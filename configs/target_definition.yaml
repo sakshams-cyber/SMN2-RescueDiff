@@ -1,0 +1,52 @@
+# Configuration for Part 1: SMN2 target definition.
+# Use high-quality genome FASTA and GTF/GFF files from a consistent source
+# such as GENCODE, Ensembl, or RefSeq. Do not mix genome builds.
+project_name: SMN2-RescueDiff
+
+inputs:
+  genome_fasta: data/raw/genome/hg38.fa
+  annotation_gtf: data/raw/annotations/gencode.gtf
+
+target:
+  gene_symbol: SMN2
+  gene_id: null
+  transcript_id: null
+  exon_number: 7
+  # Optional explicit override if transcript annotation is ambiguous.
+  # Example:
+  # manual_exon_coordinates:
+  #   chromosome: chr5
+  #   start: 70000000
+  #   end: 70000053
+  #   strand: "+"
+  manual_exon_coordinates: null
+  strand: null
+
+windows:
+  core_window_nt: 21
+  local_window_nt: 51
+  extended_window_nt: 101
+  splice_site_core_5prime:
+    exon_nt: 3
+    intron_nt: 6
+  splice_site_core_3prime:
+    intron_nt: 20
+    exon_nt: 3
+
+u1_snRNA:
+  canonical_5prime_u1_seed: "ACUUACCU"
+  calculate_simple_complementarity: true
+
+structures:
+  fetch_pdb: true
+  # These PDB IDs are configurable placeholders for experimentally supported
+  # RNA or RNA-protein structural context. Later modules should inspect chains.
+  pdb_ids:
+    - "6HMI"
+    - "6HMO"
+  output_dir: data/raw/structures
+
+outputs:
+  output_dir: data/processed/target_definition
+  report_path: reports/target_definition_report.md
+  figure_dir: figures/target_definition
