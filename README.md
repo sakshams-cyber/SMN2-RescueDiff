@@ -462,6 +462,4 @@ PYTHONPATH=src pytest
 
 These modules produce computational target definitions, decoy atlases, molecule candidates, docking/selectivity estimates, and final SRSI rankings. They do not prove splice rescue, safety, therapeutic efficacy, or clinical relevance.
 
-## Next Module Preview
-
 The full pipeline now produces a ranked computational candidate table for future validation hypotheses, with all results interpreted cautiously.
