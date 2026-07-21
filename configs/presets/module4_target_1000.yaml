@@ -1,0 +1,106 @@
+project_name: SMN2-RescueDiff
+module_name: SMN2 Target Docking and HuRDA Off-Target Counter-Screening
+
+inputs:
+  molecules_filtered: data/processed/molecule_generation/generated_molecules_for_docking.tsv
+  smn2_target_fasta: data/processed/target_definition/smn2_target_windows.fasta
+  smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+  smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+  decoy_atlas_full: data/processed/decoy_atlas/hurda_180k_full.tsv
+  decoy_atlas_summary: data/processed/decoy_atlas/hurda_summary.json
+  raw_structure_dir: data/raw/structures
+
+outputs:
+  output_dir: data/processed/docking
+  ligand_dir: data/processed/docking/ligands
+  receptor_dir: data/processed/docking/receptors
+  pose_dir: data/processed/docking/poses
+  log_dir: data/processed/docking/logs
+  simulation_dir: data/processed/docking/simulation
+  report_path: reports/docking_counter_screening_report.md
+  figure_dir: figures/docking
+
+run:
+  random_seed: 42
+  run_mode: target_only_docking
+  max_molecules_to_dock: 1000
+  require_real_docking_for_scientific_results: true
+  allow_dry_run_simulation: true
+  parallel_jobs: 1
+  resume_existing_results: false
+  save_intermediate_every_n_jobs: 100
+
+docking_engine:
+  engine: vina
+  vina_executable: vina
+  exhaustiveness: 10
+  num_modes: 10
+  energy_range: 3
+  timeout_seconds_per_job: 120
+
+receptor:
+  receptor_mode: user_provided
+  smn2_receptor_file: data/processed/docking/receptors/smn2_target_model1.pdbqt
+  receptor_format: pdbqt
+  docking_box:
+    center_x: 24.896
+    center_y: 20.352
+    center_z: 24.973
+    size_x: 44.963
+    size_y: 34.551
+    size_z: 44.652
+  require_user_to_confirm_box: false
+
+ligand_preparation:
+  input_smiles_column: canonical_smiles
+  add_hydrogens: true
+  generate_3d_conformers: true
+  optimize_geometry: true
+  max_conformer_attempts: 20
+  output_format: sdf
+  prepare_pdbqt: true
+
+decoy_panel:
+  use_decoy_panel: false
+  total_decoys_for_docking: 0
+  category_targets:
+    smn2_like_hard_decoy: 100
+    five_prime_splice_site: 100
+    three_prime_splice_site: 50
+    exonic_regulatory: 50
+    intronic_regulatory: 50
+    scrambled_smn2_control: 25
+    mutated_smn2_control: 25
+    random_bias_matched: 100
+  prioritize_high_similarity_decoys: true
+  prioritize_high_biological_weight: true
+  allow_sequence_only_decoy_panel: true
+  decoy_receptor_mode: sequence_panel_only
+
+selectivity_scoring:
+  target_score_column: target_deltaG
+  lower_deltaG_is_better: true
+  use_biological_weights: true
+  off_target_risk_threshold_deltaG: -7.0
+  selectivity_gap_threshold: 1.0
+  advance_target_deltaG_threshold: -7.0
+  advance_weighted_gap_threshold: 1.0
+  advance_off_target_risk_threshold: 0.40
+  advance_min_decoys_with_scores: 20
+
+live_simulation:
+  enable_live_logging: true
+  write_jsonl_log: true
+  live_log_file: data/processed/docking/simulation/live_docking_events.jsonl
+  live_state_file: data/processed/docking/simulation/current_docking_state.json
+  dashboard_refresh_seconds: 2
+  include_molecule_images: true
+  include_score_animation: true
+  include_target_vs_decoy_scatter: true
+  include_heatmap: true
+  dry_run_animation_speed: 0.05
+
+figures:
+  make_figures: true
+  max_heatmap_molecules: 50
+  max_heatmap_decoys: 50

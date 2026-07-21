@@ -1,0 +1,128 @@
+project_name: SMN2-RescueDiff
+module_name: Predicted Splicing-Rescue Scoring and Final SRSI Ranking
+
+inputs:
+  smn2_target_fasta: data/processed/target_definition/smn2_target_windows.fasta
+  smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+  smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+
+  decoy_atlas_full: data/processed/decoy_atlas/hurda_180k_full.tsv
+  decoy_atlas_summary: data/processed/decoy_atlas/hurda_summary.json
+
+  generated_molecules_filtered: data/processed/molecule_generation/generated_molecules_filtered.tsv
+  generated_molecules_for_docking: data/processed/molecule_generation/generated_molecules_for_docking.tsv
+  molecule_generation_summary: data/processed/molecule_generation/generated_molecule_summary.json
+
+  target_docking_scores: data/processed/docking/smn2_target_docking_scores.tsv
+  decoy_docking_scores: data/processed/docking/decoy_docking_scores.tsv
+  molecule_selectivity_scores: data/processed/docking/molecule_selectivity_scores.tsv
+  candidates_for_splicing_rescue: data/processed/docking/candidates_for_splicing_rescue.tsv
+  docking_summary: data/processed/docking/docking_summary.json
+  pose_dir: data/processed/docking/poses
+
+outputs:
+  output_dir: data/processed/final_scoring
+  table_dir: data/processed/final_scoring/tables
+  evidence_dir: data/processed/final_scoring/evidence
+  log_dir: data/processed/final_scoring/logs
+  figure_dir: figures/final_scoring
+  splicing_report_path: reports/splicing_rescue_scoring_report.md
+  final_report_path: reports/final_candidate_report.md
+
+run:
+  random_seed: 42
+  run_name: module5_decoy_final
+  overwrite_existing: false
+  allow_dry_run_inputs: false
+  require_real_docking_for_scientific_claims: true
+  max_candidates_to_score: 10000
+  top_n_final_candidates: 50
+  top_n_report_candidates: 10
+
+splicing_landmarks:
+  use_target_profile_landmarks: true
+  infer_landmarks_from_window_names: true
+  landmark_names:
+    - exon_7
+    - five_prime_splice_site
+    - three_prime_splice_site
+    - u1_snRNA_recognition_region
+    - exon_intronic_boundary
+    - exonic_splicing_enhancer_like_region
+    - exonic_splicing_silencer_like_region
+  beneficial_landmarks:
+    - five_prime_splice_site
+    - u1_snRNA_recognition_region
+    - exonic_splicing_enhancer_like_region
+  caution_landmarks:
+    - core_donor_dinucleotide
+    - core_acceptor_dinucleotide
+    - essential_branchpoint_like_region
+
+pose_analysis:
+  enabled: true
+  pose_mode: auto
+  allow_missing_pose_files: true
+  contact_distance_angstrom: 4.5
+  hydrogen_bond_distance_angstrom: 3.5
+  stacking_distance_angstrom: 5.0
+  proximity_score_decay_angstrom: 8.0
+
+splicing_rescue_scoring:
+  score_mode: hybrid_pose_and_feature
+  normalize_scores: true
+  weights:
+    beneficial_landmark_proximity: 2.0
+    u1_support_region_proximity: 2.0
+    exon7_boundary_support: 1.5
+    target_binding_strength: 1.5
+    contact_density: 1.0
+    hydrogen_bond_proxy: 0.8
+    stacking_proxy: 0.7
+    splice_site_occlusion_penalty: 2.0
+    off_target_risk_penalty: 1.5
+    missing_pose_penalty: 0.5
+  thresholds:
+    strong_target_binding_deltaG: -7.0
+    minimum_selectivity_gap: 1.0
+    maximum_off_target_risk_score: 0.40
+    minimum_splicing_rescue_score_for_advancement: 0.60
+
+srsi:
+  enabled: true
+  use_z_score_normalization: true
+  weights:
+    smn2_binding_strength: 1.0
+    splicing_rescue_score: 2.0
+    weighted_selectivity_gap: 1.5
+    qed: 0.7
+    lipinski_bonus: 0.4
+    pre_docking_candidate_score: 0.5
+    off_target_risk_penalty: 1.5
+    sa_score_penalty: 0.5
+    pains_penalty: 1.0
+    splice_site_occlusion_penalty: 1.2
+  candidate_tiers:
+    high_priority_min_srsi_percentile: 90
+    medium_priority_min_srsi_percentile: 70
+    low_priority_min_srsi_percentile: 50
+
+confidence:
+  assign_confidence_level: true
+  dry_run_confidence: very_low
+  target_only_docking_confidence: low
+  target_plus_decoy_docking_confidence: moderate
+  pose_based_scoring_confidence_bonus: true
+  missing_pose_confidence_penalty: true
+
+ablation_analysis:
+  enabled: true
+  compare_binding_only_vs_full_srsi: true
+  compare_without_decoy_penalty: true
+  compare_without_splicing_rescue_score: true
+  compare_without_chemical_quality: true
+
+figures:
+  make_figures: true
+  max_candidates_heatmap: 50
+  max_candidates_waterfall: 10

@@ -54,10 +54,18 @@ def load_config(config_path: str | Path) -> dict[str, Any]:
     return config
 
 
+def find_project_root(config_path: Path) -> Path:
+    """Find the repository root for configs stored in configs/ or configs/presets/."""
+    for parent in config_path.parents:
+        if (parent / "src" / "smn2_rescuediff").exists() and (parent / "configs").exists():
+            return parent
+    return config_path.parent.parent
+
+
 def resolve_paths(config: dict[str, Any], config_path: str | Path) -> SplicingRescuePaths:
     """Resolve all configured paths relative to the repository root."""
     path = Path(config_path).resolve()
-    project_root = path.parent.parent
+    project_root = find_project_root(path)
     inputs = config.get("inputs", {})
     outputs = config.get("outputs", {})
 
@@ -136,4 +144,3 @@ def validate_weights(config: dict[str, Any]) -> None:
 def save_config_used(config: dict[str, Any], path: str | Path) -> None:
     """Write the exact Module 5 config used."""
     Path(path).write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
-

@@ -450,6 +450,50 @@ python3 -m pip install streamlit
 
 Docking scores are computational predictions. Predicted splicing-rescue scores are proxy scores. SRSI is a prioritization metric, not proof of biological activity. Top candidates require future validation before biological interpretation. This repository does not provide synthesis instructions or human, animal, or cell testing procedures.
 
+## Reproducible Config Presets
+
+Preset configs live in `configs/presets/`. They are full YAML files, not partial overlays, so each one can be passed directly to the corresponding module CLI.
+
+### Module 3 Presets
+
+```bash
+PYTHONPATH=src python3 -m smn2_rescuediff.molecule_generation.cli --config configs/presets/module3_quick_test.yaml
+PYTHONPATH=src python3 -m smn2_rescuediff.molecule_generation.cli --config configs/presets/module3_pilot_real.yaml
+PYTHONPATH=src python3 -m smn2_rescuediff.molecule_generation.cli --config configs/presets/module3_final_rigorous.yaml
+```
+
+- `module3_quick_test.yaml`: pipeline debugging only. Uses the deterministic debug generator, tiny sampling, no neural training, and no scientific interpretation.
+- `module3_pilot_real.yaml`: small real run. Uses a compact neural GRU model to test real training, generation, filtering, and export behavior before spending more compute.
+- `module3_final_rigorous.yaml`: final science-fair run. Uses the Transformer generator, larger sampling, RL fine-tuning, and a larger docking export set.
+
+### Module 4 Presets
+
+```bash
+PYTHONPATH=src python3 -m smn2_rescuediff.docking.cli --config configs/presets/module4_target_100.yaml
+PYTHONPATH=src python3 -m smn2_rescuediff.docking.cli --config configs/presets/module4_target_1000.yaml
+PYTHONPATH=src python3 -m smn2_rescuediff.docking.cli --config configs/presets/module4_decoy_stage1.yaml
+PYTHONPATH=src python3 -m smn2_rescuediff.docking.cli --config configs/presets/module4_decoy_stage2.yaml
+```
+
+- `module4_target_100.yaml`: target-only Vina docking for the top 100 candidates.
+- `module4_target_1000.yaml`: target-only Vina docking for up to 1,000 candidates.
+- `module4_decoy_stage1.yaml`: first staged HuRDA panel, emphasizing SMN2-like hard decoys and splice-site decoys.
+- `module4_decoy_stage2.yaml`: larger staged HuRDA panel for stronger counter-screening after target-only triage.
+
+Dry-run docking results are not scientific results. They are useful for pipeline debugging, dashboard checks, and file-format validation only. Real target-only docking provides low-confidence prioritization because it estimates SMN2 target affinity without a meaningful off-target RNA counter-screen. Real target-plus-decoy docking provides stronger computational confidence because candidates are penalized when they also score well against staged HuRDA decoy panels.
+
+Never dock all 180,000 HuRDA decoys directly. Use staged hard-decoy panels: start with target-only docking, advance a smaller candidate set into `module4_decoy_stage1.yaml`, then use `module4_decoy_stage2.yaml` for the most promising candidates. The full HuRDA atlas is a source for panel selection and counter-screen design, not a single brute-force docking job.
+
+### Module 5 Presets
+
+```bash
+PYTHONPATH=src python3 -m smn2_rescuediff.splicing_rescue.cli --config configs/presets/module5_target_only_final.yaml
+PYTHONPATH=src python3 -m smn2_rescuediff.splicing_rescue.cli --config configs/presets/module5_decoy_final.yaml
+```
+
+- `module5_target_only_final.yaml`: final scoring from real target-only docking inputs. Dry-run inputs are rejected, and selectivity evidence is down-weighted because decoy docking was not performed.
+- `module5_decoy_final.yaml`: final scoring from real target-plus-decoy docking inputs. Dry-run inputs are rejected, and HuRDA selectivity contributes fully to SRSI ranking.
+
 ## Tests
 
 The tests use tiny artificial fixture files and do not require hg38 downloads:
