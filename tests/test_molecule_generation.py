@@ -371,6 +371,13 @@ def test_molecule_generation_cli_runs_on_tiny_test_mode(tmp_path):
     assert (output_dir / "generated_molecule_summary.json").exists()
     assert (output_dir / "token_vocabulary.json").exists()
     assert (output_dir / "tokenizer_metadata.json").exists()
+    assert (output_dir / "RUN_SUMMARY.md").exists()
+    assert (output_dir / "run_metrics.json").exists()
+    run_dir = output_dir / "runs" / "pytest_tiny"
+    assert (run_dir / "generated_molecules_for_docking.tsv").exists()
+    assert (run_dir / "molecule_generation_config_used.yaml").exists()
+    assert (run_dir / "RUN_SUMMARY.md").exists()
+    assert (run_dir / "run_metrics.json").exists()
     assert report.exists()
     assert (figure_dir / "training_loss_curve.png").exists()
     assert (figure_dir / "validity_uniqueness_novelty_summary.png").exists()

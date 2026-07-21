@@ -384,6 +384,12 @@ def test_splicing_rescue_cli_runs_on_tiny_inputs(tmp_path):
     assert (table_dir / "top_10_final_candidates.tsv").exists()
     assert (table_dir / "ablation_rank_comparison.tsv").exists()
     assert (evidence_dir / "top_candidate_evidence.json").exists()
+    output_dir = Path(config["outputs"]["output_dir"])
+    assert (output_dir / "RUN_SUMMARY.md").exists()
+    assert (output_dir / "run_metrics.json").exists()
+    run_dir = output_dir / "runs" / "pytest_final"
+    assert (run_dir / "tables" / "final_srsi_ranked_candidates.tsv").exists()
+    assert (run_dir / "RUN_SUMMARY.md").exists()
+    assert (run_dir / "run_metrics.json").exists()
     final = pd.read_csv(table_dir / "final_srsi_ranked_candidates.tsv", sep="\t")
     assert {"molecule_id", "srsi_score", "candidate_tier", "confidence_level"}.issubset(final.columns)
-

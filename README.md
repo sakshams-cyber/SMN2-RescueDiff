@@ -460,6 +460,23 @@ Preset configs live in `configs/presets/`. Module-specific presets are full YAML
 - `pilot_real`: small real run. Use this to verify that real training data, ligand preparation, receptor PDBQT files, Vina, and staged output paths work before spending substantial compute.
 - `final_rigorous`: final science-fair computational run. Use multi-source molecule training, real target docking, staged hard-decoy counter-screening, pose-aware scoring, ablation analysis, and final candidate reporting.
 
+### Run Folders And Stable Outputs
+
+Modules 3, 4, and 5 archive every run under a named run folder using `run.run_name` from the config. Each run folder includes the copied config used, `RUN_SUMMARY.md`, and `run_metrics.json`.
+
+- Module 3 run folders: `data/processed/molecule_generation/runs/<run_name>/`
+- Module 4 run folders: `data/processed/docking/runs/<run_name>/` or the configured stage folder's `runs/<run_name>/`
+- Module 5 run folders: `data/processed/final_scoring/runs/<run_name>/`
+
+The modules also refresh stable downstream paths so existing commands and later modules still work:
+
+- `data/processed/molecule_generation/generated_molecules_for_docking.tsv`
+- `data/processed/docking/smn2_target_docking_scores.tsv`
+- `data/processed/docking/molecule_selectivity_scores.tsv`
+- `data/processed/final_scoring/tables/final_srsi_ranked_candidates.tsv`
+
+Old run folders are not deleted by the pipeline. Reusing a `run_name` intentionally updates that named run folder and the stable latest-output files.
+
 ### Module 3 Presets
 
 ```bash

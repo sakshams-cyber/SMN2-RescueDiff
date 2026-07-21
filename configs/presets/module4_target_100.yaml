@@ -22,6 +22,7 @@ outputs:
 
 run:
   random_seed: 42
+  run_name: quick_target_100
   run_mode: target_only_docking
   max_molecules_to_dock: 100
   require_real_docking_for_scientific_results: true

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import shutil
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +31,85 @@ from .target_landmark_annotator import annotate_landmarks
 
 
 RUN_MODE_LABEL = "DRY-RUN / SIMULATED DOCKING INPUTS - NOT SCIENTIFIC RESULTS"
+
+
+def _run_name(config: dict[str, Any]) -> str:
+    run = config.setdefault("run", {})
+    name = str(run.get("run_name") or "final_scoring_001").strip()
+    run["run_name"] = name
+    return name
+
+
+def _run_paths(stable_paths, config: dict[str, Any]):
+    run_dir = stable_paths.output_dir / "runs" / _run_name(config)
+    return replace(
+        stable_paths,
+        output_dir=run_dir,
+        table_dir=run_dir / "tables",
+        evidence_dir=run_dir / "evidence",
+        log_dir=run_dir / "logs",
+        figure_dir=run_dir / "figures",
+        splicing_report_path=run_dir / "reports" / stable_paths.splicing_report_path.name,
+        final_report_path=run_dir / "reports" / stable_paths.final_report_path.name,
+    )
+
+
+def _copy_file_if_exists(source: Path, destination: Path) -> None:
+    if source.exists():
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+
+
+def _copy_directory_files(source_dir: Path, destination_dir: Path) -> None:
+    if not source_dir.exists():
+        return
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    for source in source_dir.glob("*"):
+        if source.is_file():
+            shutil.copy2(source, destination_dir / source.name)
+
+
+def _sync_run_outputs_to_stable(run_paths, stable_paths) -> None:
+    _copy_directory_files(run_paths.table_dir, stable_paths.table_dir)
+    _copy_directory_files(run_paths.evidence_dir, stable_paths.evidence_dir)
+    _copy_directory_files(run_paths.log_dir, stable_paths.log_dir)
+    _copy_directory_files(run_paths.figure_dir, stable_paths.figure_dir)
+    for filename in ["final_scoring_summary.json", "splicing_rescue_scoring_config_used.yaml"]:
+        _copy_file_if_exists(run_paths.output_dir / filename, stable_paths.output_dir / filename)
+    for filename in ["RUN_SUMMARY.md", "run_metrics.json"]:
+        _copy_file_if_exists(run_paths.output_dir / filename, stable_paths.output_dir / filename)
+    _copy_file_if_exists(run_paths.final_report_path, stable_paths.final_report_path)
+    _copy_file_if_exists(run_paths.splicing_report_path, stable_paths.splicing_report_path)
+
+
+def _write_run_artifacts(run_paths, config: dict[str, Any], summary: dict[str, Any], output_files: list[str]) -> None:
+    metrics = dict(summary)
+    metrics["run_name"] = _run_name(config)
+    metrics["run_folder"] = str(run_paths.output_dir)
+    metrics["output_files"] = output_files
+    (run_paths.output_dir / "run_metrics.json").write_text(json.dumps(metrics, indent=2, default=str), encoding="utf-8")
+    lines = [
+        f"# Module 5 Run Summary: {_run_name(config)}",
+        "",
+        f"- Run folder: `{run_paths.output_dir}`",
+        f"- Candidates loaded: {summary.get('num_candidates_loaded', 'NA')}",
+        f"- Candidates scored: {summary.get('num_candidates_scored', 'NA')}",
+        f"- High-priority candidates: {summary.get('num_high_priority_candidates', 'NA')}",
+        f"- Top candidate: `{summary.get('top_candidate_id', 'NA')}`",
+        f"- Top SRSI score: {summary.get('top_candidate_srsi', 'NA')}",
+        f"- Dry-run inputs used: {summary.get('used_dry_run_inputs', 'NA')}",
+        "",
+        "## Stable Downstream Outputs",
+        "",
+        "- `data/processed/final_scoring/tables/final_srsi_ranked_candidates.tsv`",
+        "- `data/processed/final_scoring/tables/top_10_final_candidates.tsv`",
+        "- `data/processed/final_scoring/final_scoring_summary.json`",
+        "",
+        "## Limitations",
+        "",
+        "SRSI is a computational prioritization score and does not prove binding, splicing rescue, safety, or therapeutic activity.",
+    ]
+    (run_paths.output_dir / "RUN_SUMMARY.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _validate_scoring_mode(config: dict[str, Any], used_dry_run_inputs: bool) -> None:
@@ -79,8 +161,11 @@ def _output_file_list(paths) -> list[str]:
 def run(config_path: str | Path) -> int:
     """Run Module 5 final SRSI scoring."""
     config = load_config(config_path)
+    _run_name(config)
     validate_weights(config)
-    paths = resolve_paths(config, config_path)
+    stable_paths = resolve_paths(config, config_path)
+    paths = _run_paths(stable_paths, config)
+    ensure_output_dirs(stable_paths)
     ensure_output_dirs(paths)
     run_log: list[str] = []
 
@@ -170,6 +255,8 @@ def run(config_path: str | Path) -> int:
         path=paths.splicing_report_path,
     )
     (paths.log_dir / "module5_run_log.txt").write_text("\n".join(run_log + warnings) + "\n", encoding="utf-8")
+    _write_run_artifacts(paths, config, summary, output_files)
+    _sync_run_outputs_to_stable(paths, stable_paths)
 
     top_candidate = final_ranked.iloc[0]
     print("\nModule 5 complete: Predicted splicing-rescue scoring and final SRSI ranking finished.\n")

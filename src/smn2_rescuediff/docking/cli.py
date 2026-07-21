@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import shutil
 import sys
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +70,94 @@ DECOY_COLUMNS = [
 def _write(df: pd.DataFrame, path: str | Path) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, sep="\t", index=False)
+
+
+def _run_name(config: dict[str, Any], mode: str) -> str:
+    run = config.setdefault("run", {})
+    stage = str(config.get("staged_docking", {}).get("stage_name", "")).strip()
+    name = str(run.get("run_name") or stage or f"{mode}_run").strip()
+    run["run_name"] = name
+    return name
+
+
+def _run_paths(stable_paths, config: dict[str, Any], mode: str):
+    run_dir = stable_paths.output_dir / "runs" / _run_name(config, mode)
+    return replace(
+        stable_paths,
+        output_dir=run_dir,
+        ligand_dir=run_dir / "ligands",
+        pose_dir=run_dir / "poses",
+        log_dir=run_dir / "logs",
+        simulation_dir=run_dir / "simulation",
+        report_path=run_dir / "reports" / stable_paths.report_path.name,
+        figure_dir=run_dir / "figures",
+        live_log_file=run_dir / "simulation" / "live_docking_events.jsonl",
+        live_state_file=run_dir / "simulation" / "current_docking_state.json",
+    )
+
+
+def _copy_file_if_exists(source: Path, destination: Path) -> None:
+    if source.exists():
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+
+
+def _sync_run_outputs_to_stable(run_paths, stable_paths) -> None:
+    for filename in [
+        "selected_molecules_for_docking.tsv",
+        "ligand_preparation_summary.tsv",
+        "receptor_preparation_summary.tsv",
+        "selected_decoy_docking_panel.tsv",
+        "smn2_target_docking_scores.tsv",
+        "decoy_docking_scores.tsv",
+        "molecule_selectivity_scores.tsv",
+        "candidates_for_splicing_rescue.tsv",
+        "docking_summary.json",
+        "docking_config_used.yaml",
+    ]:
+        _copy_file_if_exists(run_paths.output_dir / filename, stable_paths.output_dir / filename)
+    for filename in ["docking_run_log.txt", "failed_docking_jobs.tsv"]:
+        _copy_file_if_exists(run_paths.log_dir / filename, stable_paths.log_dir / filename)
+    for filename in ["live_docking_events.jsonl", "current_docking_state.json", "docking_simulation_summary.json"]:
+        _copy_file_if_exists(run_paths.simulation_dir / filename, stable_paths.simulation_dir / filename)
+    for filename in ["RUN_SUMMARY.md", "run_metrics.json"]:
+        _copy_file_if_exists(run_paths.output_dir / filename, stable_paths.output_dir / filename)
+    _copy_file_if_exists(run_paths.report_path, stable_paths.report_path)
+    if run_paths.figure_dir.exists():
+        stable_paths.figure_dir.mkdir(parents=True, exist_ok=True)
+        for figure in run_paths.figure_dir.glob("*"):
+            if figure.is_file():
+                shutil.copy2(figure, stable_paths.figure_dir / figure.name)
+
+
+def _write_run_artifacts(run_paths, config: dict[str, Any], summary: dict[str, Any]) -> None:
+    metrics = dict(summary)
+    metrics["run_name"] = _run_name(config, str(summary.get("run_mode", "run")))
+    metrics["run_folder"] = str(run_paths.output_dir)
+    (run_paths.output_dir / "run_metrics.json").write_text(json.dumps(metrics, indent=2, default=str), encoding="utf-8")
+    lines = [
+        f"# Module 4 Run Summary: {metrics['run_name']}",
+        "",
+        f"- Run folder: `{run_paths.output_dir}`",
+        f"- Run mode: `{summary.get('run_mode', 'NA')}`",
+        f"- Stage: `{summary.get('stage_name', 'none')}`",
+        f"- Molecules evaluated: {summary.get('molecules_evaluated', 'NA')}",
+        f"- Target scores: {summary.get('target_scores', {}).get('count', 'NA')}",
+        f"- Decoy scores: {summary.get('decoy_scores', {}).get('count', 'NA')}",
+        f"- Advanced candidates: {summary.get('advanced_candidates', 'NA')}",
+        "",
+        "## Stable Downstream Outputs",
+        "",
+        "- `data/processed/docking/smn2_target_docking_scores.tsv`",
+        "- `data/processed/docking/decoy_docking_scores.tsv`",
+        "- `data/processed/docking/molecule_selectivity_scores.tsv`",
+        "- `data/processed/docking/candidates_for_splicing_rescue.tsv`",
+        "",
+        "## Limitations",
+        "",
+        "Docking scores are computational predictions. Dry-run scores are simulated and are not scientific results.",
+    ]
+    (run_paths.output_dir / "RUN_SUMMARY.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _read_existing_table(path: str | Path, columns: list[str]) -> pd.DataFrame:
@@ -176,7 +267,7 @@ def _decoy_row(molecule: pd.Series, decoy: pd.Series, ligand_file: str, result, 
     }
 
 
-def _empty_outputs(paths, config: dict[str, Any], selected: pd.DataFrame, ligand_summary: pd.DataFrame, receptor_summary: pd.DataFrame, decoy_panel: pd.DataFrame, warnings: list[str]) -> None:
+def _empty_outputs(paths, config: dict[str, Any], selected: pd.DataFrame, ligand_summary: pd.DataFrame, receptor_summary: pd.DataFrame, decoy_panel: pd.DataFrame, warnings: list[str]) -> dict[str, Any]:
     target_scores = pd.DataFrame(columns=TARGET_COLUMNS)
     decoy_scores = pd.DataFrame(columns=DECOY_COLUMNS)
     selectivity = calculate_selectivity_scores(target_scores, decoy_scores, config)
@@ -187,6 +278,7 @@ def _empty_outputs(paths, config: dict[str, Any], selected: pd.DataFrame, ligand
     _write(pd.DataFrame(columns=["molecule_id", "target_id", "status", "notes"]), paths.log_dir / "failed_docking_jobs.tsv")
     summary = build_summary(config, selected, target_scores, decoy_scores, selectivity, warnings)
     write_summary_json(summary, paths.output_dir / "docking_summary.json")
+    (paths.output_dir / "docking_config_used.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
     write_figures(target_scores, decoy_scores, selectivity, paths.live_log_file, paths.figure_dir, config)
     write_report(
         config=config,
@@ -197,6 +289,7 @@ def _empty_outputs(paths, config: dict[str, Any], selected: pd.DataFrame, ligand
         output_files=_output_file_list(),
         report_path=paths.report_path,
     )
+    return summary
 
 
 def _output_file_list() -> list[str]:
@@ -222,10 +315,13 @@ def _output_file_list() -> list[str]:
 def run(config_path: str | Path) -> int:
     """Run Module 4."""
     config = load_config(config_path)
-    paths = resolve_paths(config, config_path)
-    ensure_output_dirs(paths)
+    stable_paths = resolve_paths(config, config_path)
     mode = run_mode(config)
-    warnings = validate_required_inputs(paths, config)
+    _run_name(config, mode)
+    paths = _run_paths(stable_paths, config, mode)
+    ensure_output_dirs(stable_paths)
+    ensure_output_dirs(paths)
+    warnings = validate_required_inputs(stable_paths, config)
     seed = int(config.get("run", {}).get("random_seed", 42))
     live_cfg = config.get("live_simulation", {})
     logger = LiveLogger(paths.live_log_file, paths.live_state_file, enabled=bool(live_cfg.get("enable_live_logging", True)))
@@ -244,13 +340,24 @@ def run(config_path: str | Path) -> int:
         log(warning)
 
     if mode == "analyze_existing":
-        target_scores = pd.read_csv(paths.output_dir / "smn2_target_docking_scores.tsv", sep="\t")
-        decoy_scores = pd.read_csv(paths.output_dir / "decoy_docking_scores.tsv", sep="\t")
-        selected = pd.read_csv(paths.output_dir / "selected_molecules_for_docking.tsv", sep="\t")
-        ligand_summary = pd.read_csv(paths.output_dir / "ligand_preparation_summary.tsv", sep="\t")
-        receptor_summary = pd.read_csv(paths.output_dir / "receptor_preparation_summary.tsv", sep="\t")
-        decoy_panel = pd.read_csv(paths.output_dir / "selected_decoy_docking_panel.tsv", sep="\t")
+        target_scores = pd.read_csv(stable_paths.output_dir / "smn2_target_docking_scores.tsv", sep="\t")
+        decoy_scores = pd.read_csv(stable_paths.output_dir / "decoy_docking_scores.tsv", sep="\t")
+        selected = pd.read_csv(stable_paths.output_dir / "selected_molecules_for_docking.tsv", sep="\t")
+        ligand_summary = pd.read_csv(stable_paths.output_dir / "ligand_preparation_summary.tsv", sep="\t")
+        receptor_summary = pd.read_csv(stable_paths.output_dir / "receptor_preparation_summary.tsv", sep="\t")
+        decoy_panel = pd.read_csv(stable_paths.output_dir / "selected_decoy_docking_panel.tsv", sep="\t")
         selectivity = calculate_selectivity_scores(target_scores, decoy_scores, config)
+        _write(target_scores, paths.output_dir / "smn2_target_docking_scores.tsv")
+        _write(decoy_scores, paths.output_dir / "decoy_docking_scores.tsv")
+        _write(selected, paths.output_dir / "selected_molecules_for_docking.tsv")
+        _write(ligand_summary, paths.output_dir / "ligand_preparation_summary.tsv")
+        _write(receptor_summary, paths.output_dir / "receptor_preparation_summary.tsv")
+        _write(decoy_panel, paths.output_dir / "selected_decoy_docking_panel.tsv")
+        _write(selectivity, paths.output_dir / "molecule_selectivity_scores.tsv")
+        candidates = selectivity[selectivity["advance_to_splicing_rescue"] == True][  # noqa: E712
+            ["molecule_id", "canonical_smiles", "target_deltaG", "weighted_selectivity_gap", "off_target_risk_score", "advance_to_splicing_rescue", "run_mode", "notes"]
+        ] if "advance_to_splicing_rescue" in selectivity else selectivity.head(0)
+        _write(candidates, paths.output_dir / "candidates_for_splicing_rescue.tsv")
     else:
         log("Loading Module 3 molecule library.")
         molecules = load_molecules(paths.molecules_filtered)
@@ -285,7 +392,9 @@ def run(config_path: str | Path) -> int:
 
         if mode == "prepare_only":
             warnings.append("prepare_only mode completed setup without running docking.")
-            _empty_outputs(paths, config, selected, ligand_summary, receptor_summary, decoy_panel, warnings)
+            summary = _empty_outputs(paths, config, selected, ligand_summary, receptor_summary, decoy_panel, warnings)
+            _write_run_artifacts(paths, config, summary)
+            _sync_run_outputs_to_stable(paths, stable_paths)
             logger.event("module_completed", run_mode=mode, status="completed", message="Prepare-only run completed.")
             logger.state(run_status="completed", last_message="Prepare-only run completed")
             return 0
@@ -493,6 +602,7 @@ def run(config_path: str | Path) -> int:
     summary = build_summary(config, selected, target_scores, decoy_scores, selectivity, warnings)
     write_summary_json(summary, paths.output_dir / "docking_summary.json")
     write_summary_json(summary, paths.simulation_dir / "docking_simulation_summary.json")
+    (paths.output_dir / "docking_config_used.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
     write_figures(target_scores, decoy_scores, selectivity, paths.live_log_file, paths.figure_dir, config)
     write_report(
         config=config,
@@ -504,6 +614,8 @@ def run(config_path: str | Path) -> int:
         report_path=paths.report_path,
     )
     (paths.log_dir / "docking_run_log.txt").write_text("\n".join(run_log + warnings) + "\n", encoding="utf-8")
+    _write_run_artifacts(paths, config, summary)
+    _sync_run_outputs_to_stable(paths, stable_paths)
     logger.event("scores_updated", run_mode=mode, status="completed", message="Selectivity scores and figures written.")
     logger.event("module_completed", run_mode=mode, status="completed", message="Module 4 complete.")
     logger.state(run_status="completed", jobs_completed=summary.get("target_scores", {}).get("count", 0) + summary.get("decoy_scores", {}).get("count", 0), last_message="Module 4 complete")

@@ -346,6 +346,12 @@ figures:
     assert (output_dir / "molecule_selectivity_scores.tsv").exists()
     assert (output_dir / "candidates_for_splicing_rescue.tsv").exists()
     assert (output_dir / "simulation" / "live_docking_events.jsonl").exists()
+    assert (output_dir / "RUN_SUMMARY.md").exists()
+    assert (output_dir / "run_metrics.json").exists()
+    run_dir = output_dir / "runs" / "dry_run_run"
+    assert (run_dir / "smn2_target_docking_scores.tsv").exists()
+    assert (run_dir / "RUN_SUMMARY.md").exists()
+    assert (run_dir / "run_metrics.json").exists()
     assert (tmp_path / "figures" / "target_vs_decoy_binding_scatter.png").exists()
 
 

@@ -22,6 +22,7 @@ outputs:
 
 run:
   random_seed: 42
+  run_name: stage_c_top75_x750_hard_decoys
   run_mode: target_plus_decoy_docking
   max_molecules_to_dock: 75
   require_real_docking_for_scientific_results: true

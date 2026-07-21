@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import random
 import shutil
 import sys
@@ -74,13 +75,72 @@ def _generation_mode(config: dict[str, Any]) -> str:
     return mode
 
 
+def _run_name(config: dict[str, Any]) -> str:
+    run = config.setdefault("run", {})
+    name = str(run.get("run_name") or "neural_run").strip()
+    run["run_name"] = name
+    return name
+
+
 def _run_output_paths(paths, config: dict[str, Any]):
-    overwrite = bool(config.get("run", {}).get("overwrite_existing", False))
-    if overwrite:
-        return paths.output_dir, paths.checkpoint_dir, paths.log_dir
-    run_name = str(config.get("run", {}).get("run_name", "neural_run"))
+    run_name = _run_name(config)
     run_dir = paths.output_dir / "runs" / run_name
     return run_dir, run_dir / "checkpoints", run_dir / "logs"
+
+
+def _write_run_artifacts(run_dir: Path, config: dict[str, Any], summary: dict[str, Any], output_files: list[str]) -> None:
+    metrics = dict(summary)
+    metrics["run_name"] = _run_name(config)
+    metrics["run_folder"] = str(run_dir)
+    metrics["output_files"] = output_files
+    (run_dir / "run_metrics.json").write_text(json.dumps(metrics, indent=2, default=str), encoding="utf-8")
+    lines = [
+        f"# Module 3 Run Summary: {_run_name(config)}",
+        "",
+        f"- Run folder: `{run_dir}`",
+        f"- Generator mode: `{config.get('generation', {}).get('generator_mode', 'NA')}`",
+        f"- Raw generated molecules: {summary.get('raw_generated_count', 'NA')}",
+        f"- Valid molecules: {summary.get('valid_count', 'NA')}",
+        f"- Filtered molecules: {summary.get('filtered_count', 'NA')}",
+        f"- Docking exports: {summary.get('selected_for_docking_count', 'NA')}",
+        f"- Toy/small training warning used: {summary.get('toy_training_file_used', 'NA')}",
+        "",
+        "## Stable Downstream Outputs",
+        "",
+        "- `data/processed/molecule_generation/generated_molecules_filtered.tsv`",
+        "- `data/processed/molecule_generation/generated_molecules_for_docking.tsv`",
+        "- `data/processed/molecule_generation/generated_molecule_summary.json`",
+        "",
+        "## Limitations",
+        "",
+        "Generated molecules are computational candidates only and do not prove binding, splicing rescue, safety, or therapeutic activity.",
+    ]
+    (run_dir / "RUN_SUMMARY.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _sync_run_outputs_to_stable(run_dir: Path, stable_dir: Path, output_files: list[str]) -> None:
+    stable_dir.mkdir(parents=True, exist_ok=True)
+    for item in output_files:
+        source = Path(item)
+        if source.exists() and source.is_file():
+            shutil.copy2(source, stable_dir / source.name)
+    for filename in ["RUN_SUMMARY.md", "run_metrics.json"]:
+        source = run_dir / filename
+        if source.exists():
+            shutil.copy2(source, stable_dir / filename)
+
+
+def _sync_run_report_and_figures(run_dir: Path, stable_report: Path, stable_figure_dir: Path) -> None:
+    run_report = run_dir / "reports" / stable_report.name
+    if run_report.exists():
+        stable_report.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(run_report, stable_report)
+    run_figure_dir = run_dir / "figures"
+    if run_figure_dir.exists():
+        stable_figure_dir.mkdir(parents=True, exist_ok=True)
+        for figure in run_figure_dir.glob("*"):
+            if figure.is_file():
+                shutil.copy2(figure, stable_figure_dir / figure.name)
 
 
 def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -126,6 +186,7 @@ def _training_surrogate_generate(training_strings: list[str], representation: st
 def run(config_path: str | Path) -> int:
     """Run the upgraded Module 3 pipeline."""
     config = load_config(config_path)
+    _run_name(config)
     paths = resolve_paths(config, config_path)
     ensure_output_dirs(paths)
     output_dir, checkpoint_dir, log_dir = _run_output_paths(paths, config)
@@ -257,7 +318,7 @@ def run(config_path: str | Path) -> int:
         docking_candidates=docking_candidates,
         raw_count=len(raw_generated),
         diversity_values=diversity_values,
-        figure_dir=paths.figure_dir,
+        figure_dir=output_dir / "figures",
         toy_dataset=toy_dataset,
     )
 
@@ -279,12 +340,15 @@ def run(config_path: str | Path) -> int:
         str(output_dir / "rl_finetuning_log.tsv"),
         str(output_dir / "molecule_generation_config_used.yaml"),
     ]
-    write_report(config=config, summary=summary, output_files=output_files, report_path=paths.report_path)
+    run_report_path = output_dir / "reports" / paths.report_path.name
+    run_report_path.parent.mkdir(parents=True, exist_ok=True)
+    write_report(config=config, summary=summary, output_files=output_files, report_path=run_report_path)
+    _write_run_artifacts(output_dir, config, summary, output_files)
 
     # Convenience copies for Module 4, while preserving run-specific outputs.
     if output_dir != paths.output_dir:
-        for filename in ["generated_molecules_filtered.tsv", "generated_molecules_for_docking.tsv", "generated_molecule_summary.json"]:
-            shutil.copy2(output_dir / filename, paths.output_dir / filename)
+        _sync_run_outputs_to_stable(output_dir, paths.output_dir, output_files)
+        _sync_run_report_and_figures(output_dir, paths.report_path, paths.figure_dir)
 
     print("\nModule 3 complete: Deep neural molecule generation finished.\n")
     print(f"Run name: {config.get('run', {}).get('run_name', 'neural_run')}")
@@ -321,4 +385,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
