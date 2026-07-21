@@ -4,6 +4,8 @@ module_name: Deep Neural Molecular Generation Model
 inputs:
   training_smiles:
     - data/raw/molecules/chembl_training_smiles.smi
+    - data/raw/molecules/zinc_training_smiles.smi
+    - data/raw/molecules/rna_ligand_training_smiles.smi
   optional_context:
     smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
     smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
@@ -19,7 +21,7 @@ outputs:
 run:
   random_seed: 42
   device: cpu
-  run_name: neural_chembl_001
+  run_name: real_training_smoke_test
   overwrite_existing: false
   save_config_used: true
 
@@ -75,14 +77,14 @@ training:
   learning_rate: 0.0005
   weight_decay: 0.00001
   validation_fraction: 0.1
-  early_stopping_patience: 5
+  early_stopping_patience: 3
   gradient_clip_norm: 1.0
   save_checkpoint_every_epoch: true
   resume_from_checkpoint: null
 
 sampling:
-  num_raw_to_generate: 100000
-  batch_size_generate: 1000
+  num_raw_to_generate: 1000
+  batch_size_generate: 250
   temperature: 0.8
   top_k: 50
   top_p: 0.95
@@ -90,7 +92,7 @@ sampling:
   remove_duplicate_generated_strings: true
 
 rl_finetuning:
-  enabled: true
+  enabled: false
   episodes: 5
   samples_per_episode: 5000
   learning_rate: 0.00005
