@@ -1,0 +1,429 @@
+"""Command-line interface for Module 4 docking and counter-screening."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
+import yaml
+
+from .config import ensure_output_dirs, load_config, resolve_paths, run_mode, validate_required_inputs
+from .decoy_panel_selector import select_decoy_panel
+from .dry_run_docker import dry_run_decoy_score, dry_run_target_score
+from .figure_writer import write_figures
+from .input_loader import load_decoy_atlas, load_molecules
+from .ligand_preparer import prepare_ligands
+from .live_logger import LiveLogger
+from .molecule_selector import select_molecules_for_docking
+from .receptor_preparer import prepare_receptor
+from .report_writer import build_summary, write_report, write_summary_json
+from .selectivity_scorer import calculate_selectivity_scores
+from .vina_runner import run_vina, validate_vina_input_files
+
+
+TARGET_COLUMNS = [
+    "molecule_id",
+    "canonical_smiles",
+    "target_id",
+    "target_name",
+    "receptor_file",
+    "ligand_file",
+    "dock_status",
+    "target_deltaG",
+    "best_pose_rank",
+    "num_poses",
+    "pose_file",
+    "engine",
+    "run_mode",
+    "is_dry_run_score",
+    "notes",
+]
+
+DECOY_COLUMNS = [
+    "molecule_id",
+    "canonical_smiles",
+    "decoy_id",
+    "decoy_category",
+    "motif_type",
+    "decoy_biological_weight",
+    "decoy_smn2_similarity_score",
+    "decoy_receptor_file",
+    "ligand_file",
+    "dock_status",
+    "decoy_deltaG",
+    "best_pose_rank",
+    "num_poses",
+    "pose_file",
+    "engine",
+    "run_mode",
+    "is_dry_run_score",
+    "notes",
+]
+
+
+def _write(df: pd.DataFrame, path: str | Path) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, sep="\t", index=False)
+
+
+def _ligand_file_for(molecule_id: str, ligand_summary: pd.DataFrame, require_pdbqt: bool = False) -> str:
+    row = ligand_summary[ligand_summary["molecule_id"] == molecule_id]
+    if row.empty:
+        return "NA"
+    record = row.iloc[0]
+    if require_pdbqt:
+        pdbqt_file = str(record.get("pdbqt_file", "NA"))
+        return pdbqt_file if pdbqt_file != "NA" and Path(pdbqt_file).exists() else "NA"
+    return str(record.get("sdf_file", "NA"))
+
+
+def _target_row(molecule: pd.Series, ligand_file: str, receptor_file: str, result, mode: str) -> dict[str, Any]:
+    data = result.to_dict()
+    return {
+        "molecule_id": molecule["molecule_id"],
+        "canonical_smiles": molecule["canonical_smiles"],
+        "target_id": "SMN2_exon7",
+        "target_name": "SMN2 exon 7 splicing-related RNA target",
+        "receptor_file": receptor_file,
+        "ligand_file": ligand_file,
+        "dock_status": data["dock_status"],
+        "target_deltaG": data["delta_g"],
+        "best_pose_rank": data["best_pose_rank"],
+        "num_poses": data["num_poses"],
+        "pose_file": data["pose_file"],
+        "engine": data["engine"],
+        "run_mode": mode,
+        "is_dry_run_score": data["is_dry_run_score"],
+        "notes": data["notes"],
+    }
+
+
+def _decoy_row(molecule: pd.Series, decoy: pd.Series, ligand_file: str, result, mode: str) -> dict[str, Any]:
+    data = result.to_dict()
+    return {
+        "molecule_id": molecule["molecule_id"],
+        "canonical_smiles": molecule["canonical_smiles"],
+        "decoy_id": decoy.get("decoy_id", "NA"),
+        "decoy_category": decoy.get("decoy_category", "NA"),
+        "motif_type": decoy.get("motif_type", "NA"),
+        "decoy_biological_weight": decoy.get("biological_weight", decoy.get("decoy_biological_weight", "NA")),
+        "decoy_smn2_similarity_score": decoy.get("smn2_similarity_score", "NA"),
+        "decoy_receptor_file": decoy.get("decoy_receptor_file", "NA"),
+        "ligand_file": ligand_file,
+        "dock_status": data["dock_status"],
+        "decoy_deltaG": data["delta_g"],
+        "best_pose_rank": data["best_pose_rank"],
+        "num_poses": data["num_poses"],
+        "pose_file": data["pose_file"],
+        "engine": data["engine"],
+        "run_mode": mode,
+        "is_dry_run_score": data["is_dry_run_score"],
+        "notes": data["notes"],
+    }
+
+
+def _empty_outputs(paths, config: dict[str, Any], selected: pd.DataFrame, ligand_summary: pd.DataFrame, receptor_summary: pd.DataFrame, decoy_panel: pd.DataFrame, warnings: list[str]) -> None:
+    target_scores = pd.DataFrame(columns=TARGET_COLUMNS)
+    decoy_scores = pd.DataFrame(columns=DECOY_COLUMNS)
+    selectivity = calculate_selectivity_scores(target_scores, decoy_scores, config)
+    _write(target_scores, paths.output_dir / "smn2_target_docking_scores.tsv")
+    _write(decoy_scores, paths.output_dir / "decoy_docking_scores.tsv")
+    _write(selectivity, paths.output_dir / "molecule_selectivity_scores.tsv")
+    _write(selectivity.head(0), paths.output_dir / "candidates_for_splicing_rescue.tsv")
+    _write(pd.DataFrame(columns=["molecule_id", "target_id", "status", "notes"]), paths.log_dir / "failed_docking_jobs.tsv")
+    summary = build_summary(config, selected, target_scores, decoy_scores, selectivity, warnings)
+    write_summary_json(summary, paths.output_dir / "docking_summary.json")
+    write_figures(target_scores, decoy_scores, selectivity, paths.live_log_file, paths.figure_dir, config)
+    write_report(
+        config=config,
+        summary=summary,
+        receptor_summary=receptor_summary,
+        ligand_summary=ligand_summary,
+        decoy_panel=decoy_panel,
+        output_files=_output_file_list(),
+        report_path=paths.report_path,
+    )
+
+
+def _output_file_list() -> list[str]:
+    return [
+        "data/processed/docking/selected_molecules_for_docking.tsv",
+        "data/processed/docking/ligand_preparation_summary.tsv",
+        "data/processed/docking/receptor_preparation_summary.tsv",
+        "data/processed/docking/selected_decoy_docking_panel.tsv",
+        "data/processed/docking/smn2_target_docking_scores.tsv",
+        "data/processed/docking/decoy_docking_scores.tsv",
+        "data/processed/docking/molecule_selectivity_scores.tsv",
+        "data/processed/docking/candidates_for_splicing_rescue.tsv",
+        "data/processed/docking/docking_summary.json",
+        "data/processed/docking/docking_config_used.yaml",
+        "data/processed/docking/logs/docking_run_log.txt",
+        "data/processed/docking/logs/failed_docking_jobs.tsv",
+        "data/processed/docking/simulation/live_docking_events.jsonl",
+        "data/processed/docking/simulation/current_docking_state.json",
+        "data/processed/docking/simulation/docking_simulation_summary.json",
+    ]
+
+
+def run(config_path: str | Path) -> int:
+    """Run Module 4."""
+    config = load_config(config_path)
+    paths = resolve_paths(config, config_path)
+    ensure_output_dirs(paths)
+    mode = run_mode(config)
+    warnings = validate_required_inputs(paths, config)
+    seed = int(config.get("run", {}).get("random_seed", 42))
+    live_cfg = config.get("live_simulation", {})
+    logger = LiveLogger(paths.live_log_file, paths.live_state_file, enabled=bool(live_cfg.get("enable_live_logging", True)))
+    run_log: list[str] = []
+
+    def log(message: str) -> None:
+        print(message)
+        run_log.append(message)
+
+    logger.event("module_started", run_mode=mode, status="running", message="Module 4 docking and counter-screening started.")
+    logger.state(run_status="running", run_mode=mode, total_jobs=0, jobs_completed=0, last_message="Module started")
+
+    if mode == "dry_run":
+        warning = "WARNING: Running in dry-run mode. These are simulated docking scores and are not scientific results."
+        warnings.append("DRY-RUN SIMULATION ONLY — NOT SCIENTIFIC DOCKING RESULTS")
+        log(warning)
+
+    if mode == "analyze_existing":
+        target_scores = pd.read_csv(paths.output_dir / "smn2_target_docking_scores.tsv", sep="\t")
+        decoy_scores = pd.read_csv(paths.output_dir / "decoy_docking_scores.tsv", sep="\t")
+        selected = pd.read_csv(paths.output_dir / "selected_molecules_for_docking.tsv", sep="\t")
+        ligand_summary = pd.read_csv(paths.output_dir / "ligand_preparation_summary.tsv", sep="\t")
+        receptor_summary = pd.read_csv(paths.output_dir / "receptor_preparation_summary.tsv", sep="\t")
+        decoy_panel = pd.read_csv(paths.output_dir / "selected_decoy_docking_panel.tsv", sep="\t")
+        selectivity = calculate_selectivity_scores(target_scores, decoy_scores, config)
+    else:
+        log("Loading Module 3 molecule library.")
+        molecules = load_molecules(paths.molecules_filtered)
+        selected = select_molecules_for_docking(
+            molecules,
+            int(config.get("run", {}).get("max_molecules_to_dock", 500)),
+            seed,
+        )
+        _write(selected, paths.output_dir / "selected_molecules_for_docking.tsv")
+
+        logger.event("ligand_preparation_started", run_mode=mode, status="running", message="Preparing ligands with RDKit.")
+        logger.state(last_message="Preparing ligands", total_jobs=len(selected), jobs_completed=0)
+        ligand_summary = prepare_ligands(selected, paths.ligand_dir, config)
+        _write(ligand_summary, paths.output_dir / "ligand_preparation_summary.tsv")
+        logger.event("ligand_preparation_completed", run_mode=mode, status="completed", message="Ligand preparation completed.")
+
+        logger.event("receptor_validation_started", run_mode=mode, status="running", message="Validating SMN2 receptor configuration.")
+        receptor_summary = prepare_receptor(config, paths.smn2_receptor_file, mode)
+        _write(receptor_summary, paths.output_dir / "receptor_preparation_summary.tsv")
+        logger.event("receptor_validation_completed", run_mode=mode, status="completed", message="Receptor validation completed.")
+
+        if config.get("decoy_panel", {}).get("use_decoy_panel", True):
+            decoys = load_decoy_atlas(paths.decoy_atlas_full)
+            decoy_panel = select_decoy_panel(decoys, config)
+        else:
+            decoy_panel = pd.DataFrame()
+        _write(decoy_panel, paths.output_dir / "selected_decoy_docking_panel.tsv")
+        logger.event("decoy_panel_selected", run_mode=mode, status="completed", message=f"Selected {len(decoy_panel)} HuRDA decoys.")
+
+        (paths.output_dir / "docking_config_used.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+
+        if mode == "prepare_only":
+            warnings.append("prepare_only mode completed setup without running docking.")
+            _empty_outputs(paths, config, selected, ligand_summary, receptor_summary, decoy_panel, warnings)
+            logger.event("module_completed", run_mode=mode, status="completed", message="Prepare-only run completed.")
+            logger.state(run_status="completed", last_message="Prepare-only run completed")
+            return 0
+
+        target_rows: list[dict[str, Any]] = []
+        decoy_rows: list[dict[str, Any]] = []
+        failed_rows: list[dict[str, Any]] = []
+        run_decoys = mode in {"dry_run", "target_plus_decoy_docking"}
+        total_jobs = len(selected) * (1 + (len(decoy_panel) if run_decoys else 0))
+        completed_jobs = 0
+        best_target = None
+
+        for _, molecule in selected.iterrows():
+            ligand_file = _ligand_file_for(str(molecule["molecule_id"]), ligand_summary, require_pdbqt=mode != "dry_run")
+            completed_jobs += 1
+            logger.event(
+                "job_started",
+                run_mode=mode,
+                molecule_id=molecule["molecule_id"],
+                canonical_smiles=molecule.get("canonical_smiles"),
+                target_type="SMN2_target",
+                target_id="SMN2_exon7",
+                job_index=completed_jobs,
+                total_jobs=total_jobs,
+                status="running",
+                message=f"Docking {molecule['molecule_id']} against SMN2 target",
+            )
+            try:
+                if mode == "dry_run":
+                    result = dry_run_target_score(molecule, seed)
+                    receptor_file = "NA"
+                else:
+                    pose_file = str(paths.pose_dir / f"{molecule['molecule_id']}_smn2_out.pdbqt")
+                    validate_vina_input_files(str(paths.smn2_receptor_file), ligand_file)
+                    result = run_vina(
+                        receptor_file=str(paths.smn2_receptor_file),
+                        ligand_file=ligand_file,
+                        pose_file=pose_file,
+                        config=config,
+                    )
+                    receptor_file = str(paths.smn2_receptor_file)
+                target_rows.append(_target_row(molecule, ligand_file, receptor_file, result, mode))
+                score = result.delta_g if isinstance(result.delta_g, float) else None
+                if score is not None:
+                    best_target = score if best_target is None else min(best_target, score)
+                logger.event(
+                    "job_completed",
+                    run_mode=mode,
+                    molecule_id=molecule["molecule_id"],
+                    canonical_smiles=molecule.get("canonical_smiles"),
+                    target_type="SMN2_target",
+                    target_id="SMN2_exon7",
+                    job_index=completed_jobs,
+                    total_jobs=total_jobs,
+                    status=result.status,
+                    current_score=result.delta_g if isinstance(result.delta_g, float) else None,
+                    best_target_score=best_target,
+                    message=f"Completed SMN2 target docking for {molecule['molecule_id']}",
+                )
+            except Exception as exc:
+                failed_rows.append({"molecule_id": molecule["molecule_id"], "target_id": "SMN2_exon7", "status": "failed", "notes": str(exc)})
+                logger.event("job_failed", run_mode=mode, molecule_id=molecule["molecule_id"], target_type="SMN2_target", target_id="SMN2_exon7", status="failed", message=str(exc))
+            logger.state(
+                current_molecule_id=molecule["molecule_id"],
+                current_smiles=molecule.get("canonical_smiles"),
+                current_target_id="SMN2_exon7",
+                current_target_type="SMN2_target",
+                current_decoy_category=None,
+                jobs_completed=completed_jobs,
+                total_jobs=total_jobs,
+                latest_score=target_rows[-1]["target_deltaG"] if target_rows else None,
+                best_target_score_so_far=best_target,
+                last_message=f"Completed SMN2 target docking for {molecule['molecule_id']}",
+            )
+
+            if run_decoys and not decoy_panel.empty:
+                for _, decoy in decoy_panel.iterrows():
+                    completed_jobs += 1
+                    logger.event(
+                        "job_started",
+                        run_mode=mode,
+                        molecule_id=molecule["molecule_id"],
+                        canonical_smiles=molecule.get("canonical_smiles"),
+                        target_type="decoy",
+                        target_id=decoy.get("decoy_id"),
+                        decoy_category=decoy.get("decoy_category"),
+                        job_index=completed_jobs,
+                        total_jobs=total_jobs,
+                        status="running",
+                        message=f"Docking {molecule['molecule_id']} against {decoy.get('decoy_id')}",
+                    )
+                    if mode == "dry_run":
+                        result = dry_run_decoy_score(molecule, decoy, seed)
+                    else:
+                        result = type("Result", (), {"to_dict": lambda self: {}})()  # not used
+                        failed_rows.append(
+                            {
+                                "molecule_id": molecule["molecule_id"],
+                                "target_id": decoy.get("decoy_id"),
+                                "status": "sequence_only_decoy",
+                                "notes": "No decoy receptor structure available; sequence-only panel cannot be docked directly.",
+                            }
+                        )
+                        from .docking_engine import DockingResult
+
+                        result = DockingResult("not_run", "NA", "NA", "NA", "NA", "vina", mode, False, "Sequence-only decoy panel; no receptor structure available.")
+                    decoy_rows.append(_decoy_row(molecule, decoy, ligand_file, result, mode))
+                    logger.event(
+                        "job_completed",
+                        run_mode=mode,
+                        molecule_id=molecule["molecule_id"],
+                        canonical_smiles=molecule.get("canonical_smiles"),
+                        target_type="decoy",
+                        target_id=decoy.get("decoy_id"),
+                        decoy_category=decoy.get("decoy_category"),
+                        job_index=completed_jobs,
+                        total_jobs=total_jobs,
+                        status=result.status,
+                        current_score=result.delta_g if isinstance(result.delta_g, float) else None,
+                        best_target_score=best_target,
+                        message=f"Completed decoy docking for {molecule['molecule_id']} vs {decoy.get('decoy_id')}",
+                    )
+                    logger.state(
+                        current_molecule_id=molecule["molecule_id"],
+                        current_smiles=molecule.get("canonical_smiles"),
+                        current_target_id=decoy.get("decoy_id"),
+                        current_target_type="decoy",
+                        current_decoy_category=decoy.get("decoy_category"),
+                        jobs_completed=completed_jobs,
+                        total_jobs=total_jobs,
+                        latest_score=result.delta_g if isinstance(result.delta_g, float) else None,
+                        best_target_score_so_far=best_target,
+                        last_message=f"Completed decoy docking for {molecule['molecule_id']}",
+                    )
+
+        target_scores = pd.DataFrame(target_rows, columns=TARGET_COLUMNS)
+        decoy_scores = pd.DataFrame(decoy_rows, columns=DECOY_COLUMNS)
+        selectivity = calculate_selectivity_scores(target_scores, decoy_scores, config)
+        _write(target_scores, paths.output_dir / "smn2_target_docking_scores.tsv")
+        _write(decoy_scores, paths.output_dir / "decoy_docking_scores.tsv")
+        _write(selectivity, paths.output_dir / "molecule_selectivity_scores.tsv")
+        candidates = selectivity[selectivity["advance_to_splicing_rescue"] == True][  # noqa: E712
+            ["molecule_id", "canonical_smiles", "target_deltaG", "weighted_selectivity_gap", "off_target_risk_score", "advance_to_splicing_rescue", "run_mode", "notes"]
+        ]
+        _write(candidates, paths.output_dir / "candidates_for_splicing_rescue.tsv")
+        _write(pd.DataFrame(failed_rows, columns=["molecule_id", "target_id", "status", "notes"]), paths.log_dir / "failed_docking_jobs.tsv")
+
+    summary = build_summary(config, selected, target_scores, decoy_scores, selectivity, warnings)
+    write_summary_json(summary, paths.output_dir / "docking_summary.json")
+    write_summary_json(summary, paths.simulation_dir / "docking_simulation_summary.json")
+    write_figures(target_scores, decoy_scores, selectivity, paths.live_log_file, paths.figure_dir, config)
+    write_report(
+        config=config,
+        summary=summary,
+        receptor_summary=receptor_summary,
+        ligand_summary=ligand_summary,
+        decoy_panel=decoy_panel,
+        output_files=_output_file_list(),
+        report_path=paths.report_path,
+    )
+    (paths.log_dir / "docking_run_log.txt").write_text("\n".join(run_log + warnings) + "\n", encoding="utf-8")
+    logger.event("scores_updated", run_mode=mode, status="completed", message="Selectivity scores and figures written.")
+    logger.event("module_completed", run_mode=mode, status="completed", message="Module 4 complete.")
+    logger.state(run_status="completed", jobs_completed=summary.get("target_scores", {}).get("count", 0) + summary.get("decoy_scores", {}).get("count", 0), last_message="Module 4 complete")
+
+    print("\nModule 4 complete: SMN2 docking and HuRDA counter-screening finished.\n")
+    print(f"Run mode: {mode}")
+    print(f"Molecules evaluated: {len(selected)}")
+    print(f"SMN2 target docking results: {paths.output_dir / 'smn2_target_docking_scores.tsv'}")
+    print(f"Decoy docking results: {paths.output_dir / 'decoy_docking_scores.tsv'}")
+    print(f"Selectivity scores: {paths.output_dir / 'molecule_selectivity_scores.tsv'}")
+    print(f"Candidates for Module 5: {paths.output_dir / 'candidates_for_splicing_rescue.tsv'}")
+    print(f"Report: {paths.report_path}")
+    print(f"Figures: {paths.figure_dir}")
+    print(f"Live simulation log: {paths.live_log_file}\n")
+    print("To view live simulation dashboard:")
+    print("streamlit run dashboard/docking_live_app.py")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run SMN2 docking and HuRDA counter-screening.")
+    parser.add_argument("--config", required=True, help="Path to configs/docking_counter_screening.yaml")
+    args = parser.parse_args(argv)
+    try:
+        return run(args.config)
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

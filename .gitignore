@@ -1,10 +1,30 @@
 .venv/
+.DS_Store
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.matplotlib-cache/
 *.fa.fai
 *.fasta.fai
+
+# Local raw datasets and generated scientific outputs.
 data/processed/
+data/raw/genome/
+data/raw/annotations/
+data/raw/molecules/*.smi
+data/raw/molecules/*.smi.gz
+data/raw/molecules/*.txt.gz
+data/raw/molecules/source_downloads/
 data/raw/structures/*.cif
 data/raw/structures/*.pdb
+reports/*.md
+saved_runs/
+
+# Local editor/config backups.
+configs/*.save
+
 figures/target_definition/*.png
+figures/decoy_atlas/*.png
+figures/docking/*.png
+figures/molecule_generation/*.png
+figures/final_scoring/*.png
