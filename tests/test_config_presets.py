@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import yaml
+import pandas as pd
 
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
@@ -14,9 +15,13 @@ from smn2_rescuediff.molecule_generation.config import load_config as load_molec
 from smn2_rescuediff.molecule_generation.config import resolve_paths as resolve_molecule_paths
 from smn2_rescuediff.splicing_rescue.config import load_config as load_splicing_config
 from smn2_rescuediff.splicing_rescue.config import resolve_paths as resolve_splicing_paths
+from smn2_rescuediff.splicing_rescue.confidence_assigner import assign_confidence
 
 
 PRESETS = [
+    "quick_test.yaml",
+    "pilot_real.yaml",
+    "final_rigorous.yaml",
     "module3_quick_test.yaml",
     "module3_pilot_real.yaml",
     "module3_final_rigorous.yaml",
@@ -54,7 +59,14 @@ def test_module3_presets_encode_debug_pilot_and_final_scales():
     assert pilot["model"]["architecture"] == "gru"
     assert pilot["candidate_prioritization"]["max_candidates_to_export_for_docking"] == 1000
     assert final["generation"]["generator_mode"] == "neural_transformer"
-    assert final["training"]["epochs"] == 30
+    assert final["inputs"]["training_smiles"] == [
+        "data/raw/molecules/chembl_training_smiles.smi",
+        "data/raw/molecules/zinc_training_smiles.smi",
+        "data/raw/molecules/rna_ligand_training_smiles.smi",
+    ]
+    assert 10 <= final["training"]["epochs"] <= 20
+    assert 100000 <= final["sampling"]["num_raw_to_generate"] <= 250000
+    assert final["run"]["overwrite_existing"] is False
     assert final["candidate_prioritization"]["max_candidates_to_export_for_docking"] == 50000
 
 
@@ -68,11 +80,18 @@ def test_module4_presets_use_target_only_and_staged_decoy_panels():
     assert target_100["run"]["max_molecules_to_dock"] == 100
     assert target_100["decoy_panel"]["use_decoy_panel"] is False
     assert target_1000["run"]["max_molecules_to_dock"] == 1000
+    assert target_1000["staged_docking"]["stage_name"] == "stage_a_target_all"
+    assert target_1000["run"]["resume_existing_results"] is True
     assert stage1["run"]["run_mode"] == "target_plus_decoy_docking"
-    assert stage1["decoy_panel"]["total_decoys_for_docking"] == 250
+    assert stage1["run"]["max_molecules_to_dock"] == 200
+    assert stage1["decoy_panel"]["total_decoys_for_docking"] == 100
+    assert stage1["staged_docking"]["reuse_prior_target_scores"] is True
     assert stage2["run"]["run_mode"] == "target_plus_decoy_docking"
-    assert stage2["decoy_panel"]["total_decoys_for_docking"] == 1000
+    assert 50 <= stage2["run"]["max_molecules_to_dock"] <= 100
+    assert 500 <= stage2["decoy_panel"]["total_decoys_for_docking"] <= 1000
     assert stage2["decoy_panel"]["total_decoys_for_docking"] < 180000
+    assert stage2["decoy_panel"]["include_categories"][0] == "smn2_like_hard_decoy"
+    assert stage2["decoy_panel"]["min_biological_weight"] >= 0.6
 
 
 def test_module5_presets_reject_dry_run_inputs_and_encode_confidence_context():
@@ -85,6 +104,35 @@ def test_module5_presets_reject_dry_run_inputs_and_encode_confidence_context():
     assert decoy_final["run"]["allow_dry_run_inputs"] is False
     assert decoy_final["splicing_rescue_scoring"]["score_mode"] == "hybrid_pose_and_feature"
     assert decoy_final["confidence"]["target_plus_decoy_docking_confidence"] == "moderate"
+    assert decoy_final["confidence"]["large_decoy_pose_ablation_confidence"] == "high"
+    assert decoy_final["ablation_analysis"]["enabled"] is True
+
+
+def test_module5_high_confidence_requires_large_decoy_panel_pose_and_ablation():
+    config = load_splicing_config(_preset("module5_decoy_final.yaml"))
+    rows = pd.DataFrame(
+        [
+            {"run_mode": "dry_run", "is_dry_run_input": True, "num_decoys_with_valid_scores": 750, "pose_analysis_status": "pose_based_proxy"},
+            {"run_mode": "target_only_docking", "is_dry_run_input": False, "num_decoys_with_valid_scores": 0, "pose_analysis_status": "pose_based_proxy"},
+            {"run_mode": "target_plus_decoy_docking", "is_dry_run_input": False, "num_decoys_with_valid_scores": 100, "pose_analysis_status": "missing_pose"},
+            {"run_mode": "target_plus_decoy_docking", "is_dry_run_input": False, "num_decoys_with_valid_scores": 750, "pose_analysis_status": "pose_based_proxy"},
+        ]
+    )
+    confidence = assign_confidence(rows, config, used_dry_run_inputs=False).tolist()
+    assert confidence == ["very_low", "low", "low", "high"]
+
+
+def test_pipeline_preset_manifests_group_module_configs():
+    quick = yaml.safe_load(_preset("quick_test.yaml").read_text(encoding="utf-8"))
+    pilot = yaml.safe_load(_preset("pilot_real.yaml").read_text(encoding="utf-8"))
+    final = yaml.safe_load(_preset("final_rigorous.yaml").read_text(encoding="utf-8"))
+
+    assert quick["preset_name"] == "quick_test"
+    assert pilot["preset_name"] == "pilot_real"
+    assert final["preset_name"] == "final_rigorous"
+    assert final["module3_config"] == "configs/presets/module3_final_rigorous.yaml"
+    assert "stage_c_top75_x750_hard_decoys" in final["module4_configs"]
+    assert final["recommended_counts"]["maximum_direct_hurda_decoys_to_dock"] < 180000
 
 
 def test_nested_preset_paths_resolve_from_project_root():
@@ -100,5 +148,5 @@ def test_nested_preset_paths_resolve_from_project_root():
     assert docking_paths.project_root == PROJECT
     assert splicing_paths.project_root == PROJECT
     assert molecule_paths.output_dir == PROJECT / "data" / "processed" / "molecule_generation"
-    assert docking_paths.output_dir == PROJECT / "data" / "processed" / "docking"
+    assert docking_paths.output_dir == PROJECT / "data" / "processed" / "docking" / "quick_target_100"
     assert splicing_paths.output_dir == PROJECT / "data" / "processed" / "final_scoring"

@@ -237,7 +237,7 @@ The score combines beneficial landmark proximity, U1-support-region proximity, e
 
 ## Confidence Levels
 
-Dry-run inputs receive very low confidence. Target-only docking receives low confidence. Target-plus-decoy docking receives moderate confidence. Pose-based scoring can increase confidence when real docking is used, while missing pose evidence decreases confidence.
+Dry-run inputs receive very low confidence. Real target-only docking receives low confidence because no off-target RNA counter-screen has been performed. Real target-plus-small-decoy-panel docking receives moderate confidence. High confidence requires real target docking, a large hard-decoy panel with valid decoy scores, pose-based scoring evidence, and ablation analysis. These confidence labels are still computational evidence labels, not experimental validation.
 
 ## Warnings
 

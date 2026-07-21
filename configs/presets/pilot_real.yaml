@@ -1,0 +1,21 @@
+project_name: SMN2-RescueDiff
+preset_name: pilot_real
+preset_type: modules_3_to_5_pipeline
+purpose: Small real run for checking training, ligand preparation, Vina setup, and staged HuRDA counter-screen behavior.
+
+module3_config: configs/presets/module3_pilot_real.yaml
+module4_configs:
+  - configs/presets/module4_target_100.yaml
+  - configs/presets/module4_decoy_stage1.yaml
+module5_config: configs/presets/module5_decoy_final.yaml
+
+recommended_use:
+  molecule_generation: compact neural GRU pilot
+  docking: target-only triage followed by a small hard-decoy panel
+  final_scoring: cautious pilot SRSI ranking
+
+scientific_status:
+  dry_run_results_are_scientific: false
+  intended_for_final_ranking: false
+  expected_confidence: low_to_moderate
+

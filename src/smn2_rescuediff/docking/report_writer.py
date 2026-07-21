@@ -33,6 +33,7 @@ def build_summary(
         "project": config.get("project_name", "SMN2-RescueDiff"),
         "module": config.get("module_name", "SMN2 Target Docking and HuRDA Off-Target Counter-Screening"),
         "run_mode": config.get("run", {}).get("run_mode", "dry_run"),
+        "stage_name": config.get("staged_docking", {}).get("stage_name", "none"),
         "dry_run_warning": "DRY-RUN SIMULATION ONLY — NOT SCIENTIFIC DOCKING RESULTS" if config.get("run", {}).get("run_mode") == "dry_run" else "",
         "molecules_evaluated": int(len(selected_molecules)),
         "target_scores": {
@@ -94,6 +95,8 @@ This module estimates computational target binding and off-target RNA selectivit
 ## Run Mode
 
 Run mode: `{run_mode}`
+
+Stage name: `{summary.get("stage_name", "none")}`
 
 ## Receptor Preparation Summary
 
@@ -172,4 +175,3 @@ streamlit run dashboard/docking_live_app.py
 Module 5 will be Predicted Splicing-Rescue Scoring. Module 4 addresses binding and selectivity; Module 5 will evaluate whether top molecules bind in a position predicted to support SMN2 exon 7 inclusion, U1 snRNA recognition, and splice-site stabilization.
 """
     Path(report_path).write_text(report, encoding="utf-8")
-

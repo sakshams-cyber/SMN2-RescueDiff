@@ -11,24 +11,32 @@ inputs:
   raw_structure_dir: data/raw/structures
 
 outputs:
-  output_dir: data/processed/docking
-  ligand_dir: data/processed/docking/ligands
+  output_dir: data/processed/docking/stage_b_decoy_100
+  ligand_dir: data/processed/docking/stage_b_decoy_100/ligands
   receptor_dir: data/processed/docking/receptors
-  pose_dir: data/processed/docking/poses
-  log_dir: data/processed/docking/logs
-  simulation_dir: data/processed/docking/simulation
+  pose_dir: data/processed/docking/stage_b_decoy_100/poses
+  log_dir: data/processed/docking/stage_b_decoy_100/logs
+  simulation_dir: data/processed/docking/stage_b_decoy_100/simulation
   report_path: reports/docking_counter_screening_report.md
   figure_dir: figures/docking
 
 run:
   random_seed: 42
   run_mode: target_plus_decoy_docking
-  max_molecules_to_dock: 100
+  max_molecules_to_dock: 200
   require_real_docking_for_scientific_results: true
   allow_dry_run_simulation: true
   parallel_jobs: 1
-  resume_existing_results: false
+  resume_existing_results: true
   save_intermediate_every_n_jobs: 25
+
+staged_docking:
+  enabled: true
+  stage_name: stage_b_top200_x100_hard_decoys
+  select_top_from_target_scores: true
+  target_scores_path: data/processed/docking/stage_a_target/smn2_target_docking_scores.tsv
+  top_molecules_from_target_scores: 200
+  reuse_prior_target_scores: true
 
 docking_engine:
   engine: vina
@@ -62,20 +70,27 @@ ligand_preparation:
 
 decoy_panel:
   use_decoy_panel: true
-  total_decoys_for_docking: 250
+  total_decoys_for_docking: 100
+  include_categories:
+    - smn2_like_hard_decoy
+    - five_prime_splice_site
+    - three_prime_splice_site
+  min_smn2_similarity: 0.45
+  min_biological_weight: 0.8
   category_targets:
-    smn2_like_hard_decoy: 100
-    five_prime_splice_site: 50
-    three_prime_splice_site: 35
-    exonic_regulatory: 20
-    intronic_regulatory: 20
-    scrambled_smn2_control: 5
-    mutated_smn2_control: 5
-    random_bias_matched: 15
+    smn2_like_hard_decoy: 60
+    five_prime_splice_site: 25
+    three_prime_splice_site: 15
+    exonic_regulatory: 0
+    intronic_regulatory: 0
+    scrambled_smn2_control: 0
+    mutated_smn2_control: 0
+    random_bias_matched: 0
   prioritize_high_similarity_decoys: true
   prioritize_high_biological_weight: true
   allow_sequence_only_decoy_panel: true
-  decoy_receptor_mode: sequence_panel_only
+  decoy_receptor_mode: prepared_pdbqt_if_available
+  decoy_receptor_file_column: decoy_receptor_file
 
 selectivity_scoring:
   target_score_column: target_deltaG

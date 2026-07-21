@@ -43,6 +43,17 @@ def select_decoy_panel(decoys: pd.DataFrame, config: dict[str, Any]) -> pd.DataF
         if col not in work.columns:
             work[col] = 0.0
         work[col] = pd.to_numeric(work[col], errors="coerce").fillna(0.0)
+    include_categories = panel_cfg.get("include_categories") or []
+    if include_categories:
+        work = work[work["decoy_category"].isin(include_categories)].copy()
+    min_similarity = panel_cfg.get("min_smn2_similarity")
+    if min_similarity is not None:
+        work = work[work["smn2_similarity_score"] >= float(min_similarity)].copy()
+    min_weight = panel_cfg.get("min_biological_weight")
+    if min_weight is not None:
+        work = work[work["biological_weight"] >= float(min_weight)].copy()
+    if work.empty:
+        raise ValueError("No HuRDA decoys remain after configured panel filters.")
     selected_frames: list[pd.DataFrame] = []
     for category, count in category_targets.items():
         subset = work[work["decoy_category"] == category].copy()
@@ -66,10 +77,16 @@ def select_decoy_panel(decoys: pd.DataFrame, config: dict[str, Any]) -> pd.DataF
         selected = pd.concat([selected, fill], ignore_index=True) if not fill.empty else selected
     selected = selected.head(total).copy()
     selected["selected_for_docking"] = True
-    selected["decoy_receptor_file"] = "NA"
-    selected["notes"] = "Sequence-based decoy panel; receptor structures are not assumed at this stage."
+    receptor_column = str(panel_cfg.get("decoy_receptor_file_column", "decoy_receptor_file"))
+    if receptor_column in selected.columns:
+        selected["decoy_receptor_file"] = selected[receptor_column].fillna("NA").astype(str)
+    else:
+        selected["decoy_receptor_file"] = "NA"
+    selected["notes"] = (
+        "Hard decoy panel selected by category, SMN2 similarity, biological weight, and bias-match score. "
+        "Rows without decoy receptor PDBQT files remain sequence-only counter-screen candidates."
+    )
     for column in PANEL_COLUMNS:
         if column not in selected.columns:
             selected[column] = "NA"
     return selected[PANEL_COLUMNS]
-

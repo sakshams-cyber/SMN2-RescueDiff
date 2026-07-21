@@ -10,7 +10,7 @@ import pandas as pd
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
-from smn2_rescuediff.docking.cli import _ligand_file_for, run
+from smn2_rescuediff.docking.cli import _filter_molecules_from_stage_scores, _ligand_file_for, _prior_stage_target_scores, run
 from smn2_rescuediff.docking.config import load_config
 from smn2_rescuediff.docking.decoy_panel_selector import select_decoy_panel
 from smn2_rescuediff.docking.dry_run_docker import dry_run_target_score
@@ -158,6 +158,63 @@ def test_decoy_panel_selector_respects_category_targets(tmp_path):
     )
     assert len(panel) == 4
     assert (panel["decoy_category"] == "smn2_like_hard_decoy").sum() >= 2
+
+
+def test_decoy_panel_selector_filters_hard_decoys_and_preserves_receptor_file(tmp_path):
+    decoys = pd.read_csv(_decoys(tmp_path / "decoys.tsv"), sep="\t")
+    decoys["decoy_receptor_file"] = [str(tmp_path / f"decoy_{idx}.pdbqt") for idx in range(len(decoys))]
+    panel = select_decoy_panel(
+        decoys,
+        {
+            "decoy_panel": {
+                "use_decoy_panel": True,
+                "total_decoys_for_docking": 2,
+                "include_categories": ["smn2_like_hard_decoy", "five_prime_splice_site"],
+                "min_smn2_similarity": 0.75,
+                "min_biological_weight": 0.5,
+                "category_targets": {"smn2_like_hard_decoy": 1, "five_prime_splice_site": 1},
+                "decoy_receptor_file_column": "decoy_receptor_file",
+            }
+        },
+    )
+    assert len(panel) == 2
+    assert set(panel["decoy_category"]).issubset({"smn2_like_hard_decoy", "five_prime_splice_site"})
+    assert panel["smn2_similarity_score"].min() >= 0.75
+    assert panel["decoy_receptor_file"].str.endswith(".pdbqt").all()
+
+
+def test_staged_docking_reuses_prior_target_scores(tmp_path):
+    molecules = pd.DataFrame(
+        [
+            {"molecule_id": "Mol_001", "canonical_smiles": "CCO"},
+            {"molecule_id": "Mol_002", "canonical_smiles": "CCN"},
+            {"molecule_id": "Mol_003", "canonical_smiles": "CCC"},
+        ]
+    )
+    score_path = tmp_path / "stage_a" / "smn2_target_docking_scores.tsv"
+    score_path.parent.mkdir()
+    pd.DataFrame(
+        [
+            {"molecule_id": "Mol_001", "canonical_smiles": "CCO", "target_id": "SMN2_exon7", "target_name": "target", "receptor_file": "r.pdbqt", "ligand_file": "l1.pdbqt", "dock_status": "completed", "target_deltaG": -6.0, "best_pose_rank": 1, "num_poses": 1, "pose_file": "p1.pdbqt", "engine": "vina", "run_mode": "target_only_docking", "is_dry_run_score": False, "notes": "stage a"},
+            {"molecule_id": "Mol_002", "canonical_smiles": "CCN", "target_id": "SMN2_exon7", "target_name": "target", "receptor_file": "r.pdbqt", "ligand_file": "l2.pdbqt", "dock_status": "completed", "target_deltaG": -8.5, "best_pose_rank": 1, "num_poses": 1, "pose_file": "p2.pdbqt", "engine": "vina", "run_mode": "target_only_docking", "is_dry_run_score": False, "notes": "stage a"},
+            {"molecule_id": "Mol_003", "canonical_smiles": "CCC", "target_id": "SMN2_exon7", "target_name": "target", "receptor_file": "r.pdbqt", "ligand_file": "l3.pdbqt", "dock_status": "completed", "target_deltaG": -7.0, "best_pose_rank": 1, "num_poses": 1, "pose_file": "p3.pdbqt", "engine": "vina", "run_mode": "target_only_docking", "is_dry_run_score": False, "notes": "stage a"},
+        ]
+    ).to_csv(score_path, sep="\t", index=False)
+    config = {
+        "run": {"max_molecules_to_dock": 2},
+        "staged_docking": {
+            "select_top_from_target_scores": True,
+            "target_scores_path": str(score_path),
+            "top_molecules_from_target_scores": 2,
+            "reuse_prior_target_scores": True,
+        },
+    }
+    selected = _filter_molecules_from_stage_scores(molecules, config, tmp_path)
+    assert selected["molecule_id"].tolist() == ["Mol_002", "Mol_003"]
+    prior = _prior_stage_target_scores(config, tmp_path, selected, "target_plus_decoy_docking")
+    assert prior["molecule_id"].tolist() == ["Mol_002", "Mol_003"]
+    assert prior["run_mode"].tolist() == ["target_plus_decoy_docking", "target_plus_decoy_docking"]
+    assert prior["is_dry_run_score"].tolist() == [False, False]
 
 
 def test_dry_run_docker_deterministic_scores():

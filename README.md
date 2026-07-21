@@ -452,7 +452,13 @@ Docking scores are computational predictions. Predicted splicing-rescue scores a
 
 ## Reproducible Config Presets
 
-Preset configs live in `configs/presets/`. They are full YAML files, not partial overlays, so each one can be passed directly to the corresponding module CLI.
+Preset configs live in `configs/presets/`. Module-specific presets are full YAML files that can be passed directly to each CLI. The three top-level preset manifests, `quick_test.yaml`, `pilot_real.yaml`, and `final_rigorous.yaml`, document which Module 3-5 configs belong together for a reproducible run.
+
+### Preset Meanings
+
+- `quick_test`: pipeline debugging only. Use this to check file paths, table schemas, dashboards, plotting, and report generation. Dry-run or tiny toy outputs are not scientific results.
+- `pilot_real`: small real run. Use this to verify that real training data, ligand preparation, receptor PDBQT files, Vina, and staged output paths work before spending substantial compute.
+- `final_rigorous`: final science-fair computational run. Use multi-source molecule training, real target docking, staged hard-decoy counter-screening, pose-aware scoring, ablation analysis, and final candidate reporting.
 
 ### Module 3 Presets
 
@@ -464,7 +470,13 @@ PYTHONPATH=src python3 -m smn2_rescuediff.molecule_generation.cli --config confi
 
 - `module3_quick_test.yaml`: pipeline debugging only. Uses the deterministic debug generator, tiny sampling, no neural training, and no scientific interpretation.
 - `module3_pilot_real.yaml`: small real run. Uses a compact neural GRU model to test real training, generation, filtering, and export behavior before spending more compute.
-- `module3_final_rigorous.yaml`: final science-fair run. Uses the Transformer generator, larger sampling, RL fine-tuning, and a larger docking export set.
+- `module3_final_rigorous.yaml`: final science-fair run. Accepts ChEMBL, ZINC, and RNA-ligand SMILES files, trains a Transformer for 15 epochs, generates 250,000 raw molecular strings, writes a run-specific folder under `data/processed/molecule_generation/runs/module3_final_rigorous/`, and exports `generated_molecules_for_docking.tsv`.
+
+Recommended Module 3 scale:
+
+- Quick test: about 500 raw generated strings.
+- Pilot real: about 25,000 raw generated strings and up to 1,000 docking exports.
+- Final rigorous: 100,000-250,000 raw generated strings and a large filtered docking export. The current preset uses 250,000 raw strings and up to 50,000 docking exports.
 
 ### Module 4 Presets
 
@@ -476,13 +488,21 @@ PYTHONPATH=src python3 -m smn2_rescuediff.docking.cli --config configs/presets/m
 ```
 
 - `module4_target_100.yaml`: target-only Vina docking for the top 100 candidates.
-- `module4_target_1000.yaml`: target-only Vina docking for up to 1,000 candidates.
-- `module4_decoy_stage1.yaml`: first staged HuRDA panel, emphasizing SMN2-like hard decoys and splice-site decoys.
-- `module4_decoy_stage2.yaml`: larger staged HuRDA panel for stronger counter-screening after target-only triage.
+- `module4_target_1000.yaml`: Stage A target-only Vina docking for up to 1,000 candidates. This can be raised into the 1,000-5,000 range if compute allows.
+- `module4_decoy_stage1.yaml`: Stage B decoy docking for the top 200 Stage A molecules against 100 hard HuRDA decoys.
+- `module4_decoy_stage2.yaml`: Stage C decoy docking for the top 75 Stage A molecules against 750 hard HuRDA decoys.
 
 Dry-run docking results are not scientific results. They are useful for pipeline debugging, dashboard checks, and file-format validation only. Real target-only docking provides low-confidence prioritization because it estimates SMN2 target affinity without a meaningful off-target RNA counter-screen. Real target-plus-decoy docking provides stronger computational confidence because candidates are penalized when they also score well against staged HuRDA decoy panels.
 
-Never dock all 180,000 HuRDA decoys directly. Use staged hard-decoy panels: start with target-only docking, advance a smaller candidate set into `module4_decoy_stage1.yaml`, then use `module4_decoy_stage2.yaml` for the most promising candidates. The full HuRDA atlas is a source for panel selection and counter-screen design, not a single brute-force docking job.
+Recommended Module 4 scale:
+
+- Stage A: target dock all selected molecules, usually 1,000-5,000 final candidates.
+- Stage B: decoy dock the top 200 target binders against about 100 hard decoys.
+- Stage C: decoy dock the top 50-100 candidates against about 500-1,000 hard decoys.
+
+The staged presets use `resume_existing_results: true`, write failed jobs to `failed_docking_jobs.tsv`, and keep each stage in its own output folder so reruns do not delete existing outputs. Real Vina target and decoy scores are written with `is_dry_run_score=false`; dry-run scores remain explicitly labeled.
+
+Never dock all 180,000 HuRDA decoys directly. Use staged hard-decoy panels selected by HuRDA category, SMN2 similarity, biological weight, and bias-match score. This is scientifically and computationally stronger than brute force because it concentrates Vina time on the most SMN2-relevant off-target motifs, avoids spending most compute on easy negatives, and still preserves the full HuRDA atlas as the reproducible source for panel selection.
 
 ### Module 5 Presets
 
@@ -493,6 +513,23 @@ PYTHONPATH=src python3 -m smn2_rescuediff.splicing_rescue.cli --config configs/p
 
 - `module5_target_only_final.yaml`: final scoring from real target-only docking inputs. Dry-run inputs are rejected, and selectivity evidence is down-weighted because decoy docking was not performed.
 - `module5_decoy_final.yaml`: final scoring from real target-plus-decoy docking inputs. Dry-run inputs are rejected, and HuRDA selectivity contributes fully to SRSI ranking.
+
+Module 5 confidence labels:
+
+- `very_low`: dry-run or simulated docking inputs.
+- `low`: real target-only docking.
+- `moderate`: real target docking plus a small hard-decoy panel.
+- `high`: real target docking plus a large hard-decoy panel, pose-based scoring, and ablation analysis.
+
+To reproduce final results, run Module 1 and Module 2 first, run Module 3 with `module3_final_rigorous.yaml`, run Module 4 Stage A with `module4_target_1000.yaml`, run Stage B with `module4_decoy_stage1.yaml`, run Stage C with `module4_decoy_stage2.yaml`, then run Module 5 with `module5_decoy_final.yaml`. Keep the generated `*_config_used.yaml`, summary JSON files, failed-job logs, and final reports with the result archive.
+
+Runtime warnings to take seriously:
+
+- Missing or toy SMILES data means molecule generation is not final-science evidence.
+- Missing ligand PDBQT files means Vina cannot run; SDF files are never valid Vina ligand inputs.
+- Missing receptor PDBQT files means real docking cannot run for that target.
+- Sequence-only HuRDA decoys are useful for panel design, but real decoy docking requires prepared decoy receptor PDBQT files.
+- Dry-run outputs are for software checks only and must not be mixed into final scientific claims.
 
 ## Tests
 

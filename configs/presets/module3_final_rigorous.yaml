@@ -4,6 +4,8 @@ module_name: Deep Neural Molecular Generation Model
 inputs:
   training_smiles:
     - data/raw/molecules/chembl_training_smiles.smi
+    - data/raw/molecules/zinc_training_smiles.smi
+    - data/raw/molecules/rna_ligand_training_smiles.smi
   optional_context:
     smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
     smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
@@ -70,7 +72,7 @@ model:
 
 training:
   enabled: true
-  epochs: 30
+  epochs: 15
   batch_size: 128
   learning_rate: 0.0005
   weight_decay: 0.00001
@@ -81,7 +83,7 @@ training:
   resume_from_checkpoint: null
 
 sampling:
-  num_raw_to_generate: 500000
+  num_raw_to_generate: 250000
   batch_size_generate: 2000
   temperature: 0.8
   top_k: 50

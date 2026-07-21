@@ -13,12 +13,12 @@ inputs:
   generated_molecules_for_docking: data/processed/molecule_generation/generated_molecules_for_docking.tsv
   molecule_generation_summary: data/processed/molecule_generation/generated_molecule_summary.json
 
-  target_docking_scores: data/processed/docking/smn2_target_docking_scores.tsv
-  decoy_docking_scores: data/processed/docking/decoy_docking_scores.tsv
-  molecule_selectivity_scores: data/processed/docking/molecule_selectivity_scores.tsv
-  candidates_for_splicing_rescue: data/processed/docking/candidates_for_splicing_rescue.tsv
-  docking_summary: data/processed/docking/docking_summary.json
-  pose_dir: data/processed/docking/poses
+  target_docking_scores: data/processed/docking/stage_c_decoy_750/smn2_target_docking_scores.tsv
+  decoy_docking_scores: data/processed/docking/stage_c_decoy_750/decoy_docking_scores.tsv
+  molecule_selectivity_scores: data/processed/docking/stage_c_decoy_750/molecule_selectivity_scores.tsv
+  candidates_for_splicing_rescue: data/processed/docking/stage_c_decoy_750/candidates_for_splicing_rescue.tsv
+  docking_summary: data/processed/docking/stage_c_decoy_750/docking_summary.json
+  pose_dir: data/processed/docking/stage_c_decoy_750/poses
 
 outputs:
   output_dir: data/processed/final_scoring
@@ -112,6 +112,10 @@ confidence:
   dry_run_confidence: very_low
   target_only_docking_confidence: low
   target_plus_decoy_docking_confidence: moderate
+  target_plus_small_decoy_panel_confidence: moderate
+  large_decoy_pose_ablation_confidence: high
+  moderate_confidence_min_decoys_with_valid_scores: 100
+  high_confidence_min_decoys_with_valid_scores: 500
   pose_based_scoring_confidence_bonus: true
   missing_pose_confidence_penalty: true
 

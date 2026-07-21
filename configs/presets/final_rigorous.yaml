@@ -1,0 +1,28 @@
+project_name: SMN2-RescueDiff
+preset_name: final_rigorous
+preset_type: modules_3_to_5_pipeline
+purpose: Final science-fair computational run with multi-source molecule generation, real Vina target docking, staged hard-decoy counter-screening, pose scoring, and ablation analysis.
+
+module3_config: configs/presets/module3_final_rigorous.yaml
+module4_configs:
+  stage_a_target_all: configs/presets/module4_target_1000.yaml
+  stage_b_top200_x100_hard_decoys: configs/presets/module4_decoy_stage1.yaml
+  stage_c_top75_x750_hard_decoys: configs/presets/module4_decoy_stage2.yaml
+module5_config: configs/presets/module5_decoy_final.yaml
+
+recommended_counts:
+  module3_raw_molecules_to_generate: 250000
+  module3_candidates_exported_for_docking: 50000
+  stage_a_target_docking_molecules: 1000
+  stage_b_decoy_docking_molecules: 200
+  stage_b_hard_decoys: 100
+  stage_c_decoy_docking_molecules: 75
+  stage_c_hard_decoys: 750
+  maximum_direct_hurda_decoys_to_dock: 1000
+
+scientific_status:
+  dry_run_results_are_scientific: false
+  intended_for_final_ranking: true
+  expected_confidence: moderate_to_high_when_real_decoy_scores_and_pose_scoring_are_available
+  limitation: Computational prioritization only; no binding, toxicity, splicing rescue, safety, or therapeutic activity is proven.
+

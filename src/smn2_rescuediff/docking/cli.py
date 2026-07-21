@@ -69,6 +69,57 @@ def _write(df: pd.DataFrame, path: str | Path) -> None:
     df.to_csv(path, sep="\t", index=False)
 
 
+def _read_existing_table(path: str | Path, columns: list[str]) -> pd.DataFrame:
+    p = Path(path)
+    if not p.exists():
+        return pd.DataFrame(columns=columns)
+    existing = pd.read_csv(p, sep="\t")
+    for column in columns:
+        if column not in existing.columns:
+            existing[column] = "NA"
+    return existing[columns]
+
+
+def _filter_molecules_from_stage_scores(molecules: pd.DataFrame, config: dict[str, Any], project_root: Path) -> pd.DataFrame:
+    """Restrict molecules to the top prior-stage target scores for staged docking."""
+    stage_cfg = config.get("staged_docking", {})
+    if not bool(stage_cfg.get("select_top_from_target_scores", False)):
+        return molecules
+    score_path = Path(str(stage_cfg.get("target_scores_path", "data/processed/docking/smn2_target_docking_scores.tsv")))
+    score_path = score_path if score_path.is_absolute() else project_root / score_path
+    if not score_path.exists():
+        raise FileNotFoundError(f"Staged docking target-score input is missing: {score_path}")
+    scores = pd.read_csv(score_path, sep="\t")
+    if "molecule_id" not in scores or "target_deltaG" not in scores:
+        raise ValueError(f"Staged docking target-score file must contain molecule_id and target_deltaG: {score_path}")
+    top_n = int(stage_cfg.get("top_molecules_from_target_scores", config.get("run", {}).get("max_molecules_to_dock", 100)))
+    ranked = scores.copy()
+    ranked["_target_deltaG"] = pd.to_numeric(ranked["target_deltaG"], errors="coerce")
+    ranked = ranked[ranked["_target_deltaG"].notna()].sort_values("_target_deltaG", ascending=True).head(top_n)
+    molecule_order = {molecule_id: idx for idx, molecule_id in enumerate(ranked["molecule_id"].astype(str).tolist())}
+    selected = molecules[molecules["molecule_id"].astype(str).isin(molecule_order)].copy()
+    selected["_stage_rank"] = selected["molecule_id"].astype(str).map(molecule_order)
+    return selected.sort_values("_stage_rank").drop(columns=["_stage_rank"]).reset_index(drop=True)
+
+
+def _prior_stage_target_scores(config: dict[str, Any], project_root: Path, selected: pd.DataFrame, mode: str) -> pd.DataFrame:
+    """Load prior target-only scores for Stage B/C decoy runs."""
+    stage_cfg = config.get("staged_docking", {})
+    if not bool(stage_cfg.get("reuse_prior_target_scores", False)):
+        return pd.DataFrame(columns=TARGET_COLUMNS)
+    score_path = Path(str(stage_cfg.get("target_scores_path", "data/processed/docking/smn2_target_docking_scores.tsv")))
+    score_path = score_path if score_path.is_absolute() else project_root / score_path
+    existing = _read_existing_table(score_path, TARGET_COLUMNS)
+    if existing.empty:
+        raise FileNotFoundError(f"No prior Stage A target scores are available for staged docking: {score_path}")
+    selected_ids = set(selected["molecule_id"].astype(str))
+    existing = existing[existing["molecule_id"].astype(str).isin(selected_ids)].copy()
+    existing = existing[existing["dock_status"] == "completed"].copy()
+    existing["run_mode"] = mode
+    existing["notes"] = existing["notes"].astype(str) + " Reused prior-stage target score for staged decoy docking."
+    return existing[TARGET_COLUMNS]
+
+
 def _ligand_file_for(molecule_id: str, ligand_summary: pd.DataFrame, require_pdbqt: bool = False) -> str:
     row = ligand_summary[ligand_summary["molecule_id"] == molecule_id]
     if row.empty:
@@ -203,6 +254,7 @@ def run(config_path: str | Path) -> int:
     else:
         log("Loading Module 3 molecule library.")
         molecules = load_molecules(paths.molecules_filtered)
+        molecules = _filter_molecules_from_stage_scores(molecules, config, paths.project_root)
         selected = select_molecules_for_docking(
             molecules,
             int(config.get("run", {}).get("max_molecules_to_dock", 500)),
@@ -241,6 +293,33 @@ def run(config_path: str | Path) -> int:
         target_rows: list[dict[str, Any]] = []
         decoy_rows: list[dict[str, Any]] = []
         failed_rows: list[dict[str, Any]] = []
+        resume = bool(config.get("run", {}).get("resume_existing_results", False))
+        completed_target_molecules: set[str] = set()
+        completed_decoy_pairs: set[tuple[str, str]] = set()
+        prior_targets = _prior_stage_target_scores(config, paths.project_root, selected, mode)
+        if not prior_targets.empty:
+            target_rows.extend(prior_targets.to_dict(orient="records"))
+            completed_target_molecules.update(prior_targets["molecule_id"].astype(str).tolist())
+            log(f"Reusing {len(prior_targets)} prior Stage A target scores for this staged decoy run.")
+        if resume:
+            existing_targets = _read_existing_table(paths.output_dir / "smn2_target_docking_scores.tsv", TARGET_COLUMNS)
+            existing_decoys = _read_existing_table(paths.output_dir / "decoy_docking_scores.tsv", DECOY_COLUMNS)
+            existing_failed = _read_existing_table(paths.log_dir / "failed_docking_jobs.tsv", ["molecule_id", "target_id", "status", "notes"])
+            already_loaded_targets = {str(row["molecule_id"]) for row in target_rows}
+            existing_targets = existing_targets[~existing_targets["molecule_id"].astype(str).isin(already_loaded_targets)].copy()
+            target_rows.extend(existing_targets.to_dict(orient="records"))
+            decoy_rows.extend(existing_decoys.to_dict(orient="records"))
+            failed_rows.extend(existing_failed.to_dict(orient="records"))
+            if not existing_targets.empty:
+                completed_target_molecules.update(existing_targets.loc[existing_targets["dock_status"] == "completed", "molecule_id"].astype(str))
+            if not existing_decoys.empty:
+                done = existing_decoys[existing_decoys["dock_status"] == "completed"]
+                completed_decoy_pairs = set(zip(done["molecule_id"].astype(str), done["decoy_id"].astype(str)))
+            if completed_target_molecules or completed_decoy_pairs:
+                log(
+                    "Resuming existing docking results: "
+                    f"{len(completed_target_molecules)} completed target jobs and {len(completed_decoy_pairs)} completed decoy jobs will be skipped."
+                )
         run_decoys = mode in {"dry_run", "target_plus_decoy_docking"}
         total_jobs = len(selected) * (1 + (len(decoy_panel) if run_decoys else 0))
         completed_jobs = 0
@@ -248,39 +327,21 @@ def run(config_path: str | Path) -> int:
 
         for _, molecule in selected.iterrows():
             ligand_file = _ligand_file_for(str(molecule["molecule_id"]), ligand_summary, require_pdbqt=mode != "dry_run")
-            completed_jobs += 1
-            logger.event(
-                "job_started",
-                run_mode=mode,
-                molecule_id=molecule["molecule_id"],
-                canonical_smiles=molecule.get("canonical_smiles"),
-                target_type="SMN2_target",
-                target_id="SMN2_exon7",
-                job_index=completed_jobs,
-                total_jobs=total_jobs,
-                status="running",
-                message=f"Docking {molecule['molecule_id']} against SMN2 target",
-            )
-            try:
-                if mode == "dry_run":
-                    result = dry_run_target_score(molecule, seed)
-                    receptor_file = "NA"
-                else:
-                    pose_file = str(paths.pose_dir / f"{molecule['molecule_id']}_smn2_out.pdbqt")
-                    validate_vina_input_files(str(paths.smn2_receptor_file), ligand_file)
-                    result = run_vina(
-                        receptor_file=str(paths.smn2_receptor_file),
-                        ligand_file=ligand_file,
-                        pose_file=pose_file,
-                        config=config,
-                    )
-                    receptor_file = str(paths.smn2_receptor_file)
-                target_rows.append(_target_row(molecule, ligand_file, receptor_file, result, mode))
-                score = result.delta_g if isinstance(result.delta_g, float) else None
-                if score is not None:
-                    best_target = score if best_target is None else min(best_target, score)
+            molecule_id = str(molecule["molecule_id"])
+            if molecule_id in completed_target_molecules:
                 logger.event(
-                    "job_completed",
+                    "job_skipped",
+                    run_mode=mode,
+                    molecule_id=molecule_id,
+                    target_type="SMN2_target",
+                    target_id="SMN2_exon7",
+                    status="completed",
+                    message=f"Skipped completed SMN2 target docking for {molecule_id}.",
+                )
+            else:
+                completed_jobs += 1
+                logger.event(
+                    "job_started",
                     run_mode=mode,
                     molecule_id=molecule["molecule_id"],
                     canonical_smiles=molecule.get("canonical_smiles"),
@@ -288,14 +349,44 @@ def run(config_path: str | Path) -> int:
                     target_id="SMN2_exon7",
                     job_index=completed_jobs,
                     total_jobs=total_jobs,
-                    status=result.status,
-                    current_score=result.delta_g if isinstance(result.delta_g, float) else None,
-                    best_target_score=best_target,
-                    message=f"Completed SMN2 target docking for {molecule['molecule_id']}",
+                    status="running",
+                    message=f"Docking {molecule['molecule_id']} against SMN2 target",
                 )
-            except Exception as exc:
-                failed_rows.append({"molecule_id": molecule["molecule_id"], "target_id": "SMN2_exon7", "status": "failed", "notes": str(exc)})
-                logger.event("job_failed", run_mode=mode, molecule_id=molecule["molecule_id"], target_type="SMN2_target", target_id="SMN2_exon7", status="failed", message=str(exc))
+                try:
+                    if mode == "dry_run":
+                        result = dry_run_target_score(molecule, seed)
+                        receptor_file = "NA"
+                    else:
+                        pose_file = str(paths.pose_dir / f"{molecule['molecule_id']}_smn2_out.pdbqt")
+                        validate_vina_input_files(str(paths.smn2_receptor_file), ligand_file)
+                        result = run_vina(
+                            receptor_file=str(paths.smn2_receptor_file),
+                            ligand_file=ligand_file,
+                            pose_file=pose_file,
+                            config=config,
+                        )
+                        receptor_file = str(paths.smn2_receptor_file)
+                    target_rows.append(_target_row(molecule, ligand_file, receptor_file, result, mode))
+                    score = result.delta_g if isinstance(result.delta_g, float) else None
+                    if score is not None:
+                        best_target = score if best_target is None else min(best_target, score)
+                    logger.event(
+                        "job_completed",
+                        run_mode=mode,
+                        molecule_id=molecule["molecule_id"],
+                        canonical_smiles=molecule.get("canonical_smiles"),
+                        target_type="SMN2_target",
+                        target_id="SMN2_exon7",
+                        job_index=completed_jobs,
+                        total_jobs=total_jobs,
+                        status=result.status,
+                        current_score=result.delta_g if isinstance(result.delta_g, float) else None,
+                        best_target_score=best_target,
+                        message=f"Completed SMN2 target docking for {molecule['molecule_id']}",
+                    )
+                except Exception as exc:
+                    failed_rows.append({"molecule_id": molecule["molecule_id"], "target_id": "SMN2_exon7", "status": "failed", "notes": str(exc)})
+                    logger.event("job_failed", run_mode=mode, molecule_id=molecule["molecule_id"], target_type="SMN2_target", target_id="SMN2_exon7", status="failed", message=str(exc))
             logger.state(
                 current_molecule_id=molecule["molecule_id"],
                 current_smiles=molecule.get("canonical_smiles"),
@@ -311,6 +402,19 @@ def run(config_path: str | Path) -> int:
 
             if run_decoys and not decoy_panel.empty:
                 for _, decoy in decoy_panel.iterrows():
+                    decoy_id = str(decoy.get("decoy_id", "NA"))
+                    if (molecule_id, decoy_id) in completed_decoy_pairs:
+                        logger.event(
+                            "job_skipped",
+                            run_mode=mode,
+                            molecule_id=molecule_id,
+                            target_type="decoy",
+                            target_id=decoy_id,
+                            decoy_category=decoy.get("decoy_category"),
+                            status="completed",
+                            message=f"Skipped completed decoy docking for {molecule_id} vs {decoy_id}.",
+                        )
+                        continue
                     completed_jobs += 1
                     logger.event(
                         "job_started",
@@ -328,18 +432,23 @@ def run(config_path: str | Path) -> int:
                     if mode == "dry_run":
                         result = dry_run_decoy_score(molecule, decoy, seed)
                     else:
-                        result = type("Result", (), {"to_dict": lambda self: {}})()  # not used
-                        failed_rows.append(
-                            {
-                                "molecule_id": molecule["molecule_id"],
-                                "target_id": decoy.get("decoy_id"),
-                                "status": "sequence_only_decoy",
-                                "notes": "No decoy receptor structure available; sequence-only panel cannot be docked directly.",
-                            }
-                        )
                         from .docking_engine import DockingResult
 
-                        result = DockingResult("not_run", "NA", "NA", "NA", "NA", "vina", mode, False, "Sequence-only decoy panel; no receptor structure available.")
+                        decoy_receptor = str(decoy.get("decoy_receptor_file", "NA"))
+                        try:
+                            validate_vina_input_files(decoy_receptor, ligand_file)
+                            pose_file = str(paths.pose_dir / f"{molecule['molecule_id']}_{decoy_id}_out.pdbqt")
+                            result = run_vina(receptor_file=decoy_receptor, ligand_file=ligand_file, pose_file=pose_file, config=config)
+                        except Exception as exc:
+                            failed_rows.append(
+                                {
+                                    "molecule_id": molecule["molecule_id"],
+                                    "target_id": decoy.get("decoy_id"),
+                                    "status": "failed",
+                                    "notes": str(exc),
+                                }
+                            )
+                            result = DockingResult("not_run", "NA", "NA", "NA", "NA", "vina", mode, False, str(exc))
                     decoy_rows.append(_decoy_row(molecule, decoy, ligand_file, result, mode))
                     logger.event(
                         "job_completed",

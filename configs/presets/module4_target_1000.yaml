@@ -11,12 +11,12 @@ inputs:
   raw_structure_dir: data/raw/structures
 
 outputs:
-  output_dir: data/processed/docking
-  ligand_dir: data/processed/docking/ligands
+  output_dir: data/processed/docking/stage_a_target
+  ligand_dir: data/processed/docking/stage_a_target/ligands
   receptor_dir: data/processed/docking/receptors
-  pose_dir: data/processed/docking/poses
-  log_dir: data/processed/docking/logs
-  simulation_dir: data/processed/docking/simulation
+  pose_dir: data/processed/docking/stage_a_target/poses
+  log_dir: data/processed/docking/stage_a_target/logs
+  simulation_dir: data/processed/docking/stage_a_target/simulation
   report_path: reports/docking_counter_screening_report.md
   figure_dir: figures/docking
 
@@ -27,8 +27,14 @@ run:
   require_real_docking_for_scientific_results: true
   allow_dry_run_simulation: true
   parallel_jobs: 1
-  resume_existing_results: false
+  resume_existing_results: true
   save_intermediate_every_n_jobs: 100
+
+staged_docking:
+  enabled: true
+  stage_name: stage_a_target_all
+  select_top_from_target_scores: false
+  reuse_prior_target_scores: false
 
 docking_engine:
   engine: vina

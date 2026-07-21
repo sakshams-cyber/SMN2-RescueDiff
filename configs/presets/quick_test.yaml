@@ -1,0 +1,20 @@
+project_name: SMN2-RescueDiff
+preset_name: quick_test
+preset_type: modules_3_to_5_pipeline
+purpose: Pipeline debugging only; outputs are not scientific results.
+
+module3_config: configs/presets/module3_quick_test.yaml
+module4_configs:
+  - configs/presets/module4_target_100.yaml
+module5_config: configs/presets/module5_target_only_final.yaml
+
+recommended_use:
+  molecule_generation: tiny deterministic debug generation
+  docking: target-only format and control-flow check
+  final_scoring: smoke-test final report generation only
+
+scientific_status:
+  dry_run_results_are_scientific: false
+  intended_for_final_ranking: false
+  confidence: very_low
+
