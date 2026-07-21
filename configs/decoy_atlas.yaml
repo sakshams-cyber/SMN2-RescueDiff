@@ -1,0 +1,75 @@
+project_name: SMN2-RescueDiff
+module_name: HuRDA-180K Human RNA Decoy Atlas
+
+inputs:
+  genome_fasta: data/raw/genome/hg38.fa
+  annotation_gtf: data/raw/annotations/gencode.gtf
+  smn2_target_fasta: data/processed/target_definition/smn2_target_windows.fasta
+  smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+  smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+
+outputs:
+  output_dir: data/processed/decoy_atlas
+  report_path: reports/decoy_atlas_report.md
+  figure_dir: figures/decoy_atlas
+
+atlas:
+  target_total_decoys: 180000
+  max_total_decoys: 220000
+  random_seed: 42
+  remove_duplicate_sequences: true
+  remove_exact_smn2_matches: true
+
+windows:
+  five_prime_splice_site:
+    core_exon_nt: 3
+    core_intron_nt: 6
+    local_window_nt: 51
+    extended_window_nt: 101
+
+  three_prime_splice_site:
+    intron_nt: 20
+    exon_nt: 3
+    local_window_nt: 51
+    extended_window_nt: 101
+
+  regulatory_motif_window_nt: 51
+  random_window_nt: 51
+
+decoy_targets:
+  five_prime_splice_site_decoys: 60000
+  three_prime_splice_site_decoys: 45000
+  smn2_like_hard_decoys: 25000
+  exonic_regulatory_decoys: 15000
+  intronic_regulatory_decoys: 15000
+  scrambled_smn2_controls: 2500
+  mutated_smn2_controls: 2500
+  random_bias_matched_windows: 15000
+
+feature_matching:
+  gc_tolerance: 0.08
+  length_must_match: true
+  min_smn2_similarity_for_hard_decoys: 0.45
+  max_smn2_similarity_for_hard_decoys: 0.90
+  kmer_size: 3
+  use_u1_complementarity: true
+  use_splice_strength_score: true
+  use_bias_match_score: true
+
+splits:
+  train_fraction: 0.70
+  validation_fraction: 0.10
+  test_fraction: 0.20
+  create_chromosome_holdout: true
+  create_hard_decoy_holdout: true
+  create_gene_holdout: true
+
+biological_weights:
+  five_prime_splice_site: 1.0
+  smn2_like_hard_decoy: 1.0
+  three_prime_splice_site: 0.8
+  exonic_regulatory: 0.7
+  intronic_regulatory: 0.6
+  random_bias_matched: 0.3
+  scrambled_smn2_control: 0.1
+  mutated_smn2_control: 0.2
