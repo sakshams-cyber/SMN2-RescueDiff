@@ -6,11 +6,18 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
-from smn2_rescuediff.docking.cli import _filter_molecules_from_stage_scores, _ligand_file_for, _prior_stage_target_scores, run
+from smn2_rescuediff.docking.cli import (
+    _benchmark_molecule_selection_from_target_scores,
+    _filter_molecules_from_stage_scores,
+    _ligand_file_for,
+    _prior_stage_target_scores,
+    run,
+)
 from smn2_rescuediff.docking.config import load_config
 from smn2_rescuediff.docking.decoy_panel_selector import select_decoy_panel
 from smn2_rescuediff.docking.dry_run_docker import dry_run_target_score
@@ -215,6 +222,56 @@ def test_staged_docking_reuses_prior_target_scores(tmp_path):
     assert prior["molecule_id"].tolist() == ["Mol_002", "Mol_003"]
     assert prior["run_mode"].tolist() == ["target_plus_decoy_docking", "target_plus_decoy_docking"]
     assert prior["is_dry_run_score"].tolist() == [False, False]
+
+
+def test_benchmark_staged_selection_uses_target_scores_directly(tmp_path):
+    score_path = tmp_path / "stage_a" / "smn2_target_docking_scores.tsv"
+    score_path.parent.mkdir()
+    pd.DataFrame(
+        [
+            {"molecule_id": "Mol_001", "canonical_smiles": "CCO", "dock_status": "completed", "target_deltaG": -7.2, "is_dry_run_score": False},
+            {"molecule_id": "Mol_002", "canonical_smiles": "CCN", "dock_status": "completed", "target_deltaG": -8.9, "is_dry_run_score": False},
+            {"molecule_id": "Mol_003", "canonical_smiles": "CCC", "dock_status": "failed", "target_deltaG": -10.0, "is_dry_run_score": False},
+            {"molecule_id": "Mol_004", "canonical_smiles": "CCCl", "dock_status": "completed", "target_deltaG": -8.1, "is_dry_run_score": True},
+            {"molecule_id": "Mol_005", "canonical_smiles": "CNC", "dock_status": "completed", "target_deltaG": -7.8, "is_dry_run_score": False},
+            {"molecule_id": "Mol_006", "canonical_smiles": "COC", "dock_status": "completed", "target_deltaG": -6.5, "is_dry_run_score": False},
+        ]
+    ).to_csv(score_path, sep="\t", index=False)
+    config = {
+        "run": {"max_molecules_to_dock": 3, "require_real_docking_for_scientific_results": True},
+        "staged_docking": {
+            "select_top_from_target_scores": True,
+            "ignore_advance_filters_for_benchmark": True,
+            "target_scores_path": str(score_path),
+            "top_molecules_from_target_scores": 100,
+        },
+    }
+    selected, message = _benchmark_molecule_selection_from_target_scores(config, tmp_path)
+    assert selected["molecule_id"].tolist() == ["Mol_002", "Mol_005", "Mol_001"]
+    assert selected["stage_target_deltaG"].tolist() == [-8.9, -7.8, -7.2]
+    assert "ignored advancement filters" in message
+
+
+def test_benchmark_staged_selection_fails_when_request_is_underfilled(tmp_path):
+    score_path = tmp_path / "stage_a" / "smn2_target_docking_scores.tsv"
+    score_path.parent.mkdir()
+    pd.DataFrame(
+        [
+            {"molecule_id": "Mol_001", "canonical_smiles": "CCO", "dock_status": "completed", "target_deltaG": -7.2, "is_dry_run_score": False},
+            {"molecule_id": "Mol_002", "canonical_smiles": "CCN", "dock_status": "completed", "target_deltaG": -8.9, "is_dry_run_score": False},
+        ]
+    ).to_csv(score_path, sep="\t", index=False)
+    config = {
+        "run": {"max_molecules_to_dock": 100, "require_real_docking_for_scientific_results": True},
+        "staged_docking": {
+            "select_top_from_target_scores": True,
+            "ignore_advance_filters_for_benchmark": True,
+            "target_scores_path": str(score_path),
+            "top_molecules_from_target_scores": 100,
+        },
+    }
+    with pytest.raises(ValueError, match="requested 100 molecules, but only 2 eligible"):
+        _benchmark_molecule_selection_from_target_scores(config, tmp_path)
 
 
 def test_dry_run_docker_deterministic_scores():

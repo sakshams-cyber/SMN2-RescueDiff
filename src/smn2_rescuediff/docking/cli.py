@@ -193,6 +193,80 @@ def _filter_molecules_from_stage_scores(molecules: pd.DataFrame, config: dict[st
     return selected.sort_values("_stage_rank").drop(columns=["_stage_rank"]).reset_index(drop=True)
 
 
+def _is_false_series(series: pd.Series) -> pd.Series:
+    """Return a boolean mask for values that represent false."""
+    return series.astype(str).str.strip().str.lower().isin({"false", "0", "no", "n"})
+
+
+def _benchmark_molecule_selection_from_target_scores(
+    config: dict[str, Any],
+    project_root: Path,
+) -> tuple[pd.DataFrame, str]:
+    """Select benchmark decoy-docking molecules directly from prior target scores."""
+    stage_cfg = config.get("staged_docking", {})
+    score_path = Path(str(stage_cfg.get("target_scores_path", "data/processed/docking/smn2_target_docking_scores.tsv")))
+    score_path = score_path if score_path.is_absolute() else project_root / score_path
+    if not score_path.exists():
+        raise FileNotFoundError(f"Staged benchmark target-score input is missing: {score_path}")
+
+    scores = pd.read_csv(score_path, sep="\t")
+    required = {"molecule_id", "canonical_smiles", "target_deltaG", "dock_status"}
+    missing = required - set(scores.columns)
+    if missing:
+        raise ValueError(f"Staged benchmark target-score file is missing required columns {sorted(missing)}: {score_path}")
+
+    top_n = int(stage_cfg.get("top_molecules_from_target_scores", config.get("run", {}).get("max_molecules_to_dock", 100)))
+    max_molecules = int(config.get("run", {}).get("max_molecules_to_dock", top_n))
+    requested = min(top_n, max_molecules)
+    if requested <= 0:
+        raise ValueError("staged_docking.top_molecules_from_target_scores and run.max_molecules_to_dock must request at least one molecule.")
+
+    ranked = scores.copy()
+    ranked["_target_deltaG"] = pd.to_numeric(ranked["target_deltaG"], errors="coerce")
+    ranked = ranked[ranked["_target_deltaG"].notna()].copy()
+    ranked = ranked[ranked["dock_status"].astype(str).str.lower() == "completed"].copy()
+
+    require_real = bool(config.get("run", {}).get("require_real_docking_for_scientific_results", False))
+    if require_real:
+        if "is_dry_run_score" not in ranked.columns:
+            raise ValueError("Staged benchmark requires real docking scores, but target_scores_path has no is_dry_run_score column.")
+        ranked = ranked[_is_false_series(ranked["is_dry_run_score"])].copy()
+
+    ranked = ranked.sort_values("_target_deltaG", ascending=True)
+    ranked = ranked.drop_duplicates(subset=["molecule_id"], keep="first")
+    available = len(ranked)
+    if available < requested:
+        raise ValueError(
+            "Staged benchmark requested "
+            f"{requested} molecules, but only {available} eligible target-score rows were available after filtering for "
+            "dock_status=completed"
+            + (", is_dry_run_score=false" if require_real else "")
+            + ", and numeric target_deltaG. "
+            "Provide more completed Stage A target scores or lower top_molecules_from_target_scores/max_molecules_to_dock."
+        )
+
+    selected = ranked.head(requested).copy().reset_index(drop=True)
+    selected["stage_target_deltaG"] = selected["_target_deltaG"]
+    selected["stage_target_rank"] = selected.index + 1
+    selected["selection_source"] = str(score_path)
+    selected["selection_notes"] = (
+        "Selected directly from staged_docking.target_scores_path by ascending target_deltaG; "
+        "benchmark mode ignored advancement filters and prior decoy/selectivity outputs."
+    )
+    selected = selected.drop(columns=["_target_deltaG"])
+
+    base_columns = ["molecule_id", "canonical_smiles"]
+    extra_columns = [column for column in selected.columns if column not in base_columns]
+    message = (
+        f"Benchmark staged selection chose {len(selected)} molecules from {score_path} by ascending target_deltaG "
+        f"(requested=min(top_molecules_from_target_scores={top_n}, max_molecules_to_dock={max_molecules})={requested}; "
+        "kept dock_status=completed"
+        + (" and is_dry_run_score=false" if require_real else "")
+        + "; ignored advancement filters, prior selectivity files, previous decoy outputs, and candidate lists)."
+    )
+    return selected[base_columns + extra_columns], message
+
+
 def _prior_stage_target_scores(config: dict[str, Any], project_root: Path, selected: pd.DataFrame, mode: str) -> pd.DataFrame:
     """Load prior target-only scores for Stage B/C decoy runs."""
     stage_cfg = config.get("staged_docking", {})
@@ -361,12 +435,22 @@ def run(config_path: str | Path) -> int:
     else:
         log("Loading Module 3 molecule library.")
         molecules = load_molecules(paths.molecules_filtered)
-        molecules = _filter_molecules_from_stage_scores(molecules, config, paths.project_root)
-        selected = select_molecules_for_docking(
-            molecules,
-            int(config.get("run", {}).get("max_molecules_to_dock", 500)),
-            seed,
-        )
+        stage_cfg = config.get("staged_docking", {})
+        if bool(stage_cfg.get("select_top_from_target_scores", False)) and bool(stage_cfg.get("ignore_advance_filters_for_benchmark", False)):
+            selected, selection_message = _benchmark_molecule_selection_from_target_scores(config, paths.project_root)
+            log(selection_message)
+        else:
+            molecules = _filter_molecules_from_stage_scores(molecules, config, paths.project_root)
+            selected = select_molecules_for_docking(
+                molecules,
+                int(config.get("run", {}).get("max_molecules_to_dock", 500)),
+                seed,
+            )
+            if bool(stage_cfg.get("select_top_from_target_scores", False)):
+                log(
+                    f"Scientific staged selection retained {len(selected)} molecules after target-score filtering "
+                    "and the configured molecule-selection cap."
+                )
         _write(selected, paths.output_dir / "selected_molecules_for_docking.tsv")
 
         logger.event("ligand_preparation_started", run_mode=mode, status="running", message="Preparing ligands with RDKit.")

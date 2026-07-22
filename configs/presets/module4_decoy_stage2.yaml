@@ -35,6 +35,7 @@ staged_docking:
   enabled: true
   stage_name: stage_c_top75_x750_hard_decoys
   select_top_from_target_scores: true
+  ignore_advance_filters_for_benchmark: false
   target_scores_path: data/processed/docking/stage_a_target/smn2_target_docking_scores.tsv
   top_molecules_from_target_scores: 75
   reuse_prior_target_scores: true
