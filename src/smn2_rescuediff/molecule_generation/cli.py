@@ -88,12 +88,30 @@ def _run_output_paths(paths, config: dict[str, Any]):
     return run_dir, run_dir / "checkpoints", run_dir / "logs"
 
 
+def _write_text(path: str | Path, text: str) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+
+
+def _write_tsv(df: pd.DataFrame, path: str | Path) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(p, sep="\t", index=False)
+
+
+def _copy2(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+
+
 def _write_run_artifacts(run_dir: Path, config: dict[str, Any], summary: dict[str, Any], output_files: list[str]) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
     metrics = dict(summary)
     metrics["run_name"] = _run_name(config)
     metrics["run_folder"] = str(run_dir)
     metrics["output_files"] = output_files
-    (run_dir / "run_metrics.json").write_text(json.dumps(metrics, indent=2, default=str), encoding="utf-8")
+    _write_text(run_dir / "run_metrics.json", json.dumps(metrics, indent=2, default=str))
     lines = [
         f"# Module 3 Run Summary: {_run_name(config)}",
         "",
@@ -115,7 +133,7 @@ def _write_run_artifacts(run_dir: Path, config: dict[str, Any], summary: dict[st
         "",
         "Generated molecules are computational candidates only and do not prove binding, splicing rescue, safety, or therapeutic activity.",
     ]
-    (run_dir / "RUN_SUMMARY.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _write_text(run_dir / "RUN_SUMMARY.md", "\n".join(lines) + "\n")
 
 
 def _sync_run_outputs_to_stable(run_dir: Path, stable_dir: Path, output_files: list[str]) -> None:
@@ -123,24 +141,23 @@ def _sync_run_outputs_to_stable(run_dir: Path, stable_dir: Path, output_files: l
     for item in output_files:
         source = Path(item)
         if source.exists() and source.is_file():
-            shutil.copy2(source, stable_dir / source.name)
+            _copy2(source, stable_dir / source.name)
     for filename in ["RUN_SUMMARY.md", "run_metrics.json"]:
         source = run_dir / filename
         if source.exists():
-            shutil.copy2(source, stable_dir / filename)
+            _copy2(source, stable_dir / filename)
 
 
 def _sync_run_report_and_figures(run_dir: Path, stable_report: Path, stable_figure_dir: Path) -> None:
     run_report = run_dir / "reports" / stable_report.name
     if run_report.exists():
-        stable_report.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(run_report, stable_report)
+        _copy2(run_report, stable_report)
     run_figure_dir = run_dir / "figures"
     if run_figure_dir.exists():
         stable_figure_dir.mkdir(parents=True, exist_ok=True)
         for figure in run_figure_dir.glob("*"):
             if figure.is_file():
-                shutil.copy2(figure, stable_figure_dir / figure.name)
+                _copy2(figure, stable_figure_dir / figure.name)
 
 
 def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -214,7 +231,7 @@ def run(config_path: str | Path) -> int:
     warnings.extend(representation_warnings)
     training_strings, conversion_rejected = smiles_to_representation(canonical_training, representation)
     if conversion_rejected:
-        pd.DataFrame(conversion_rejected).to_csv(output_dir / "representation_conversion_rejected.tsv", sep="\t", index=False)
+        _write_tsv(pd.DataFrame(conversion_rejected), output_dir / "representation_conversion_rejected.tsv")
         warnings.append(f"{len(conversion_rejected)} molecules could not be converted to {representation}.")
 
     tokenizer = MolecularTokenizer.build(
@@ -226,7 +243,7 @@ def run(config_path: str | Path) -> int:
     tokenizer.write_metadata(output_dir / "tokenizer_metadata.json")
 
     if bool(config.get("run", {}).get("save_config_used", True)):
-        (output_dir / "molecule_generation_config_used.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+        _write_text(output_dir / "molecule_generation_config_used.yaml", yaml.safe_dump(config, sort_keys=False))
 
     requested_raw = int(config.get("sampling", {}).get("num_raw_to_generate", 100000))
     if toy_dataset and requested_raw > 1000:
@@ -242,17 +259,17 @@ def run(config_path: str | Path) -> int:
         print(f"Training neural molecular language model ({config.get('model', {}).get('architecture', 'transformer_decoder')}).")
         model, training_log, training_warnings, device_name = train_neural_model(training_strings, tokenizer, config, checkpoint_dir)
         warnings.extend(training_warnings)
-        training_log.to_csv(output_dir / "model_training_log.tsv", sep="\t", index=False)
+        _write_tsv(training_log, output_dir / "model_training_log.tsv")
         print("Sampling neural candidate molecules.")
         raw_generated = sample_neural_strings(model, tokenizer, config, requested_raw, device_name)
     elif mode == "inference_only":
         warnings.append("Inference-only mode used training-set representation strings as a smoke-test source because no trained checkpoint loader was requested.")
         raw_generated = _training_surrogate_generate(training_strings, representation, requested_raw)
-        training_log.to_csv(output_dir / "model_training_log.tsv", sep="\t", index=False)
+        _write_tsv(training_log, output_dir / "model_training_log.tsv")
     else:
         warnings.append("debug_ngram mode is for troubleshooting only and is not the neural-first scientific path.")
         raw_generated = _debug_ngram_generate(canonical_training, representation, config, requested_raw)
-        training_log.to_csv(output_dir / "model_training_log.tsv", sep="\t", index=False)
+        _write_tsv(training_log, output_dir / "model_training_log.tsv")
 
     if raw_generated.empty:
         raise ValueError("No raw molecular strings were generated.")
@@ -281,7 +298,7 @@ def run(config_path: str | Path) -> int:
     diversity_values = pairwise_tanimoto_sample(filtered, config)
     rl_log, rl_warnings = run_reward_finetuning(filtered, config, checkpoint_dir)
     warnings.extend(rl_warnings)
-    rl_log.to_csv(output_dir / "rl_finetuning_log.tsv", sep="\t", index=False)
+    _write_tsv(rl_log, output_dir / "rl_finetuning_log.tsv")
 
     summary = build_summary(
         config=config,

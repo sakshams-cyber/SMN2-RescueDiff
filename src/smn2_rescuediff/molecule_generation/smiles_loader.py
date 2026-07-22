@@ -77,4 +77,6 @@ def clean_smiles(smiles: list[str], max_length: int | None = None) -> list[str]:
 
 def write_smiles(smiles: list[str], path: str | Path) -> None:
     """Write one SMILES string per line."""
-    Path(path).write_text("\n".join(smiles) + ("\n" if smiles else ""), encoding="utf-8")
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("\n".join(smiles) + ("\n" if smiles else ""), encoding="utf-8")

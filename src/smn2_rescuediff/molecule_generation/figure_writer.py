@@ -25,6 +25,7 @@ def _numeric(df: pd.DataFrame, column: str) -> pd.Series:
 
 
 def _placeholder(path: Path, title: str, message: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     plt = _plt()
     plt.figure(figsize=(7, 4.5))
     plt.text(0.5, 0.5, message, ha="center", va="center", wrap=True)

@@ -95,9 +95,13 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
         raise ValueError("No valid training molecules remained after cleaning. Provide larger valid SMILES files or loosen data_processing filters.")
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "training_smiles_merged_cleaned.smi").write_text("\n".join(accepted) + "\n", encoding="utf-8")
+    cleaned_path = output_dir / "training_smiles_merged_cleaned.smi"
+    cleaned_path.parent.mkdir(parents=True, exist_ok=True)
+    cleaned_path.write_text("\n".join(accepted) + "\n", encoding="utf-8")
     rejected_df = pd.DataFrame(rejected, columns=["raw_smiles", "canonical_smiles", "reason"])
-    rejected_df.to_csv(output_dir / "training_dataset_rejected.tsv", sep="\t", index=False)
+    rejected_path = output_dir / "training_dataset_rejected.tsv"
+    rejected_path.parent.mkdir(parents=True, exist_ok=True)
+    rejected_df.to_csv(rejected_path, sep="\t", index=False)
     summary = {
         "training_files": [str(path) for path in existing],
         "training_molecules_raw": int(len(raw_smiles)),
@@ -107,6 +111,7 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
         "rejected_count": int(len(rejected_df)),
         "warnings": warnings,
     }
-    (output_dir / "training_dataset_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    summary_path = output_dir / "training_dataset_summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return accepted, summary, rejected_df, warnings
-

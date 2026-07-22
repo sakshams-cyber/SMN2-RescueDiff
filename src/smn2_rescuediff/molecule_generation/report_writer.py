@@ -33,6 +33,7 @@ def _numeric(df: pd.DataFrame, column: str) -> pd.Series:
 
 
 def _placeholder_figure(path: Path, title: str, message: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     plt = _plt()
     plt.figure(figsize=(7, 4.5))
     plt.text(0.5, 0.5, message, ha="center", va="center", wrap=True)
@@ -183,7 +184,9 @@ def build_summary(
 
 def write_summary_json(summary: dict[str, Any], path: str | Path) -> None:
     """Write summary JSON."""
-    Path(path).write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
 
 def write_report(
@@ -301,4 +304,6 @@ Molecules are assigned scaffold-based diversity cluster identifiers. A runtime-c
 
 The next module can use these filtered computational candidate molecules for SMN2 target docking preparation, HuRDA decoy counter-screening, and transcriptome-aware scoring. No synthesis, biological testing, or clinical use is implied by these outputs.
 """
-    Path(report_path).write_text(report, encoding="utf-8")
+    p = Path(report_path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(report, encoding="utf-8")

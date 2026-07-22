@@ -36,6 +36,7 @@ def run_reward_finetuning(
         rewards = [chemical_plausibility_reward(row, weights) for _, row in sample.iterrows()]
         checkpoint = Path(checkpoint_dir) / f"rl_reward_episode_{episode:03d}.txt"
         if bool(rl_cfg.get("save_rl_checkpoints", True)):
+            checkpoint.parent.mkdir(parents=True, exist_ok=True)
             checkpoint.write_text("Reward-only diagnostic checkpoint; no policy weights updated.\n", encoding="utf-8")
         rows.append(
             {
@@ -52,4 +53,3 @@ def run_reward_finetuning(
             }
         )
     return pd.DataFrame(rows), warnings
-

@@ -92,15 +92,19 @@ class MolecularTokenizer:
         return "".join(tokens)
 
     def to_json(self, path: str | Path) -> None:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "representation": self.representation,
             "add_start_end_tokens": self.add_start_end_tokens,
             "token_to_id": self.token_to_id,
             "id_to_token": {str(k): v for k, v in self.id_to_token.items()},
         }
-        Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        p.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     def write_metadata(self, path: str | Path) -> None:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "representation": self.representation,
             "vocab_size": len(self.token_to_id),
@@ -110,5 +114,4 @@ class MolecularTokenizer:
             "unk_token": UNK,
             "tokenizer_notes": "SELFIES symbols are used when representation=selfies; otherwise common SMILES tokens are preserved.",
         }
-        Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
-
+        p.write_text(json.dumps(payload, indent=2), encoding="utf-8")

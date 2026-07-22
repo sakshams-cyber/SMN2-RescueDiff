@@ -77,8 +77,10 @@ class SmilesTokenizer:
         return "".join(tokens)
 
     def to_json(self, path: str | Path) -> None:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
         payload = {"token_to_id": self.token_to_id, "id_to_token": {str(k): v for k, v in self.id_to_token.items()}}
-        Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        p.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     @classmethod
     def from_json(cls, path: str | Path) -> "SmilesTokenizer":
@@ -87,4 +89,3 @@ class SmilesTokenizer:
             token_to_id={str(k): int(v) for k, v in payload["token_to_id"].items()},
             id_to_token={int(k): str(v) for k, v in payload["id_to_token"].items()},
         )
-
