@@ -105,6 +105,7 @@ def _copy_file_if_exists(source: Path, destination: Path) -> None:
 def _sync_run_outputs_to_stable(run_paths, stable_paths) -> None:
     for filename in [
         "selected_molecules_for_docking.tsv",
+        "selected_molecules_for_decoy_docking.tsv",
         "ligand_preparation_summary.tsv",
         "receptor_preparation_summary.tsv",
         "selected_decoy_docking_panel.tsv",
@@ -369,6 +370,7 @@ def _empty_outputs(paths, config: dict[str, Any], selected: pd.DataFrame, ligand
 def _output_file_list() -> list[str]:
     return [
         "data/processed/docking/selected_molecules_for_docking.tsv",
+        "data/processed/docking/selected_molecules_for_decoy_docking.tsv",
         "data/processed/docking/ligand_preparation_summary.tsv",
         "data/processed/docking/receptor_preparation_summary.tsv",
         "data/processed/docking/selected_decoy_docking_panel.tsv",
@@ -436,7 +438,8 @@ def run(config_path: str | Path) -> int:
         log("Loading Module 3 molecule library.")
         molecules = load_molecules(paths.molecules_filtered)
         stage_cfg = config.get("staged_docking", {})
-        if bool(stage_cfg.get("select_top_from_target_scores", False)) and bool(stage_cfg.get("ignore_advance_filters_for_benchmark", False)):
+        benchmark_stage = bool(stage_cfg.get("select_top_from_target_scores", False)) and bool(stage_cfg.get("ignore_advance_filters_for_benchmark", False))
+        if benchmark_stage:
             selected, selection_message = _benchmark_molecule_selection_from_target_scores(config, paths.project_root)
             log(selection_message)
         else:
@@ -452,6 +455,9 @@ def run(config_path: str | Path) -> int:
                     "and the configured molecule-selection cap."
                 )
         _write(selected, paths.output_dir / "selected_molecules_for_docking.tsv")
+        if benchmark_stage:
+            _write(selected, paths.output_dir / "selected_molecules_for_decoy_docking.tsv")
+            log(f"Wrote benchmark decoy molecule selection list to {paths.output_dir / 'selected_molecules_for_decoy_docking.tsv'}.")
 
         logger.event("ligand_preparation_started", run_mode=mode, status="running", message="Preparing ligands with RDKit.")
         logger.state(last_message="Preparing ligands", total_jobs=len(selected), jobs_completed=0)
