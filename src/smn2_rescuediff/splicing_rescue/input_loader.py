@@ -43,6 +43,69 @@ def _as_bool_series(series: pd.Series) -> pd.Series:
     return series.astype(str).str.lower().isin({"true", "1", "yes"})
 
 
+def _as_false_series(series: pd.Series) -> pd.Series:
+    return series.astype(str).str.lower().isin({"false", "0", "no"})
+
+
+def _first_numeric_column(df: pd.DataFrame, columns: list[str]) -> pd.Series | None:
+    for column in columns:
+        if column in df:
+            return pd.to_numeric(df[column], errors="coerce")
+    return None
+
+
+def _selectivity_gap_from_available_columns(df: pd.DataFrame) -> pd.Series | None:
+    explicit_gap = _first_numeric_column(df, ["selectivity_gap", "mean_selectivity_gap"])
+    if explicit_gap is not None:
+        return explicit_gap
+    if "target_deltaG" not in df:
+        return None
+    target = pd.to_numeric(df["target_deltaG"], errors="coerce")
+    decoy = _first_numeric_column(df, ["decoy_deltaG", "mean_decoy_deltaG", "weighted_mean_decoy_deltaG", "best_decoy_deltaG"])
+    if decoy is None:
+        return None
+    return decoy - target
+
+
+def normalize_selectivity_table(selectivity: pd.DataFrame) -> pd.DataFrame:
+    """Normalize Module 4 selectivity exports without inventing missing decoy evidence."""
+    df = selectivity.copy()
+
+    if "weighted_mean_selectivity_gap" in df:
+        weighted_mean_gap = pd.to_numeric(df["weighted_mean_selectivity_gap"], errors="coerce")
+        if "weighted_selectivity_gap" in df:
+            df["weighted_selectivity_gap"] = pd.to_numeric(df["weighted_selectivity_gap"], errors="coerce").combine_first(weighted_mean_gap)
+        else:
+            df["weighted_selectivity_gap"] = weighted_mean_gap
+
+    if "num_decoys_with_scores" in df:
+        decoy_count = pd.to_numeric(df["num_decoys_with_scores"], errors="coerce")
+        if "num_decoys_with_valid_scores" in df:
+            df["num_decoys_with_valid_scores"] = pd.to_numeric(df["num_decoys_with_valid_scores"], errors="coerce").combine_first(decoy_count)
+        else:
+            df["num_decoys_with_valid_scores"] = decoy_count
+
+    gap = _selectivity_gap_from_available_columns(df)
+    if gap is not None:
+        df["selectivity_gap"] = gap
+
+    if "num_decoys_with_valid_scores" not in df:
+        df["num_decoys_with_valid_scores"] = pd.NA
+
+    real_decoy_evidence = (
+        pd.to_numeric(df.get("num_decoys_with_valid_scores", pd.Series([pd.NA] * len(df), index=df.index)), errors="coerce").fillna(0) > 0
+    )
+    if "is_dry_run_score" in df:
+        real_decoy_evidence &= _as_false_series(df["is_dry_run_score"])
+    real_decoy_evidence &= pd.to_numeric(df.get("weighted_selectivity_gap", pd.Series([pd.NA] * len(df), index=df.index)), errors="coerce").notna()
+    df["has_real_decoy_selectivity"] = real_decoy_evidence
+    if "run_mode" not in df:
+        df["run_mode"] = "NA"
+    missing_run_mode = df["run_mode"].isna() | df["run_mode"].astype(str).isin(["", "NA", "nan"])
+    df.loc[real_decoy_evidence & missing_run_mode, "run_mode"] = "target_plus_decoy_docking"
+    return df
+
+
 def detect_dry_run(target_scores: pd.DataFrame, selectivity: pd.DataFrame, docking_summary: dict[str, Any]) -> bool:
     """Detect whether Module 4 docking inputs are dry-run or simulated."""
     if str(docking_summary.get("run_mode", "")).lower() == "dry_run":
@@ -77,7 +140,7 @@ def load_all_inputs(paths: SplicingRescuePaths) -> dict[str, Any]:
     target_scores = read_tsv(paths.target_docking_scores, required=True, require_molecule_id=True)
     if target_scores.empty or "target_deltaG" not in target_scores.columns:
         raise SplicingRescueInputError("All docking scores are missing: target_docking_scores has no target_deltaG values.")
-    selectivity = read_tsv(paths.molecule_selectivity_scores, required=True, require_molecule_id=True)
+    selectivity = normalize_selectivity_table(read_tsv(paths.molecule_selectivity_scores, required=True, require_molecule_id=True))
     if selectivity.empty:
         raise SplicingRescueInputError("No molecules can be scored: molecule_selectivity_scores.tsv is empty.")
     candidates_for_rescue = read_tsv(paths.candidates_for_splicing_rescue, required=False, require_molecule_id=True)
@@ -140,4 +203,3 @@ def assemble_candidate_table(inputs: dict[str, Any], max_candidates: int) -> pd.
     if pd.to_numeric(merged.get("target_deltaG", pd.Series(dtype=float)), errors="coerce").isna().all():
         raise SplicingRescueInputError("All docking scores are missing after candidate merge.")
     return merged.reset_index(drop=True)
-

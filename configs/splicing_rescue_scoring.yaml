@@ -15,7 +15,7 @@ inputs:
 
   target_docking_scores: data/processed/docking/smn2_target_docking_scores.tsv
   decoy_docking_scores: data/processed/docking/decoy_docking_scores.tsv
-  molecule_selectivity_scores: data/processed/docking/molecule_selectivity_scores.tsv
+  molecule_selectivity_scores: data/processed/docking/molecule_selectivity_scores_from_real_decoys.tsv
   candidates_for_splicing_rescue: data/processed/docking/candidates_for_splicing_rescue.tsv
   docking_summary: data/processed/docking/docking_summary.json
   pose_dir: data/processed/docking/poses

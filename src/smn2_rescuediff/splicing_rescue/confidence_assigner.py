@@ -22,6 +22,18 @@ def _raise_confidence(level: str) -> str:
     return CONFIDENCE_ORDER[idx]
 
 
+def _as_bool(value: object) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes"}
+
+
+def _numeric_value(row: pd.Series, columns: list[str], default: float = 0.0) -> float:
+    for column in columns:
+        value = pd.to_numeric(pd.Series([row.get(column, None)]), errors="coerce").iloc[0]
+        if pd.notna(value):
+            return float(value)
+    return default
+
+
 def assign_confidence(df: pd.DataFrame, config: dict, used_dry_run_inputs: bool) -> pd.Series:
     """Assign confidence levels without implying experimental validation."""
     cfg = config.get("confidence", {})
@@ -30,11 +42,17 @@ def assign_confidence(df: pd.DataFrame, config: dict, used_dry_run_inputs: bool)
     levels = []
     for _, row in df.iterrows():
         run_mode = str(row.get("run_mode", "NA"))
-        if used_dry_run_inputs or bool(row.get("is_dry_run_input", False)):
+        valid_decoys = _numeric_value(row, ["num_decoys_with_valid_scores", "num_decoys_with_scores"], default=0.0)
+        weighted_gap = pd.to_numeric(pd.Series([row.get("weighted_selectivity_gap", None)]), errors="coerce").iloc[0]
+        has_real_decoy_selectivity = _as_bool(row.get("has_real_decoy_selectivity", False)) or (
+            valid_decoys > 0 and not _as_bool(row.get("is_dry_run_score", False)) and pd.notna(weighted_gap)
+        )
+        if has_real_decoy_selectivity and run_mode in {"", "NA", "nan"}:
+            run_mode = "target_plus_decoy_docking"
+        if used_dry_run_inputs or _as_bool(row.get("is_dry_run_input", False)):
             level = str(cfg.get("dry_run_confidence", "very_low"))
         else:
-            if run_mode == "target_plus_decoy_docking":
-                valid_decoys = pd.to_numeric(pd.Series([row.get("num_decoys_with_valid_scores", 0)]), errors="coerce").fillna(0).iloc[0]
+            if run_mode == "target_plus_decoy_docking" or has_real_decoy_selectivity:
                 small_panel = float(cfg.get("moderate_confidence_min_decoys_with_valid_scores", 100))
                 large_panel = float(cfg.get("high_confidence_min_decoys_with_valid_scores", 500))
                 ablation_enabled = bool(config.get("ablation_analysis", {}).get("enabled", True))
@@ -43,8 +61,10 @@ def assign_confidence(df: pd.DataFrame, config: dict, used_dry_run_inputs: bool)
                     level = str(cfg.get("large_decoy_pose_ablation_confidence", "high"))
                 elif valid_decoys >= small_panel:
                     level = str(cfg.get("target_plus_decoy_docking_confidence", "moderate"))
-                else:
+                elif valid_decoys > 0:
                     level = str(cfg.get("target_plus_small_decoy_panel_confidence", "moderate"))
+                else:
+                    level = str(cfg.get("target_only_docking_confidence", "low"))
             elif run_mode == "target_only_docking":
                 level = str(cfg.get("target_only_docking_confidence", "low"))
             else:

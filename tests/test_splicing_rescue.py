@@ -12,8 +12,9 @@ sys.path.insert(0, str(PROJECT / "src"))
 from smn2_rescuediff.splicing_rescue.ablation_analysis import run_ablation_analysis
 from smn2_rescuediff.splicing_rescue.cli import run
 from smn2_rescuediff.splicing_rescue.config import load_config, resolve_paths, validate_weights
+from smn2_rescuediff.splicing_rescue.confidence_assigner import assign_confidence
 from smn2_rescuediff.splicing_rescue.evidence_writer import write_evidence_json
-from smn2_rescuediff.splicing_rescue.input_loader import assemble_candidate_table, load_all_inputs
+from smn2_rescuediff.splicing_rescue.input_loader import assemble_candidate_table, load_all_inputs, normalize_selectivity_table
 from smn2_rescuediff.splicing_rescue.pose_parser import parse_pose_for_candidate
 from smn2_rescuediff.splicing_rescue.rescue_score_calculator import calculate_splicing_rescue_scores
 from smn2_rescuediff.splicing_rescue.splicing_feature_scorer import infer_feature_based_components, selectivity_gap_score
@@ -344,6 +345,70 @@ def test_splicing_rescue_score_between_zero_and_one(tmp_path):
 def test_selectivity_gap_logic():
     scores = selectivity_gap_score(pd.Series([2.0, -1.0]), minimum_gap=1.0)
     assert scores.iloc[0] > scores.iloc[1]
+
+
+def test_real_decoy_selectivity_export_is_normalized_without_fake_values():
+    raw = pd.DataFrame(
+        [
+            {
+                "molecule_id": "MolA",
+                "target_deltaG": -8.0,
+                "decoy_deltaG": -6.5,
+                "weighted_mean_selectivity_gap": 1.4,
+                "num_decoys_with_scores": 10,
+                "is_dry_run_score": False,
+            },
+            {
+                "molecule_id": "MolB",
+                "target_deltaG": -7.2,
+                "decoy_deltaG": pd.NA,
+                "weighted_mean_selectivity_gap": pd.NA,
+                "num_decoys_with_scores": 0,
+                "is_dry_run_score": False,
+            },
+        ]
+    )
+    normalized = normalize_selectivity_table(raw)
+    assert normalized.loc[0, "weighted_selectivity_gap"] == 1.4
+    assert normalized.loc[0, "selectivity_gap"] == 1.5
+    assert normalized.loc[0, "num_decoys_with_valid_scores"] == 10
+    assert bool(normalized.loc[0, "has_real_decoy_selectivity"]) is True
+    assert pd.isna(normalized.loc[1, "weighted_selectivity_gap"])
+    assert pd.isna(normalized.loc[1, "selectivity_gap"])
+    assert bool(normalized.loc[1, "has_real_decoy_selectivity"]) is False
+
+
+def test_small_real_decoy_panel_confidence_is_moderate_not_high():
+    config = {
+        "confidence": {
+            "assign_confidence_level": True,
+            "dry_run_confidence": "very_low",
+            "target_only_docking_confidence": "low",
+            "target_plus_decoy_docking_confidence": "moderate",
+            "target_plus_small_decoy_panel_confidence": "moderate",
+            "large_decoy_pose_ablation_confidence": "high",
+            "moderate_confidence_min_decoys_with_valid_scores": 100,
+            "high_confidence_min_decoys_with_valid_scores": 500,
+            "pose_based_scoring_confidence_bonus": True,
+            "missing_pose_confidence_penalty": True,
+        },
+        "ablation_analysis": {"enabled": True},
+    }
+    rows = pd.DataFrame(
+        [
+            {
+                "run_mode": "target_plus_decoy_docking",
+                "is_dry_run_input": False,
+                "is_dry_run_score": False,
+                "num_decoys_with_scores": 10,
+                "weighted_selectivity_gap": 1.5,
+                "has_real_decoy_selectivity": True,
+                "pose_analysis_status": "pose_based_proxy",
+            }
+        ]
+    )
+    confidence = assign_confidence(rows, config, used_dry_run_inputs=False).iloc[0]
+    assert confidence == "moderate"
 
 
 def test_srsi_score_and_tiers_are_calculated(tmp_path):
