@@ -11,12 +11,12 @@ inputs:
   raw_structure_dir: data/raw/structures
 
 outputs:
-  output_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v2
-  ligand_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v2/ligands
+  output_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v3
+  ligand_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v3/ligands
   receptor_dir: data/processed/docking/receptors
-  pose_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v2/poses
-  log_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v2/logs
-  simulation_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v2/simulation
+  pose_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v3/poses
+  log_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v3/logs
+  simulation_dir: data/processed/docking/stage_b_decoy_100x10_fresh_v3/simulation
   report_path: reports/docking_counter_screening_report.md
   figure_dir: figures/docking
 
@@ -24,7 +24,7 @@ run:
   random_seed: 42
   run_name: decoy_benchmark_100x10_fresh_v2
   run_mode: target_plus_decoy_docking
-  max_molecules_to_dock: 100
+  max_molecules_to_dock: 93
   require_real_docking_for_scientific_results: true
   allow_dry_run_simulation: false
   parallel_jobs: 1
@@ -37,7 +37,7 @@ staged_docking:
   select_top_from_target_scores: true
   ignore_advance_filters_for_benchmark: true
   target_scores_path: data/processed/docking/stage_a_target/smn2_target_docking_scores.tsv
-  top_molecules_from_target_scores: 100
+  top_molecules_from_target_scores: 93
   reuse_prior_target_scores: true
 
 docking_engine:
@@ -103,7 +103,7 @@ selectivity_scoring:
   advance_target_deltaG_threshold: 0.0
   advance_weighted_gap_threshold: 1.0
   advance_off_target_risk_threshold: 0.40
-  advance_min_decoys_with_scores: 20
+  advance_min_decoys_with_scores: 10
 
 live_simulation:
   enable_live_logging: true

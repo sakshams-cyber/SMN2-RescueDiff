@@ -4,6 +4,8 @@ module_name: Deep Neural Molecular Generation Model
 inputs:
   training_smiles:
     - data/raw/molecules/chembl_training_smiles.smi
+    - data/raw/molecules/zinc_training_smiles.smi
+    - data/raw/molecules/rna_ligand_training_smiles.smi
   optional_context:
     smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
     smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
@@ -18,7 +20,7 @@ outputs:
 
 run:
   random_seed: 42
-  device: auto
+  device: cpu
   run_name: module3_pilot_real
   overwrite_existing: false
   save_config_used: true
