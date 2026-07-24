@@ -6,11 +6,12 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+import yaml
 
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
-from smn2_rescuediff.molecule_generation.candidate_prioritizer import add_candidate_scores
+from smn2_rescuediff.molecule_generation.candidate_prioritizer import add_candidate_scores, select_docking_candidates
 from smn2_rescuediff.molecule_generation.chemical_filter import (
     calculate_properties,
     mol_from_smiles,
@@ -212,6 +213,35 @@ def test_training_smiles_loads_and_cleans(tmp_path):
     assert any("too small" in warning for warning in warnings)
 
 
+def test_quality_training_manifest_builds_weighted_source_tables(tmp_path):
+    source_a = tmp_path / "chembl.smi"
+    source_b = tmp_path / "rna.smi"
+    source_a.write_text("CCO\nCCN\nCC.Cl\ninvalid\n", encoding="utf-8")
+    source_b.write_text("CCO\nc1ccncc1\nCCOC\n", encoding="utf-8")
+    manifest = tmp_path / "sources.tsv"
+    manifest.write_text(
+        "source_name\tpath\tsource_type\tsource_weight\tmax_rows\tquality_tier\tnotes\n"
+        f"chembl\t{source_a}\tbroad\t1.0\t100\ttier2\tbaseline\n"
+        f"rna\t{source_b}\trna_ligand_like\t3.0\t100\ttier1\toverweight\n",
+        encoding="utf-8",
+    )
+    config_path = _tiny_cli_config(tmp_path)
+    config = load_config(config_path)
+    config["inputs"].pop("training_smiles", None)
+    config["inputs"]["training_source_manifest"] = str(manifest)
+    config["data_processing"]["min_molecular_weight_training"] = 20
+    cleaned, summary, rejected, warnings = build_training_dataset(config, tmp_path, tmp_path / "quality_out")
+    assert len(set(cleaned)) == 4
+    assert len(cleaned) > len(set(cleaned))
+    assert summary["training_molecules_cleaned"] == 4
+    assert summary["training_molecules_weighted"] > summary["training_molecules_cleaned"]
+    assert not rejected.empty
+    quality_dir = tmp_path / "quality_out" / "quality_training"
+    assert (quality_dir / "quality_training_unique.tsv").exists()
+    assert (quality_dir / "quality_training_weighted.tsv").exists()
+    assert (quality_dir / "source_balance_report.tsv").exists()
+
+
 def test_selfies_conversion_round_trips_known_smiles():
     pytest.importorskip("selfies")
     assert selfies_available()
@@ -310,8 +340,30 @@ def test_candidate_scoring_adds_prioritization_columns():
     df = pd.DataFrame([{**props, "canonical_smiles": "c1ccncc1", "is_valid": True, "is_duplicate": False, "is_novel_vs_training": True}])
     scored = add_candidate_scores(df)
     assert "rna_ligand_like_score" in scored
+    assert "chemical_quality_score" in scored
+    assert "final_generation_selection_score" in scored
     assert "pre_docking_candidate_score" in scored
-    assert 0 <= float(scored["pre_docking_candidate_score"].iloc[0]) <= 1
+    assert 0 <= float(scored["final_generation_selection_score"].iloc[0]) <= 1
+
+
+def test_quality_weighted_docking_selection_exports_diverse_top_candidates():
+    smiles = ["c1ccncc1", "c1ccccc1", "CCOC(=O)N", "CCN(CC)CC", "CCCCCCCCCCCC"]
+    rows = []
+    for item in smiles:
+        mol = mol_from_smiles(item)
+        rows.append({**calculate_properties(mol), "canonical_smiles": item, "is_valid": True, "is_duplicate": False, "is_novel_vs_training": True, "max_tanimoto_to_training": 0.2})
+    selected = select_docking_candidates(
+        pd.DataFrame(rows),
+        {
+            "candidate_prioritization": {
+                "max_candidates_to_export_for_docking": 3,
+                "morgan_diversity_selection_enabled": True,
+                "tanimoto_similarity_threshold_for_diversity": 0.75,
+            }
+        },
+    )
+    assert len(selected) == 3
+    assert selected["final_generation_selection_score"].notna().all()
 
 
 def test_summary_json_contains_required_fields(tmp_path):
@@ -392,3 +444,26 @@ def test_molecule_generation_cli_runs_on_tiny_test_mode(tmp_path):
         "pre_docking_candidate_score",
         "selected_for_docking",
     }.issubset(filtered.columns)
+
+
+def test_molecule_generation_cli_writes_quality_training_outputs_from_manifest(tmp_path):
+    source = tmp_path / "rna_source.smi"
+    source.write_text("CCO\nCCN\nCCOC\nc1ccncc1\n", encoding="utf-8")
+    manifest = tmp_path / "quality_sources.tsv"
+    manifest.write_text(
+        "source_name\tpath\tsource_type\tsource_weight\tmax_rows\tquality_tier\tnotes\n"
+        f"rna\t{source}\trna_ligand_like\t2.0\t100\ttier1\ttiny test\n",
+        encoding="utf-8",
+    )
+    config_path = _tiny_cli_config(tmp_path)
+    config = load_config(config_path)
+    config["inputs"].pop("training_smiles", None)
+    config["inputs"]["training_source_manifest"] = str(manifest)
+    config_path.write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+    assert run(config_path) == 0
+    output_dir = Path(config["outputs"]["output_dir"])
+    assert (output_dir / "quality_training" / "quality_training_unique.tsv").exists()
+    assert (output_dir / "quality_training" / "quality_training_weighted.tsv").exists()
+    assert (output_dir / "quality_training" / "source_balance_report.tsv").exists()
+    docking = pd.read_csv(output_dir / "generated_molecules_for_docking.tsv", sep="\t")
+    assert {"chemical_quality_score", "final_generation_selection_score", "tpsa", "synthetic_accessibility_proxy"}.issubset(docking.columns)

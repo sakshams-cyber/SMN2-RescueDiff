@@ -9,6 +9,7 @@ from typing import Any
 import pandas as pd
 
 from .chemical_filter import canonicalize_smiles, require_rdkit
+from .quality_training import build_quality_training_dataset
 from .smiles_cleaner import clean_smiles_strings, iter_smiles_lines
 from .smiles_loader import TOY_WARNING, create_example_training_smiles
 
@@ -28,9 +29,35 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
     """Load, validate, canonicalize, and merge configured training SMILES files."""
     require_rdkit()
     inputs = config.get("inputs", {})
+    data_cfg = config.get("data_processing", {})
+    manifest = inputs.get("training_source_manifest")
+    if manifest:
+        accepted, summary, rejected_df, warnings = build_quality_training_dataset(
+            manifest_path=str(manifest),
+            project_root=project_root,
+            output_dir=output_dir,
+            data_cfg=data_cfg,
+        )
+        min_warning = int(data_cfg.get("min_training_molecules_warning", 1000))
+        if summary.get("training_molecules_cleaned", 0) < min_warning:
+            warnings.append(
+                "WARNING: This quality-weighted training dataset is small for final molecule generation. "
+                "Interpret the run as pilot/debug unless larger source files are provided."
+            )
+        cleaned_path = output_dir / "training_smiles_merged_cleaned.smi"
+        cleaned_path.parent.mkdir(parents=True, exist_ok=True)
+        cleaned_path.write_text("\n".join(accepted) + "\n", encoding="utf-8")
+        rejected_path = output_dir / "training_dataset_rejected.tsv"
+        rejected_path.parent.mkdir(parents=True, exist_ok=True)
+        rejected_df.to_csv(rejected_path, sep="\t", index=False)
+        summary["warnings"] = warnings
+        summary_path = output_dir / "training_dataset_summary.json"
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        return accepted, summary, rejected_df, warnings
+
     raw_value = inputs.get("training_smiles", [])
     paths = normalize_training_paths(raw_value) if raw_value else []
-    data_cfg = config.get("data_processing", {})
     warnings: list[str] = []
     resolved: list[Path] = []
     for item in paths:

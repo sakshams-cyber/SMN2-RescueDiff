@@ -25,6 +25,7 @@ PRESETS = [
     "module3_quick_test.yaml",
     "module3_pilot_real.yaml",
     "module3_final_rigorous.yaml",
+    "module3_final_final_rigorous_x10.yaml",
     "module4_target_100.yaml",
     "module4_target_1000.yaml",
     "module4_decoy_stage1.yaml",
@@ -51,6 +52,7 @@ def test_module3_presets_encode_debug_pilot_and_final_scales():
     quick = load_molecule_config(_preset("module3_quick_test.yaml"))
     pilot = load_molecule_config(_preset("module3_pilot_real.yaml"))
     final = load_molecule_config(_preset("module3_final_rigorous.yaml"))
+    final_x10 = load_molecule_config(_preset("module3_final_final_rigorous_x10.yaml"))
 
     assert quick["generation"]["generator_mode"] == "debug_ngram"
     assert quick["training"]["enabled"] is False
@@ -68,6 +70,12 @@ def test_module3_presets_encode_debug_pilot_and_final_scales():
     assert 100000 <= final["sampling"]["num_raw_to_generate"] <= 250000
     assert final["run"]["overwrite_existing"] is False
     assert final["candidate_prioritization"]["max_candidates_to_export_for_docking"] == 50000
+    assert final_x10["inputs"]["training_source_manifest"] == "configs/molecule_training_sources_quality.tsv"
+    assert final_x10["training"]["epochs"] == 10
+    assert final_x10["sampling"]["num_raw_to_generate"] == 50000
+    assert 500 <= final_x10["candidate_prioritization"]["max_candidates_to_export_for_docking"] <= 1000
+    assert final_x10["rl_finetuning"]["enabled"] is False
+    assert final_x10["candidate_prioritization"]["morgan_diversity_selection_enabled"] is True
 
 
 def test_module4_presets_use_target_only_and_staged_decoy_panels():

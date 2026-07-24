@@ -100,7 +100,9 @@ def write_generation_figures(
         ("logp", "logp_distribution.png", "LogP distribution", "LogP"),
         ("qed", "qed_distribution.png", "QED distribution", "QED"),
         ("rna_ligand_like_score", "rna_ligand_like_score_distribution.png", "RNA-ligand-like score distribution", "RNA-ligand-like score"),
+        ("chemical_quality_score", "chemical_quality_score_distribution.png", "Chemical quality score distribution", "Chemical quality score"),
         ("pre_docking_candidate_score", "pre_docking_candidate_score_distribution.png", "Pre-docking candidate score distribution", "Pre-docking candidate score"),
+        ("final_generation_selection_score", "final_generation_selection_score_distribution.png", "Final generation selection score distribution", "Final generation selection score"),
     ]:
         values = _numeric(filtered, column)
         if values.empty:

@@ -39,6 +39,7 @@ FINAL_FILTERED_COLUMNS = [
     "representation",
     "raw_generated_string",
     "decoded_smiles",
+    "valid_smiles",
     "canonical_smiles",
     "is_valid",
     "is_duplicate",
@@ -48,19 +49,25 @@ FINAL_FILTERED_COLUMNS = [
     "hbd",
     "hba",
     "rotatable_bonds",
+    "tpsa",
     "formal_charge",
     "num_rings",
     "num_aromatic_rings",
     "qed",
     "sa_score",
     "lipinski_pass",
+    "pains_flag",
     "pains_alert",
+    "synthetic_accessibility_proxy",
     "filter_pass",
     "rejection_reason",
     "max_tanimoto_to_training",
     "bemis_murcko_scaffold",
+    "novelty_vs_training_set",
     "rna_ligand_like_score",
+    "chemical_quality_score",
     "pre_docking_candidate_score",
+    "final_generation_selection_score",
     "diversity_cluster_id",
     "selected_for_docking",
     "notes",
@@ -141,7 +148,8 @@ def _sync_run_outputs_to_stable(run_dir: Path, stable_dir: Path, output_files: l
     for item in output_files:
         source = Path(item)
         if source.exists() and source.is_file():
-            _copy2(source, stable_dir / source.name)
+            destination = stable_dir / "quality_training" / source.name if source.parent.name == "quality_training" else stable_dir / source.name
+            _copy2(source, destination)
     for filename in ["RUN_SUMMARY.md", "run_metrics.json"]:
         source = run_dir / filename
         if source.exists():
@@ -290,8 +298,10 @@ def run(config_path: str | Path) -> int:
     docking_candidates = select_docking_candidates(filtered, config) if bool(config.get("candidate_prioritization", {}).get("enabled", True)) else filtered.copy()
     selected_set = set(docking_candidates["canonical_smiles"]) if not docking_candidates.empty else set()
     filtered["selected_for_docking"] = filtered["canonical_smiles"].isin(selected_set)
+    if not docking_candidates.empty:
+        docking_candidates["selected_for_docking"] = True
     filtered = _normalize_columns(filtered)
-    docking_candidates = _normalize_columns(filtered[filtered["selected_for_docking"] == True].copy())  # noqa: E712
+    docking_candidates = _normalize_columns(docking_candidates.copy())
     write_table(filtered, output_dir / "generated_molecules_filtered.tsv")
     write_table(docking_candidates, output_dir / "generated_molecules_for_docking.tsv")
 
@@ -317,7 +327,13 @@ def run(config_path: str | Path) -> int:
             "run_name": config.get("run", {}).get("run_name", "neural_run"),
             "training_files": dataset_summary.get("training_files", []),
             "training_molecules_raw": dataset_summary.get("training_molecules_raw", 0),
+            "training_molecules_valid": dataset_summary.get("training_molecules_valid", dataset_summary.get("training_molecules_cleaned", 0)),
+            "training_molecules_invalid": dataset_summary.get("training_molecules_invalid", dataset_summary.get("rejected_count", 0)),
+            "training_molecules_deduplicated": dataset_summary.get("training_molecules_deduplicated", 0),
             "training_molecules_cleaned": dataset_summary.get("training_molecules_cleaned", 0),
+            "training_molecules_weighted": dataset_summary.get("training_molecules_weighted", dataset_summary.get("training_molecules_cleaned", 0)),
+            "quality_training_manifest": dataset_summary.get("training_source_manifest", "NA"),
+            "quality_source_balance": dataset_summary.get("source_balance", []),
             "representation": representation,
             "model_architecture": config.get("model", {}).get("architecture", "transformer_decoder"),
             "epochs_completed": int(len(training_log)),
@@ -357,6 +373,13 @@ def run(config_path: str | Path) -> int:
         str(output_dir / "rl_finetuning_log.tsv"),
         str(output_dir / "molecule_generation_config_used.yaml"),
     ]
+    quality_outputs = [
+        output_dir / "quality_training" / "quality_training_unique.tsv",
+        output_dir / "quality_training" / "quality_training_weighted.tsv",
+        output_dir / "quality_training" / "source_balance_report.tsv",
+        output_dir / "quality_training" / "quality_training_rejected.tsv",
+    ]
+    output_files.extend(str(path) for path in quality_outputs if path.exists())
     run_report_path = output_dir / "reports" / paths.report_path.name
     run_report_path.parent.mkdir(parents=True, exist_ok=True)
     write_report(config=config, summary=summary, output_files=output_files, report_path=run_report_path)

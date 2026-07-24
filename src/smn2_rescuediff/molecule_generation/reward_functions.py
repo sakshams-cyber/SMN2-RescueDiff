@@ -16,6 +16,10 @@ def _between(value: float, low: float, high: float) -> float:
     return max(0.0, 1.0 - distance / width)
 
 
+def _num(row: pd.Series, column: str, default: float = 0.0) -> float:
+    return float(pd.to_numeric(pd.Series([row.get(column, default)]), errors="coerce").fillna(default).iloc[0])
+
+
 def rna_ligand_like_score(row: pd.Series) -> float:
     """Score pre-docking chemical features associated with RNA-ligand-like candidates."""
     mw = float(pd.to_numeric(pd.Series([row.get("molecular_weight", 0)]), errors="coerce").fillna(0).iloc[0])
@@ -47,19 +51,18 @@ def chemical_plausibility_reward(row: pd.Series, weights: dict[str, float] | Non
     reward += float(weights.get("validity", 2.0)) if bool(row.get("is_valid", False)) else -2.0
     reward += float(weights.get("uniqueness", 1.0)) if not bool(row.get("is_duplicate", False)) else float(weights.get("duplicate_penalty", -1.0))
     reward += float(weights.get("novelty", 1.0)) if bool(row.get("is_novel_vs_training", False)) else 0.0
-    reward += float(weights.get("qed", 1.5)) * float(pd.to_numeric(pd.Series([row.get("qed", 0)]), errors="coerce").fillna(0).iloc[0])
+    reward += float(weights.get("qed", 1.5)) * _num(row, "qed", 0.0)
     reward += float(weights.get("lipinski", 1.0)) if bool(row.get("lipinski_pass", False)) else 0.0
-    reward += float(weights.get("molecular_weight_range", 0.8)) * _between(float(row.get("molecular_weight", 0)), 150, 650)
-    reward += float(weights.get("logp_range", 0.8)) * _between(float(row.get("logp", 0)), -2, 6)
-    reward += float(weights.get("hbond_balance", 0.6)) * _between(float(row.get("hbd", 0)) + float(row.get("hba", 0)), 2, 14)
-    reward += float(weights.get("aromatic_ring_balance", 0.5)) * _between(float(row.get("num_aromatic_rings", 0)), 0, 4)
+    reward += float(weights.get("molecular_weight_range", 0.8)) * _between(_num(row, "molecular_weight", 0.0), 150, 650)
+    reward += float(weights.get("logp_range", 0.8)) * _between(_num(row, "logp", 0.0), -2, 6)
+    reward += float(weights.get("hbond_balance", 0.6)) * _between(_num(row, "hbd", 0.0) + _num(row, "hba", 0.0), 2, 14)
+    reward += float(weights.get("aromatic_ring_balance", 0.5)) * _between(_num(row, "num_aromatic_rings", 0.0), 0, 4)
     reward += float(weights.get("heteroatom_presence", 0.7)) * (1.0 if any(atom in str(row.get("canonical_smiles", "")) for atom in ["N", "O", "S", "P"]) else 0.0)
     reward += float(weights.get("nitrogen_heterocycle_bonus", 0.8)) * (1.0 if "n" in str(row.get("canonical_smiles", "")) else 0.0)
     if bool(row.get("pains_alert", False)):
         reward += float(weights.get("pains_penalty", -2.0))
-    if abs(float(row.get("formal_charge", 0))) > 2:
+    if abs(_num(row, "formal_charge", 0.0)) > 2:
         reward += float(weights.get("excessive_charge_penalty", -1.0))
-    if float(row.get("molecular_weight", 0)) > 650:
+    if _num(row, "molecular_weight", 0.0) > 650:
         reward += float(weights.get("large_molecule_penalty", -1.0))
     return float(reward) if math.isfinite(float(reward)) else -10.0
-

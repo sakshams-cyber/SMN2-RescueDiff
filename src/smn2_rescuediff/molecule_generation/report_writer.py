@@ -150,8 +150,11 @@ def build_summary(
         "logp",
         "qed",
         "max_tanimoto_to_training",
+        "novelty_vs_training_set",
         "rna_ligand_like_score",
+        "chemical_quality_score",
         "pre_docking_candidate_score",
+        "final_generation_selection_score",
     ]:
         values = _numeric(filtered, column)
         numeric_summary[column] = {
@@ -212,7 +215,9 @@ def write_report(
             "- `figures/molecule_generation/logp_distribution.png`",
             "- `figures/molecule_generation/qed_distribution.png`",
             "- `figures/molecule_generation/rna_ligand_like_score_distribution.png`",
+            "- `figures/molecule_generation/chemical_quality_score_distribution.png`",
             "- `figures/molecule_generation/pre_docking_candidate_score_distribution.png`",
+            "- `figures/molecule_generation/final_generation_selection_score_distribution.png`",
             "- `figures/molecule_generation/scaffold_frequency_top20.png`",
             "- `figures/molecule_generation/validity_uniqueness_novelty_summary.png`",
             "- `figures/molecule_generation/diversity_distribution.png`",
@@ -238,7 +243,11 @@ Recommended real training sources include ChEMBL, ZINC subsets, RNA-binding liga
 ## Dataset And Representation
 
 - Raw training molecules read: {summary.get("training_molecules_raw", "NA")}
+- Valid training molecules: {summary.get("training_molecules_valid", "NA")}
+- Invalid training molecules: {summary.get("training_molecules_invalid", "NA")}
+- Deduplicated training records: {summary.get("training_molecules_deduplicated", "NA")}
 - Cleaned canonical training molecules: {summary.get("training_molecules_cleaned", "NA")}
+- Weighted training rows used for model exposure: {summary.get("training_molecules_weighted", "NA")}
 - Molecular representation: {summary.get("representation", config.get("tokenization", {}).get("representation", "selfies"))}
 - Generator mode: {summary.get("generator_mode", config.get("generation", {}).get("generator_mode", "neural_transformer"))}
 
@@ -272,7 +281,7 @@ The module uses RDKit to parse and canonicalize decoded SMILES, remove invalid m
 - Novel-filtered fraction: {summary.get("novel_filtered_fraction"):.4f}
 - Candidates exported for docking: {summary.get("selected_for_docking_count", "NA")}
 
-Filtered molecules receive scaffold annotations, novelty scores against the training set, diversity cluster identifiers, RNA-ligand-like scores, and pre-docking candidate scores. These values support downstream prioritization but are not substitutes for Module 4 docking or experimental validation.
+Filtered molecules receive scaffold annotations, novelty scores against the training set, diversity cluster identifiers, RNA-ligand-like scores, chemical quality scores, and final generation selection scores. The docking export is ranked by quality-weighted score and diversity-selected with Morgan-fingerprint/Tanimoto filtering when enabled. These values support downstream prioritization but are not substitutes for Module 4 docking or experimental validation.
 
 ## Property Summary
 

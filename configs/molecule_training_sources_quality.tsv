@@ -1,0 +1,4 @@
+source_name	path	source_type	source_weight	max_rows	quality_tier	notes
+ChEMBL_druglike	data/raw/molecules/chembl_training_smiles.smi	broad_druglike	1.0	250000	tier2	Broad drug-like chemical prior for plausible medicinal chemistry.
+ZINC_leadlike	data/raw/molecules/zinc_training_smiles.smi	leadlike_diversity	0.8	250000	tier2	Lead-like diversity source; lower weight than RNA-ligand-biased data.
+RNA_ligand_curated	data/raw/molecules/rna_ligand_training_smiles.smi	rna_ligand_like	4.0	100000	tier1	Oversampled RNA-ligand-like source for final quality-weighted generation.

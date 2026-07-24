@@ -18,6 +18,7 @@ class MoleculeGenerationPaths:
     config_path: Path
     project_root: Path
     training_smiles: list[Path]
+    training_source_manifest: Path | None
     smn2_target_profile: Path
     smn2_target_metadata: Path
     decoy_atlas_summary: Path
@@ -68,17 +69,21 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> MoleculeGe
     inputs = config.get("inputs", {})
     outputs = config.get("outputs", {})
     raw_training = inputs.get("training_smiles")
+    raw_manifest = inputs.get("training_source_manifest")
     if isinstance(raw_training, list):
         training = [resolve(str(item), "inputs.training_smiles") for item in raw_training]
     elif raw_training:
         training = [resolve(str(raw_training), "inputs.training_smiles")]
+    elif raw_manifest:
+        training = []
     else:
-        raise MoleculeGenerationConfigError("Missing required path field: inputs.training_smiles")
+        raise MoleculeGenerationConfigError("Missing required path field: inputs.training_smiles or inputs.training_source_manifest")
     output_dir = resolve(outputs.get("output_dir"), "outputs.output_dir")
     return MoleculeGenerationPaths(
         config_path=path,
         project_root=project_root,
         training_smiles=training,
+        training_source_manifest=resolve(str(raw_manifest), "inputs.training_source_manifest") if raw_manifest else None,
         smn2_target_profile=resolve(optional_context("smn2_target_profile"), "inputs.optional_context.smn2_target_profile"),
         smn2_target_metadata=resolve(optional_context("smn2_target_metadata"), "inputs.optional_context.smn2_target_metadata"),
         decoy_atlas_summary=resolve(optional_context("decoy_atlas_summary"), "inputs.optional_context.decoy_atlas_summary"),
@@ -87,7 +92,7 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> MoleculeGe
         log_dir=resolve(outputs.get("log_dir") or str(output_dir / "logs"), "outputs.log_dir"),
         report_path=resolve(outputs.get("report_path"), "outputs.report_path"),
         figure_dir=resolve(outputs.get("figure_dir"), "outputs.figure_dir"),
-        raw_molecule_dir=training[0].parent,
+        raw_molecule_dir=training[0].parent if training else project_root / "data" / "raw" / "molecules",
     )
 
 

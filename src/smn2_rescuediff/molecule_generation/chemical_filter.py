@@ -88,6 +88,7 @@ def calculate_properties(mol: object, calculate_qed: bool = True, pains_catalog:
     hbd = int(Lipinski.NumHDonors(mol))
     hba = int(Lipinski.NumHAcceptors(mol))
     rotatable = int(Lipinski.NumRotatableBonds(mol))
+    tpsa = float(rdMolDescriptors.CalcTPSA(mol))
     formal_charge = int(Chem.GetFormalCharge(mol))
     num_rings = int(mol.GetRingInfo().NumRings())
     aromatic_rings = int(rdMolDescriptors.CalcNumAromaticRings(mol))
@@ -104,6 +105,7 @@ def calculate_properties(mol: object, calculate_qed: bool = True, pains_catalog:
         "hbd": hbd,
         "hba": hba,
         "rotatable_bonds": rotatable,
+        "tpsa": tpsa,
         "formal_charge": formal_charge,
         "num_rings": num_rings,
         "num_aromatic_rings": aromatic_rings,
@@ -111,6 +113,11 @@ def calculate_properties(mol: object, calculate_qed: bool = True, pains_catalog:
         "sa_score": "NA",
         "lipinski_pass": lipinski_pass(mw, logp, hbd, hba),
         "pains_alert": pains_alert,
+        "pains_flag": pains_alert,
+        "synthetic_accessibility_proxy": round(
+            max(0.0, min(1.0, 1.0 - 0.0012 * max(0.0, mw - 250.0) - 0.035 * rotatable - 0.04 * max(0, num_rings - 3))),
+            6,
+        ),
     }
 
 
@@ -161,6 +168,7 @@ def process_generated_smiles(generated: pd.DataFrame, config: dict[str, Any]) ->
             "decoded_smiles": decoded,
             "raw_smiles": decoded,
             "canonical_smiles": "NA",
+            "valid_smiles": False,
             "is_valid": False,
             "is_duplicate": False,
             "is_novel_vs_training": "NA",
@@ -169,6 +177,7 @@ def process_generated_smiles(generated: pd.DataFrame, config: dict[str, Any]) ->
             "hbd": "NA",
             "hba": "NA",
             "rotatable_bonds": "NA",
+            "tpsa": "NA",
             "formal_charge": "NA",
             "num_rings": "NA",
             "num_aromatic_rings": "NA",
@@ -176,6 +185,8 @@ def process_generated_smiles(generated: pd.DataFrame, config: dict[str, Any]) ->
             "sa_score": "NA",
             "lipinski_pass": "NA",
             "pains_alert": "NA",
+            "pains_flag": "NA",
+            "synthetic_accessibility_proxy": "NA",
             "filter_pass": False,
             "rejection_reason": "",
             "max_tanimoto_to_training": "NA",
@@ -195,6 +206,7 @@ def process_generated_smiles(generated: pd.DataFrame, config: dict[str, Any]) ->
         base.update(props)
         base["canonical_smiles"] = canonical
         base["is_valid"] = True
+        base["valid_smiles"] = True
         is_duplicate = canonical in seen
         base["is_duplicate"] = is_duplicate
         reasons = []
