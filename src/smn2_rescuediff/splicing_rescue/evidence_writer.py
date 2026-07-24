@@ -8,6 +8,8 @@ from typing import Any
 
 import pandas as pd
 
+from .numeric import safe_float
+
 
 def _json_safe(value: Any) -> Any:
     if isinstance(value, (list, dict, tuple)):
@@ -47,9 +49,9 @@ def _why_ranked_high(row: pd.Series) -> list[str]:
 
 def _main_concerns(row: pd.Series) -> list[str]:
     concerns = ["Computational prediction only", "Requires experimental validation before biological interpretation"]
-    if bool(row.get("is_dry_run_input", False)):
+    if str(row.get("is_dry_run_input", False)).strip().lower() in {"true", "1", "yes"}:
         concerns.insert(0, "Dry-run/simulated docking input; requires real docking before interpretation")
-    if pd.to_numeric(pd.Series([row.get("off_target_risk_score")]), errors="coerce").fillna(1).iloc[0] >= 0.6:
+    if safe_float(row.get("off_target_risk_score"), 0.5) >= 0.6:
         concerns.append("Elevated HuRDA off-target risk proxy")
     if str(row.get("pose_analysis_status", "")).lower().find("fallback") >= 0:
         concerns.append("Pose-based contact evidence unavailable or incomplete")

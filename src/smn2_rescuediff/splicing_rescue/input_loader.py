@@ -77,6 +77,20 @@ def normalize_selectivity_table(selectivity: pd.DataFrame) -> pd.DataFrame:
             df["weighted_selectivity_gap"] = pd.to_numeric(df["weighted_selectivity_gap"], errors="coerce").combine_first(weighted_mean_gap)
         else:
             df["weighted_selectivity_gap"] = weighted_mean_gap
+    elif "weighted_selectivity_gap" in df:
+        df["weighted_selectivity_gap"] = pd.to_numeric(df["weighted_selectivity_gap"], errors="coerce")
+
+    for column in [
+        "target_deltaG",
+        "best_decoy_deltaG",
+        "mean_decoy_deltaG",
+        "median_decoy_deltaG",
+        "weighted_mean_decoy_deltaG",
+        "percent_decoys_stronger_than_target",
+        "off_target_risk_score",
+    ]:
+        if column in df:
+            df[column] = pd.to_numeric(df[column], errors="coerce")
 
     if "num_decoys_with_scores" in df:
         decoy_count = pd.to_numeric(df["num_decoys_with_scores"], errors="coerce")

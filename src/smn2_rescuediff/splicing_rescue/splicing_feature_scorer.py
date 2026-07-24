@@ -5,6 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from .numeric import safe_float
+
 
 def numeric_series(df: pd.DataFrame, column: str, default: float = 0.0) -> pd.Series:
     """Return a numeric series with missing values filled."""
@@ -17,7 +19,7 @@ def clip01(values: pd.Series | np.ndarray | float) -> pd.Series | float:
     """Clip values to the 0-1 range."""
     if isinstance(values, pd.Series):
         return values.clip(lower=0.0, upper=1.0)
-    return float(max(0.0, min(1.0, float(values))))
+    return float(max(0.0, min(1.0, safe_float(values, 0.0))))
 
 
 def minmax_score(series: pd.Series, higher_is_better: bool = True) -> pd.Series:
@@ -66,9 +68,9 @@ def off_target_safety_score(off_target_risk: pd.Series, maximum_risk: float = 0.
 def infer_feature_based_components(candidates: pd.DataFrame, landmarks: pd.DataFrame, config: dict) -> pd.DataFrame:
     """Infer feature-based support components for each candidate."""
     thresholds = config.get("splicing_rescue_scoring", {}).get("thresholds", {})
-    strong_delta = float(thresholds.get("strong_target_binding_deltaG", -7.0))
-    min_gap = float(thresholds.get("minimum_selectivity_gap", 1.0))
-    max_risk = float(thresholds.get("maximum_off_target_risk_score", 0.40))
+    strong_delta = safe_float(thresholds.get("strong_target_binding_deltaG", -7.0), -7.0)
+    min_gap = safe_float(thresholds.get("minimum_selectivity_gap", 1.0), 1.0)
+    max_risk = safe_float(thresholds.get("maximum_off_target_risk_score", 0.40), 0.40)
     result = pd.DataFrame(index=candidates.index)
     result["molecule_id"] = candidates["molecule_id"].astype(str)
     result["target_binding_strength_score"] = target_binding_strength_score(numeric_series(candidates, "target_deltaG", default=np.nan), strong_delta)
@@ -92,4 +94,3 @@ def infer_feature_based_components(candidates: pd.DataFrame, landmarks: pd.DataF
         + 0.20 * result["beneficial_landmark_proximity_score"]
     ).clip(0, 1)
     return result
-

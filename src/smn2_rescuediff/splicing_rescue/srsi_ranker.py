@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from .confidence_assigner import assign_confidence
+from .numeric import coerce_numeric_columns, safe_float
 from .splicing_feature_scorer import numeric_series, zscore
 
 
@@ -44,6 +46,31 @@ FINAL_COLUMNS = [
 ]
 
 
+NUMERIC_FINAL_COLUMNS = {
+    "final_rank",
+    "target_deltaG",
+    "target_binding_strength_score",
+    "best_decoy_deltaG",
+    "weighted_mean_decoy_deltaG",
+    "weighted_selectivity_gap",
+    "percent_decoys_stronger_than_target",
+    "off_target_risk_score",
+    "predicted_splicing_rescue_score",
+    "splice_site_occlusion_penalty",
+    "molecular_weight",
+    "logp",
+    "hbd",
+    "hba",
+    "rotatable_bonds",
+    "formal_charge",
+    "qed",
+    "sa_score",
+    "pre_docking_candidate_score",
+    "srsi_score",
+    "srsi_percentile",
+}
+
+
 def _bool_series(df: pd.DataFrame, column: str, default: bool = False) -> pd.Series:
     if column not in df:
         return pd.Series([default] * len(df), index=df.index)
@@ -56,31 +83,31 @@ def _percentiles(series: pd.Series) -> pd.Series:
 
 def _candidate_tier(row: pd.Series, config: dict) -> str:
     tiers = config.get("srsi", {}).get("candidate_tiers", {})
-    percentile = float(row.get("srsi_percentile", 0.0))
-    rescue = float(row.get("predicted_splicing_rescue_score", 0.0))
-    risk = float(pd.to_numeric(pd.Series([row.get("off_target_risk_score", 1.0)]), errors="coerce").fillna(1.0).iloc[0])
-    if pd.isna(row.get("srsi_score")) or rescue <= 0:
+    percentile = safe_float(row.get("srsi_percentile"), 0.0)
+    rescue = safe_float(row.get("predicted_splicing_rescue_score"), 0.0)
+    risk = safe_float(row.get("off_target_risk_score"), 0.5)
+    if pd.isna(safe_float(row.get("srsi_score"))) or rescue <= 0:
         return "insufficient_evidence"
     if risk >= 0.80 or rescue < 0.20:
         return "not_recommended"
-    if percentile >= float(tiers.get("high_priority_min_srsi_percentile", 90)) and rescue >= 0.50 and risk <= 0.65:
+    if percentile >= safe_float(tiers.get("high_priority_min_srsi_percentile", 90), 90.0) and rescue >= 0.50 and risk <= 0.65:
         return "high_priority_computational_candidate"
-    if percentile >= float(tiers.get("medium_priority_min_srsi_percentile", 70)) and rescue >= 0.35 and risk <= 0.75:
+    if percentile >= safe_float(tiers.get("medium_priority_min_srsi_percentile", 70), 70.0) and rescue >= 0.35 and risk <= 0.75:
         return "medium_priority_computational_candidate"
-    if percentile >= float(tiers.get("low_priority_min_srsi_percentile", 50)) and rescue >= 0.25:
+    if percentile >= safe_float(tiers.get("low_priority_min_srsi_percentile", 50), 50.0) and rescue >= 0.25:
         return "low_priority_computational_candidate"
     return "not_recommended"
 
 
 def _recommended_next_step(row: pd.Series) -> str:
-    if bool(row.get("is_dry_run_input", False)):
+    if str(row.get("is_dry_run_input", False)).strip().lower() in {"true", "1", "yes"}:
         return "requires real docking before interpretation"
     status = str(row.get("pose_analysis_status", ""))
     if any(token in status for token in ["missing", "fallback", "failed", "no_receptor"]):
         return "requires pose validation"
-    if float(row.get("off_target_risk_score", 1.0)) >= 0.80:
+    if safe_float(row.get("off_target_risk_score"), 0.5) >= 0.80:
         return "not recommended due to off-target risk"
-    if float(row.get("predicted_splicing_rescue_score", 0.0)) < 0.25:
+    if safe_float(row.get("predicted_splicing_rescue_score"), 0.0) < 0.25:
         return "not recommended due to poor splicing-rescue proxy score"
     return "future experimental validation required"
 
@@ -109,26 +136,28 @@ def calculate_srsi(candidates: pd.DataFrame, rescue_scores: pd.DataFrame, config
             work[column] = work.get(alt, "NA")
     weights = config.get("srsi", {}).get("weights", {})
     binding_strength = -numeric_series(work, "target_deltaG", default=0.0)
+    if "weighted_selectivity_gap" in work:
+        work["weighted_selectivity_gap"] = pd.to_numeric(work["weighted_selectivity_gap"], errors="coerce")
     weighted_gap = numeric_series(work, "weighted_selectivity_gap", default=0.0)
     rescue = numeric_series(work, "predicted_splicing_rescue_score", default=0.0)
     qed = numeric_series(work, "qed", default=0.0)
     pre_docking = numeric_series(work, "pre_docking_candidate_score", default=0.0)
-    off_target = numeric_series(work, "off_target_risk_score", default=1.0)
+    off_target = numeric_series(work, "off_target_risk_score", default=0.5)
     sa_score = numeric_series(work, "sa_score", default=0.0)
     occlusion = numeric_series(work, "splice_site_occlusion_penalty", default=0.0)
     lipinski = _bool_series(work, "lipinski_pass", default=False).astype(float)
     pains = _bool_series(work, "pains_alert", default=False).astype(float)
     srsi = (
-        float(weights.get("smn2_binding_strength", 1.0)) * zscore(binding_strength)
-        + float(weights.get("splicing_rescue_score", 2.0)) * zscore(rescue)
-        + float(weights.get("weighted_selectivity_gap", 1.5)) * zscore(weighted_gap)
-        + float(weights.get("qed", 0.7)) * zscore(qed)
-        + float(weights.get("lipinski_bonus", 0.4)) * lipinski
-        + float(weights.get("pre_docking_candidate_score", 0.5)) * zscore(pre_docking)
-        - float(weights.get("off_target_risk_penalty", 1.5)) * zscore(off_target)
-        - float(weights.get("sa_score_penalty", 0.5)) * zscore(sa_score)
-        - float(weights.get("pains_penalty", 1.0)) * pains
-        - float(weights.get("splice_site_occlusion_penalty", 1.2)) * zscore(occlusion)
+        safe_float(weights.get("smn2_binding_strength", 1.0), 1.0) * zscore(binding_strength)
+        + safe_float(weights.get("splicing_rescue_score", 2.0), 2.0) * zscore(rescue)
+        + safe_float(weights.get("weighted_selectivity_gap", 1.5), 1.5) * zscore(weighted_gap)
+        + safe_float(weights.get("qed", 0.7), 0.7) * zscore(qed)
+        + safe_float(weights.get("lipinski_bonus", 0.4), 0.4) * lipinski
+        + safe_float(weights.get("pre_docking_candidate_score", 0.5), 0.5) * zscore(pre_docking)
+        - safe_float(weights.get("off_target_risk_penalty", 1.5), 1.5) * zscore(off_target)
+        - safe_float(weights.get("sa_score_penalty", 0.5), 0.5) * zscore(sa_score)
+        - safe_float(weights.get("pains_penalty", 1.0), 1.0) * pains
+        - safe_float(weights.get("splice_site_occlusion_penalty", 1.2), 1.2) * zscore(occlusion)
     )
     if used_dry_run_inputs:
         # Preserve relative ranking for pipeline testing while making the caveat
@@ -153,6 +182,5 @@ def calculate_srsi(candidates: pd.DataFrame, rescue_scores: pd.DataFrame, config
     ]
     for column in FINAL_COLUMNS:
         if column not in work:
-            work[column] = "NA"
-    return work[FINAL_COLUMNS]
-
+            work[column] = np.nan if column in NUMERIC_FINAL_COLUMNS else "NA"
+    return coerce_numeric_columns(work[FINAL_COLUMNS], NUMERIC_FINAL_COLUMNS)

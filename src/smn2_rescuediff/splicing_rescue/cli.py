@@ -207,6 +207,11 @@ def run(config_path: str | Path) -> int:
     final_ranked = calculate_srsi(candidates, rescue_scores, config, used_dry_run_inputs)
     if final_ranked.empty:
         raise ValueError("No molecules can be scored after SRSI calculation.")
+    missing_selectivity = int(final_ranked["weighted_selectivity_gap"].isna().sum()) if "weighted_selectivity_gap" in final_ranked else len(final_ranked)
+    if missing_selectivity:
+        warnings.append(
+            f"{missing_selectivity} candidates have missing weighted_selectivity_gap values; blank selectivity fields mean no usable decoy selectivity value was available."
+        )
     write_table(final_ranked, paths.table_dir / "final_srsi_ranked_candidates.tsv")
     top_report_n = int(config.get("run", {}).get("top_n_report_candidates", 10))
     write_table(final_ranked.head(top_report_n), paths.table_dir / "top_10_final_candidates.tsv")

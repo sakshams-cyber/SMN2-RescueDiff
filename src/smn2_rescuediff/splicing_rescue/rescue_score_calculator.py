@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
+from .numeric import coerce_numeric_columns, safe_float
 from .splicing_feature_scorer import numeric_series
 
 
@@ -31,6 +33,24 @@ RESCUE_COLUMNS = [
     "is_dry_run_input",
     "notes",
 ]
+
+NUMERIC_RESCUE_COLUMNS = {
+    "target_deltaG",
+    "weighted_selectivity_gap",
+    "off_target_risk_score",
+    "target_binding_strength_score",
+    "beneficial_landmark_proximity_score",
+    "u1_support_score",
+    "exon7_boundary_support_score",
+    "contact_density_score",
+    "hydrogen_bond_proxy_score",
+    "stacking_proxy_score",
+    "splice_site_occlusion_penalty",
+    "pose_support_score",
+    "feature_based_support_score",
+    "predicted_splicing_rescue_score",
+    "splicing_rescue_score_percentile",
+}
 
 
 def _percentiles(series: pd.Series) -> pd.Series:
@@ -63,7 +83,7 @@ def calculate_splicing_rescue_scores(
     weights = scoring.get("weights", {})
     thresholds = scoring.get("thresholds", {})
     score_mode = str(scoring.get("score_mode", "hybrid_pose_and_feature"))
-    minimum_score = float(thresholds.get("minimum_splicing_rescue_score_for_advancement", 0.60))
+    minimum_score = safe_float(thresholds.get("minimum_splicing_rescue_score_for_advancement", 0.60), 0.60)
 
     work = candidates.copy()
     work = work.merge(feature_scores, on="molecule_id", how="left", suffixes=("", "_feature"))
@@ -90,13 +110,13 @@ def calculate_splicing_rescue_scores(
     off_target = numeric_series(work, "off_target_risk_score", default=0.5).clip(0, 1)
 
     positive = (
-        float(weights.get("beneficial_landmark_proximity", 2.0)) * work["beneficial_landmark_proximity_score"]
-        + float(weights.get("u1_support_region_proximity", 2.0)) * work["u1_support_score"]
-        + float(weights.get("exon7_boundary_support", 1.5)) * work["exon7_boundary_support_score"]
-        + float(weights.get("target_binding_strength", 1.5)) * work["target_binding_strength_score"]
-        + float(weights.get("contact_density", 1.0)) * work["contact_density_score"]
-        + float(weights.get("hydrogen_bond_proxy", 0.8)) * work["hydrogen_bond_proxy_score"]
-        + float(weights.get("stacking_proxy", 0.7)) * work["stacking_proxy_score"]
+        safe_float(weights.get("beneficial_landmark_proximity", 2.0), 2.0) * work["beneficial_landmark_proximity_score"]
+        + safe_float(weights.get("u1_support_region_proximity", 2.0), 2.0) * work["u1_support_score"]
+        + safe_float(weights.get("exon7_boundary_support", 1.5), 1.5) * work["exon7_boundary_support_score"]
+        + safe_float(weights.get("target_binding_strength", 1.5), 1.5) * work["target_binding_strength_score"]
+        + safe_float(weights.get("contact_density", 1.0), 1.0) * work["contact_density_score"]
+        + safe_float(weights.get("hydrogen_bond_proxy", 0.8), 0.8) * work["hydrogen_bond_proxy_score"]
+        + safe_float(weights.get("stacking_proxy", 0.7), 0.7) * work["stacking_proxy_score"]
     )
     if score_mode in {"feature_based", "dry_run_input_analysis"}:
         positive += 2.0 * work["feature_based_support_score"]
@@ -107,18 +127,18 @@ def calculate_splicing_rescue_scores(
         positive += 1.5 * work["pose_support_score"]
 
     negative = (
-        float(weights.get("splice_site_occlusion_penalty", 2.0)) * work["splice_site_occlusion_penalty"]
-        + float(weights.get("off_target_risk_penalty", 1.5)) * off_target
-        + float(weights.get("missing_pose_penalty", 0.5)) * missing_pose.astype(float)
+        safe_float(weights.get("splice_site_occlusion_penalty", 2.0), 2.0) * work["splice_site_occlusion_penalty"]
+        + safe_float(weights.get("off_target_risk_penalty", 1.5), 1.5) * off_target
+        + safe_float(weights.get("missing_pose_penalty", 0.5), 0.5) * missing_pose.astype(float)
     )
     if used_dry_run_inputs:
         negative += 0.10
-    denominator = max(1e-9, float(sum(abs(float(value)) for value in weights.values())) + 2.0)
+    denominator = max(1e-9, float(sum(abs(safe_float(value, 0.0)) for value in weights.values())) + 2.0)
     score = ((positive - negative) / denominator).clip(lower=0.0, upper=1.0)
     work["predicted_splicing_rescue_score"] = score.round(6)
     work["splicing_rescue_score_percentile"] = _percentiles(work["predicted_splicing_rescue_score"]).round(3)
     work["splicing_rescue_tier"] = [
-        _tier(float(score_value), float(percentile), minimum_score)
+        _tier(safe_float(score_value), safe_float(percentile, 0.0), minimum_score)
         for score_value, percentile in zip(work["predicted_splicing_rescue_score"], work["splicing_rescue_score_percentile"], strict=False)
     ]
     if "pose_analysis_status" not in work:
@@ -136,6 +156,5 @@ def calculate_splicing_rescue_scores(
     ]
     for column in RESCUE_COLUMNS:
         if column not in work:
-            work[column] = "NA"
-    return work[RESCUE_COLUMNS]
-
+            work[column] = np.nan if column in NUMERIC_RESCUE_COLUMNS else "NA"
+    return coerce_numeric_columns(work[RESCUE_COLUMNS], NUMERIC_RESCUE_COLUMNS)

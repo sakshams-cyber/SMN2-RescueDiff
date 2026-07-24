@@ -8,6 +8,8 @@ from typing import Any
 
 import pandas as pd
 
+from .numeric import coerce_numeric_columns, safe_float
+
 
 LIMITATIONS = [
     "Docking scores are computational predictions and do not prove experimental binding.",
@@ -18,11 +20,65 @@ LIMITATIONS = [
     "This module does not provide chemical synthesis instructions or human, animal, or cell testing procedures.",
 ]
 
+NUMERIC_OUTPUT_COLUMNS = {
+    "final_rank",
+    "target_deltaG",
+    "target_binding_strength_score",
+    "best_decoy_deltaG",
+    "mean_decoy_deltaG",
+    "median_decoy_deltaG",
+    "weighted_mean_decoy_deltaG",
+    "weighted_selectivity_gap",
+    "selectivity_gap",
+    "selectivity_gap_best_decoy",
+    "selectivity_gap_mean_decoy",
+    "percent_decoys_stronger_than_target",
+    "off_target_risk_score",
+    "predicted_splicing_rescue_score",
+    "splice_site_occlusion_penalty",
+    "molecular_weight",
+    "logp",
+    "hbd",
+    "hba",
+    "rotatable_bonds",
+    "formal_charge",
+    "qed",
+    "sa_score",
+    "pre_docking_candidate_score",
+    "srsi_score",
+    "srsi_percentile",
+    "splicing_rescue_score_percentile",
+    "num_decoys_with_scores",
+    "num_decoys_with_valid_scores",
+    "num_decoys_tested",
+    "num_close_contacts",
+    "num_contacts_with_target_region",
+    "num_contacts_with_beneficial_landmarks",
+    "num_contacts_with_caution_landmarks",
+    "minimum_distance_to_u1_region",
+    "minimum_distance_to_5prime_splice_site",
+    "minimum_distance_to_3prime_splice_site",
+    "minimum_distance_to_core_donor_region",
+    "minimum_distance_to_core_acceptor_region",
+    "hydrogen_bond_proxy_count",
+    "stacking_proxy_count",
+    "contact_density_score",
+    "hydrogen_bond_proxy_score",
+    "stacking_proxy_score",
+    "pose_support_score",
+    "feature_based_support_score",
+    "rank_change_binding_to_full",
+    "binding_only_rank",
+    "binding_plus_selectivity_rank",
+    "binding_plus_splicing_rescue_rank",
+    "full_srsi_rank",
+}
+
 
 def write_table(df: pd.DataFrame, path: str | Path) -> None:
     """Write a TSV table."""
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, sep="\t", index=False)
+    coerce_numeric_columns(df, NUMERIC_OUTPUT_COLUMNS).to_csv(path, sep="\t", index=False)
 
 
 def build_summary(
@@ -38,6 +94,7 @@ def build_summary(
     tier_counts = final_ranked.get("candidate_tier", pd.Series(dtype=str)).value_counts().to_dict() if not final_ranked.empty else {}
     top = final_ranked.iloc[0] if not final_ranked.empty else None
     pose_status = pose_contact_features.get("pose_analysis_status", pd.Series(dtype=str)).astype(str) if not pose_contact_features.empty else pd.Series(dtype=str)
+    selectivity_values = pd.to_numeric(final_ranked.get("weighted_selectivity_gap", pd.Series(dtype=float)), errors="coerce")
     return {
         "module": "Predicted Splicing-Rescue Scoring and Final SRSI Ranking",
         "run_name": config.get("run", {}).get("run_name", "final_scoring_001"),
@@ -48,7 +105,9 @@ def build_summary(
         "num_low_priority_candidates": int(tier_counts.get("low_priority_computational_candidate", 0)),
         "num_not_recommended": int(tier_counts.get("not_recommended", 0)),
         "top_candidate_id": str(top.get("molecule_id")) if top is not None else None,
-        "top_candidate_srsi": float(top.get("srsi_score")) if top is not None and pd.notna(top.get("srsi_score")) else None,
+        "top_candidate_srsi": safe_float(top.get("srsi_score"), None) if top is not None else None,
+        "missing_selectivity_gap_count": int(selectivity_values.isna().sum()) if not final_ranked.empty else 0,
+        "candidates_with_selectivity_gap_count": int(selectivity_values.notna().sum()) if not final_ranked.empty else 0,
         "used_real_docking_inputs": bool(not used_dry_run_inputs),
         "used_dry_run_inputs": bool(used_dry_run_inputs),
         "pose_based_scoring_count": int((pose_status == "pose_based_proxy").sum()),
@@ -121,6 +180,10 @@ def write_final_candidate_report(
     warning_text = "\n".join(f"- {item}" for item in summary.get("warnings", [])) or "- No warnings were recorded."
     limitations = "\n".join(f"- {item}" for item in LIMITATIONS)
     ablation_note = "Ablation analysis was not available." if ablation.empty else _top_table(ablation.rename(columns={"full_srsi_rank": "final_rank"}), min(top_n, len(ablation)))
+    selectivity_note = (
+        f"{summary.get('missing_selectivity_gap_count', 0)} ranked candidates have missing `weighted_selectivity_gap` values. "
+        "Blank selectivity fields indicate that no usable real decoy selectivity value was available for that molecule; values were not fabricated."
+    )
     report = f"""# SMN2-RescueDiff Final Candidate Report
 
 ## Predicted Splicing-Rescue Scoring And Final SRSI Ranking
@@ -151,6 +214,8 @@ The top-ranked molecules identified by SMN2-RescueDiff are computational candida
 SRSI combines target binding strength, predicted splicing-rescue support, weighted HuRDA selectivity gap, QED, Lipinski-style chemical quality, pre-docking candidate score, off-target risk, synthetic-accessibility proxy when available, PAINS alerts, and splice-site occlusion penalty. Because docking energies are more negative for stronger predicted binding, SMN2 binding strength is calculated as `-1 * target_deltaG`.
 
 Binding alone is intentionally insufficient. A candidate with strong SMN2 target docking can rank lower if HuRDA decoy binding is also strong, if predicted splice-site occlusion is high, or if the splicing-rescue proxy score is weak.
+
+Missing selectivity handling: {selectivity_note}
 
 ## Predicted Splicing-Rescue Proxy
 
@@ -207,6 +272,10 @@ def write_splicing_method_report(
         if not pose_contact_features.empty
         else "No pose/contact features were calculated."
     )
+    selectivity_note = (
+        f"{summary.get('missing_selectivity_gap_count', 0)} candidates had missing `weighted_selectivity_gap` values. "
+        "Missing selectivity values are left blank in numeric outputs and mean that usable real decoy selectivity evidence was not available."
+    )
     report = f"""# Splicing-Rescue Scoring Method Report
 {dry_run_notice}
 ## Why Binding Alone Is Insufficient
@@ -230,6 +299,8 @@ Pose/contact status counts:
 ## Feature-Based Fallback
 
 If pose files are unavailable or cannot be parsed, the module uses a feature-based fallback from target docking strength, HuRDA selectivity gap, off-target risk, and landmark availability. Fallback scores are intentionally conservative and recorded with `pose_analysis_status`.
+
+Selectivity evidence note: {selectivity_note}
 
 ## Predicted Splicing-Rescue Score
 

@@ -458,3 +458,47 @@ def test_splicing_rescue_cli_runs_on_tiny_inputs(tmp_path):
     assert (run_dir / "run_metrics.json").exists()
     final = pd.read_csv(table_dir / "final_srsi_ranked_candidates.tsv", sep="\t")
     assert {"molecule_id", "srsi_score", "candidate_tier", "confidence_level"}.issubset(final.columns)
+
+
+def test_splicing_rescue_cli_handles_literal_na_numeric_inputs(tmp_path):
+    config_path = _toy_project(tmp_path)
+    dock = tmp_path / "data" / "processed" / "docking"
+    _write_tsv(
+        dock / "molecule_selectivity_scores.tsv",
+        [
+            {
+                "molecule_id": "MolA",
+                "canonical_smiles": "CCO",
+                "target_deltaG": -7.8,
+                "best_decoy_deltaG": "NA",
+                "weighted_mean_decoy_deltaG": "None",
+                "weighted_selectivity_gap": "NA",
+                "percent_decoys_stronger_than_target": "",
+                "off_target_risk_score": "N/A",
+                "num_decoys_with_valid_scores": "NA",
+                "run_mode": "dry_run",
+                "is_dry_run_score": True,
+            }
+        ],
+    )
+    _write_tsv(
+        dock / "candidates_for_splicing_rescue.tsv",
+        [
+            {
+                "molecule_id": "MolA",
+                "target_deltaG": "NA",
+                "weighted_selectivity_gap": "N/A",
+                "off_target_risk_score": "None",
+            }
+        ],
+    )
+    assert run(config_path) == 0
+
+    config = load_config(config_path)
+    table_dir = Path(config["outputs"]["table_dir"])
+    final = pd.read_csv(table_dir / "final_srsi_ranked_candidates.tsv", sep="\t", keep_default_na=False)
+    assert final.loc[0, "weighted_selectivity_gap"] == ""
+    assert final.loc[0, "off_target_risk_score"] == ""
+    assert final.loc[0, "srsi_score"] != "NA"
+    warnings = json.loads((Path(config["outputs"]["evidence_dir"]) / "scoring_warnings.json").read_text(encoding="utf-8"))
+    assert any("missing weighted_selectivity_gap" in item for item in warnings["warnings"])

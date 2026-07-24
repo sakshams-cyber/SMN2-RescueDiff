@@ -7,6 +7,8 @@ from typing import Any
 
 import pandas as pd
 
+from .numeric import safe_float
+
 
 CONTACT_COLUMNS = [
     "molecule_id",
@@ -82,9 +84,9 @@ def analyze_contacts(
 ) -> pd.DataFrame:
     """Calculate pose-based contact proxy features."""
     pose_cfg = config.get("pose_analysis", {})
-    contact_cutoff = float(pose_cfg.get("contact_distance_angstrom", 4.5))
-    hbond_cutoff = float(pose_cfg.get("hydrogen_bond_distance_angstrom", 3.5))
-    stacking_cutoff = float(pose_cfg.get("stacking_distance_angstrom", 5.0))
+    contact_cutoff = safe_float(pose_cfg.get("contact_distance_angstrom", 4.5), 4.5)
+    hbond_cutoff = safe_float(pose_cfg.get("hydrogen_bond_distance_angstrom", 3.5), 3.5)
+    stacking_cutoff = safe_float(pose_cfg.get("stacking_distance_angstrom", 5.0), 5.0)
     rows: list[dict[str, Any]] = []
     parse_by_id = pose_parse.set_index("molecule_id").to_dict("index") if not pose_parse.empty else {}
     has_u1 = _landmark_presence(landmarks, "u1")
@@ -154,4 +156,3 @@ def analyze_contacts(
             }
         )
     return pd.DataFrame(rows, columns=CONTACT_COLUMNS)
-

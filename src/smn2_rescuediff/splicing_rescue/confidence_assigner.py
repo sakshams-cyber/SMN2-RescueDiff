@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from .numeric import safe_float
+
 
 CONFIDENCE_ORDER = ["very_low", "low", "moderate", "high"]
 
@@ -28,9 +30,9 @@ def _as_bool(value: object) -> bool:
 
 def _numeric_value(row: pd.Series, columns: list[str], default: float = 0.0) -> float:
     for column in columns:
-        value = pd.to_numeric(pd.Series([row.get(column, None)]), errors="coerce").iloc[0]
+        value = safe_float(row.get(column, None))
         if pd.notna(value):
-            return float(value)
+            return value
     return default
 
 
@@ -43,7 +45,7 @@ def assign_confidence(df: pd.DataFrame, config: dict, used_dry_run_inputs: bool)
     for _, row in df.iterrows():
         run_mode = str(row.get("run_mode", "NA"))
         valid_decoys = _numeric_value(row, ["num_decoys_with_valid_scores", "num_decoys_with_scores"], default=0.0)
-        weighted_gap = pd.to_numeric(pd.Series([row.get("weighted_selectivity_gap", None)]), errors="coerce").iloc[0]
+        weighted_gap = safe_float(row.get("weighted_selectivity_gap", None))
         has_real_decoy_selectivity = _as_bool(row.get("has_real_decoy_selectivity", False)) or (
             valid_decoys > 0 and not _as_bool(row.get("is_dry_run_score", False)) and pd.notna(weighted_gap)
         )
@@ -53,8 +55,8 @@ def assign_confidence(df: pd.DataFrame, config: dict, used_dry_run_inputs: bool)
             level = str(cfg.get("dry_run_confidence", "very_low"))
         else:
             if run_mode == "target_plus_decoy_docking" or has_real_decoy_selectivity:
-                small_panel = float(cfg.get("moderate_confidence_min_decoys_with_valid_scores", 100))
-                large_panel = float(cfg.get("high_confidence_min_decoys_with_valid_scores", 500))
+                small_panel = safe_float(cfg.get("moderate_confidence_min_decoys_with_valid_scores", 100), 100.0)
+                large_panel = safe_float(cfg.get("high_confidence_min_decoys_with_valid_scores", 500), 500.0)
                 ablation_enabled = bool(config.get("ablation_analysis", {}).get("enabled", True))
                 status = str(row.get("pose_analysis_status", ""))
                 if valid_decoys >= large_panel and status == "pose_based_proxy" and ablation_enabled:
