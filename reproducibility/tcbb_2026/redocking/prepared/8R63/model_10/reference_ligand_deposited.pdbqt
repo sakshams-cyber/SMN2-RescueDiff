@@ -1,0 +1,60 @@
+REMARK  Name = /Users/saksham/Documents/Regeneron ISEF SMA Project/SMN2-RescueDiff/data/processed/redocking_validation/prepared/8R63/model_10/reference_ligand_deposited.pdb
+REMARK  9 active torsions:
+REMARK  status: ('A' for Active; 'I' for Inactive)
+REMARK    1  A    between atoms: C2_2  and  C9_14
+REMARK    2  A    between atoms: C6_4  and  C15_22
+REMARK    3  A    between atoms: C28_6  and  C22_27
+REMARK    4  A    between atoms: C24_7  and  O18_24
+REMARK    5  A    between atoms: C25_8  and  C20_26
+REMARK    6  A    between atoms: C26_10  and  C20_26
+REMARK    7  A    between atoms: C27_11  and  C22_27
+REMARK    8  A    between atoms: C11_13  and  O29_29
+REMARK    9  A    between atoms: C12_15  and  O18_24
+REMARK                            x       y       z     vdW  Elec       q    Type
+REMARK                         _______ _______ _______ _____ _____    ______ ____
+ROOT
+ATOM      1  C16 Y53 B 101      11.682  38.754  30.381  1.00  0.00    +0.035 A 
+ATOM      2  C12 Y53 B 101      11.248  39.995  32.395  1.00  0.00    +0.235 A 
+ATOM      3  N13 Y53 B 101       9.926  39.850  32.201  1.00  0.00    -0.111 NA
+ATOM      4  N14 Y53 B 101       9.462  39.192  31.133  1.00  0.00    -0.146 NA
+ATOM      5  C15 Y53 B 101      10.287  38.628  30.227  1.00  0.00    +0.097 A 
+ATOM      6  C17 Y53 B 101      12.170  39.461  31.486  1.00  0.00    +0.071 A 
+ENDROOT
+BRANCH   5   7
+ATOM      7  C6  Y53 B 101       9.666  37.872  29.096  1.00  0.00    +0.044 A 
+ATOM      8  C10 Y53 B 101       7.751  37.303  27.685  1.00  0.00    +0.054 A 
+ATOM      9  C8  Y53 B 101       9.870  36.218  27.296  1.00  0.00    +0.009 A 
+ATOM     10  C11 Y53 B 101       8.307  38.035  28.738  1.00  0.00    +0.127 A 
+ATOM     11  C9  Y53 B 101       8.524  36.389  26.958  1.00  0.00    -0.011 A 
+ATOM     12  C7  Y53 B 101      10.434  36.951  28.348  1.00  0.00    +0.014 A 
+BRANCH  11  14
+ATOM     13  C3  Y53 B 101       6.590  35.756  25.453  1.00  0.00    +0.142 A 
+ATOM     14  C2  Y53 B 101       7.938  35.625  25.860  1.00  0.00    +0.019 A 
+ATOM     15  C1  Y53 B 101       8.595  34.705  25.112  1.00  0.00    +0.113 A 
+ATOM     16  N4  Y53 B 101       6.393  34.923  24.444  1.00  0.00    -0.182 NA
+ATOM     17  N5  Y53 B 101       7.596  34.294  24.240  1.00  0.00    -0.284 N 
+ATOM     18  H5  Y53 B 101       7.695  33.604  23.509  1.00  0.00    +0.188 HD
+ENDBRANCH  11  14
+BRANCH  10  19
+ATOM     19  O29 Y53 B 101       7.500  38.912  29.400  1.00  0.00    -0.506 OA
+ATOM     20  H29 Y53 B 101       8.005  39.301  30.134  1.00  0.00    +0.292 HD
+ENDBRANCH  10  19
+ENDBRANCH   5   7
+BRANCH   2  21
+ATOM     21  O18 Y53 B 101      11.707  40.677  33.493  1.00  0.00    -0.472 OA
+BRANCH  21  23
+ATOM     22  C28 Y53 B 101       9.371  42.356  36.906  1.00  0.00    -0.010 C 
+ATOM     23  C24 Y53 B 101      11.011  40.563  34.747  1.00  0.00    +0.173 C 
+ATOM     24  C25 Y53 B 101      11.244  37.872  37.489  1.00  0.00    -0.010 C 
+ATOM     25  C26 Y53 B 101      13.019  39.557  37.304  1.00  0.00    -0.010 C 
+ATOM     26  C27 Y53 B 101      11.591  42.563  37.978  1.00  0.00    -0.010 C 
+ATOM     27  N21 Y53 B 101      10.597  40.281  37.543  1.00  0.00    +0.386 N 
+ATOM     28  C19 Y53 B 101      11.390  39.211  35.391  1.00  0.00    +0.031 C 
+ATOM     29  C20 Y53 B 101      11.550  39.275  36.929  1.00  0.00    -0.070 C 
+ATOM     30  C22 Y53 B 101      10.760  41.700  37.013  1.00  0.00    -0.070 C 
+ATOM     31  C23 Y53 B 101      11.420  41.757  35.618  1.00  0.00    +0.031 C 
+ATOM     32 H21A Y53 B 101      10.693  40.286  38.569  1.00  0.00    -0.084 HD
+ATOM     33 H21B Y53 B 101       9.632  39.968  37.364  1.00  0.00    -0.084 HD
+ENDBRANCH  21  23
+ENDBRANCH   2  21
+TORSDOF 5

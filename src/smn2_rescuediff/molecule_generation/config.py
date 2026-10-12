@@ -19,6 +19,7 @@ class MoleculeGenerationPaths:
     project_root: Path
     training_smiles: list[Path]
     training_source_manifest: Path | None
+    benchmark_splicing_controls: Path | None
     smn2_target_profile: Path
     smn2_target_metadata: Path
     decoy_atlas_summary: Path
@@ -69,7 +70,8 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> MoleculeGe
     inputs = config.get("inputs", {})
     outputs = config.get("outputs", {})
     raw_training = inputs.get("training_smiles")
-    raw_manifest = inputs.get("training_source_manifest")
+    raw_manifest = inputs.get("training_source_manifest") or inputs.get("training_manifest")
+    raw_benchmark_controls = inputs.get("benchmark_controls", {}).get("splicing_controls") if isinstance(inputs.get("benchmark_controls", {}), dict) else None
     if isinstance(raw_training, list):
         training = [resolve(str(item), "inputs.training_smiles") for item in raw_training]
     elif raw_training:
@@ -84,6 +86,7 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> MoleculeGe
         project_root=project_root,
         training_smiles=training,
         training_source_manifest=resolve(str(raw_manifest), "inputs.training_source_manifest") if raw_manifest else None,
+        benchmark_splicing_controls=resolve(str(raw_benchmark_controls), "inputs.benchmark_controls.splicing_controls") if raw_benchmark_controls else None,
         smn2_target_profile=resolve(optional_context("smn2_target_profile"), "inputs.optional_context.smn2_target_profile"),
         smn2_target_metadata=resolve(optional_context("smn2_target_metadata"), "inputs.optional_context.smn2_target_metadata"),
         decoy_atlas_summary=resolve(optional_context("decoy_atlas_summary"), "inputs.optional_context.decoy_atlas_summary"),
@@ -115,4 +118,5 @@ def optional_context_status(paths: MoleculeGenerationPaths) -> dict[str, bool]:
         "smn2_target_profile_exists": paths.smn2_target_profile.exists(),
         "smn2_target_metadata_exists": paths.smn2_target_metadata.exists(),
         "decoy_atlas_summary_exists": paths.decoy_atlas_summary.exists(),
+        "benchmark_splicing_controls_exists": bool(paths.benchmark_splicing_controls and paths.benchmark_splicing_controls.exists()),
     }

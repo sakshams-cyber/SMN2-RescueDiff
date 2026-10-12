@@ -1,0 +1,116 @@
+{
+  "decoy_docking": {
+    "all_observed_rows_completed": true,
+    "all_observed_scores_real_vina": true,
+    "complete_150x100": false,
+    "decoys": 97,
+    "intended_design": "150 molecules x 100 decoys (15,000 pairs)",
+    "missing_pairs_relative_to_150x100": 741,
+    "missing_scores_imputed": false,
+    "molecules": 147,
+    "observed_design": "147 molecules x 97 decoys (14,259 pairs)",
+    "rows": 14259
+  },
+  "environment": {
+    "open_babel": "Open Babel 3.2.1 -- Jul 11 2026 -- 19:21:27",
+    "python": "Python 3.11.15",
+    "vina": "AutoDock Vina v1.2.7"
+  },
+  "final_scoring": {
+    "interpretation": "Composite scores are descriptive computational rankings, not validated binding or exon-rescue measurements.",
+    "ranked_candidates": 147
+  },
+  "generation": {
+    "benchmark_controls": {
+      "controls_in_current_posthoc_audit": [
+        "risdiplam",
+        "branaplam"
+      ],
+      "controls_in_historical_generation_run": [
+        "branaplam"
+      ],
+      "current_posthoc_control_count": 2,
+      "docking_posthoc_summary": {
+        "benchmark_controls_loaded": 2,
+        "candidate_count": 1000,
+        "enabled": true,
+        "exclude_too_similar_candidates": true,
+        "max_allowed_tanimoto_to_benchmark": 0.7,
+        "too_similar_count": 0
+      },
+      "filtered_posthoc_summary": {
+        "benchmark_controls_loaded": 2,
+        "candidate_count": 40477,
+        "enabled": true,
+        "exclude_too_similar_candidates": true,
+        "max_allowed_tanimoto_to_benchmark": 0.7,
+        "too_similar_count": 0
+      },
+      "historical_control_count": 1,
+      "interpretation": "The frozen July generation run screened similarity against branaplam only. Risdiplam was added to the benchmark-control file later and is evaluated here post hoc; this does not retroactively change the historical generation run.",
+      "warnings": []
+    },
+    "diffusion_model": false,
+    "diversity": {
+      "docking_scaffold_label_fraction": 0.977,
+      "docking_unique_scaffold_labels": 977,
+      "filtered_scaffold_label_fraction": 0.8553993626009833,
+      "filtered_unique_scaffold_labels": 34624,
+      "mean_pairwise_morgan_tanimoto": 0.12117030523895608,
+      "median_pairwise_morgan_tanimoto": 0.11510791366906475,
+      "sampled_pair_count": 50000
+    },
+    "generation": {
+      "emitted_fraction_of_requested": 0.9932,
+      "filtered_molecules": 40477,
+      "novel_filtered_fraction": 0.9982459174345925,
+      "novel_filtered_molecules": 40406,
+      "raw_samples_requested": 50000,
+      "rejected_molecules": 9183,
+      "selected_for_docking": 1000,
+      "unique_filtered_molecules": 40477,
+      "unique_generated_strings_emitted": 49660,
+      "unique_valid_fraction": 0.99655658477648,
+      "unique_valid_molecules": 49489,
+      "valid_emitted_strings": 49660,
+      "validity_denominator_note": "The sampler removed duplicate generated strings before RDKit validation. This validity rate is not a rate over all sampling attempts.",
+      "validity_fraction_of_emitted_strings": 1.0
+    },
+    "model_type": "unconditional autoregressive SELFIES Transformer decoder",
+    "run_name": "module3_final_final_rigorous_x10",
+    "source_limitations": [
+      "The configured RBIND and SMMRNA files contributed zero rows to this run.",
+      "Training was therefore based on the available ChEMBL and ZINC subset files, not an RNA-ligand-enriched corpus.",
+      "Novelty fingerprints were limited to the first 20,000 canonical training molecules, as recorded by the run warning.",
+      "The existing n-gram log records sample generation only; it is not a controlled generator-performance baseline."
+    ],
+    "target_conditioned_generation": false,
+    "training": {
+      "best_validation_loss": 0.5722038051621481,
+      "epochs": 10,
+      "final_train_loss": 0.6287246889571854,
+      "final_validation_loss": 0.5722038051621481,
+      "invalid_rows": 466,
+      "raw_rows_loaded": 150000,
+      "unique_rows_used": 149534,
+      "valid_rows": 149534,
+      "weighted_exposure_rows": 224092
+    }
+  },
+  "redocking": {
+    "failed_jobs": 0,
+    "jobs": 225,
+    "protocol_sha256": "93a483b1490b68ab6f5496688aa03569875be4cc3b3d5ae125793cb45abb77a6",
+    "retained_modes": 4488,
+    "structures": 4,
+    "symmetry_corrected_rmsd_rows": 64535
+  },
+  "scientific_interpretation": "Exploratory computational workflow and docking-methodology caution only; not evidence of binding, splicing rescue, safety, or efficacy.",
+  "target_docking": {
+    "all_completed": true,
+    "all_real_vina_scores": true,
+    "conformers": 5,
+    "molecules": 500,
+    "rows": 2500
+  }
+}

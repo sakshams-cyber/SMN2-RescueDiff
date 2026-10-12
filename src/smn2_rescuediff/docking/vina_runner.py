@@ -68,6 +68,9 @@ def run_vina(
         "--energy_range",
         str(engine_cfg.get("energy_range", 3)),
     ]
+    seed_policy = str(engine_cfg.get("random_seed_policy", "")).strip().lower()
+    if seed_policy == "fixed_run_seed":
+        command.extend(["--seed", str(config.get("run", {}).get("random_seed", 42))])
     try:
         completed = subprocess.run(
             command,

@@ -28,6 +28,7 @@ PRESETS = [
     "module3_final_final_rigorous_x10.yaml",
     "module4_target_100.yaml",
     "module4_target_1000.yaml",
+    "module4_target_conformer_panel_500x5.yaml",
     "module4_decoy_stage1.yaml",
     "module4_decoy_stage2.yaml",
     "module5_target_only_final.yaml",
@@ -81,6 +82,7 @@ def test_module3_presets_encode_debug_pilot_and_final_scales():
 def test_module4_presets_use_target_only_and_staged_decoy_panels():
     target_100 = load_docking_config(_preset("module4_target_100.yaml"))
     target_1000 = load_docking_config(_preset("module4_target_1000.yaml"))
+    target5_500 = load_docking_config(_preset("module4_target_conformer_panel_500x5.yaml"))
     stage1 = load_docking_config(_preset("module4_decoy_stage1.yaml"))
     stage2 = load_docking_config(_preset("module4_decoy_stage2.yaml"))
 
@@ -90,6 +92,13 @@ def test_module4_presets_use_target_only_and_staged_decoy_panels():
     assert target_1000["run"]["max_molecules_to_dock"] == 1000
     assert target_1000["staged_docking"]["stage_name"] == "stage_a_target_all"
     assert target_1000["run"]["resume_existing_results"] is True
+    assert target5_500["run"]["run_mode"] == "target_conformer_panel_docking"
+    assert target5_500["run"]["max_molecules_to_dock"] == 500
+    assert target5_500["target_conformer_panel"]["manifest"] == "configs/target_conformer_panel_5.tsv"
+    assert target5_500["target_conformer_panel"]["expected_conformer_count"] == 5
+    assert target5_500["target_conformer_filter"]["top_n_to_advance"] == 150
+    assert target5_500["run"]["allow_dry_run_simulation"] is False
+    assert target5_500["outputs"]["output_dir"] == "data/processed/docking/target_conformer_runs/target5_500"
     assert stage1["run"]["run_mode"] == "target_plus_decoy_docking"
     assert stage1["run"]["max_molecules_to_dock"] == 200
     assert stage1["decoy_panel"]["total_decoys_for_docking"] == 100

@@ -142,14 +142,17 @@ def build_summary(
 ) -> dict[str, Any]:
     """Build the machine-readable Module 3 summary."""
     validity = len(valid) / raw_count if raw_count else 0.0
-    uniqueness = valid["canonical_smiles"].nunique() / len(valid) if len(valid) and "canonical_smiles" in valid else 0.0
-    novelty = (filtered["is_novel_vs_training"] == True).sum() / len(filtered) if len(filtered) and "is_novel_vs_training" in filtered else 0.0  # noqa: E712
+    valid_unique_count = int(valid["canonical_smiles"].nunique()) if "canonical_smiles" in valid else 0
+    uniqueness = valid_unique_count / len(valid) if len(valid) else 0.0
+    novel_filtered_count = int((filtered["is_novel_vs_training"] == True).sum()) if "is_novel_vs_training" in filtered else 0  # noqa: E712
+    novelty = novel_filtered_count / len(filtered) if len(filtered) else 0.0
     numeric_summary = {}
     for column in [
         "molecular_weight",
         "logp",
         "qed",
         "max_tanimoto_to_training",
+        "nearest_benchmark_tanimoto",
         "novelty_vs_training_set",
         "rna_ligand_like_score",
         "chemical_quality_score",
@@ -173,9 +176,13 @@ def build_summary(
         "model_architecture": config.get("model", {}).get("architecture", "transformer_decoder"),
         "raw_generated_count": int(raw_count),
         "valid_count": int(len(valid)),
+        "valid_unique_count": valid_unique_count,
+        "valid_duplicate_count": max(int(len(valid)) - valid_unique_count, 0),
         "filtered_count": int(len(filtered)),
+        "novel_filtered_count": novel_filtered_count,
         "rejected_count": int(len(rejected)),
         "validity_fraction": validity,
+        "validity_fraction_denominator": "unique generated strings emitted by the sampler, after optional generated-string deduplication",
         "unique_valid_fraction": uniqueness,
         "novel_filtered_fraction": float(novelty),
         "source_generator_counts": filtered["source_generator"].value_counts().to_dict() if "source_generator" in filtered else {},
@@ -227,7 +234,7 @@ def write_report(
 
 ## Purpose
 
-Module 3 trains and samples a neural molecular language model to produce computational candidate molecules for future SMN2 RNA-target docking and HuRDA transcriptome-aware off-target counter-screening. The primary model is a Transformer decoder trained on curated molecular strings, with a GRU/LSTM fallback path and SELFIES support for more robust molecular-string generation.
+Module 3 trains and samples an unconditional neural molecular language model to produce computational candidate molecules for future SMN2 RNA-target docking and HuRDA transcriptome-aware off-target counter-screening. The primary model is an autoregressive Transformer decoder trained on molecular strings, with a GRU/LSTM fallback path and SELFIES support for more robust molecular-string generation. SMN2 sequence or structure features do not condition generation; target information is introduced only in downstream screening and scoring.
 
 The output is a prioritized pre-docking candidate library. It does not establish RNA binding, exon 7 rescue, toxicity, safety, or clinical utility.
 
@@ -237,6 +244,7 @@ The output is a prioritized pre-docking candidate library. It does not establish
 - Module 1 target profile available: {context.get("smn2_target_profile_exists")}
 - Module 1 target metadata available: {context.get("smn2_target_metadata_exists")}
 - Module 2 HuRDA summary available: {context.get("decoy_atlas_summary_exists")}
+- Held-out benchmark splicing controls available: {context.get("benchmark_splicing_controls_exists")}
 
 Recommended real training sources include ChEMBL, ZINC subsets, RNA-binding ligand collections where available, approved drug-like molecule libraries, and project-specific compound collections. Toy fallback data are only for validating the software path.
 
@@ -253,10 +261,27 @@ Recommended real training sources include ChEMBL, ZINC subsets, RNA-binding liga
 
 The preprocessing step removes invalid records, optionally removes salts and mixtures, canonicalizes molecules with RDKit, filters training molecules by configurable molecular-weight and atom constraints, removes duplicates, and writes rejected training records for auditability.
 
+## Held-Out Benchmark Controls
+
+Benchmark controls were not used for model training.
+
+Known splicing modifiers such as risdiplam can be provided through `inputs.benchmark_controls.splicing_controls` and are treated as held-out reference controls. If any benchmark-control SMILES are accidentally present in a training source, they are rejected with the reason `held_out_benchmark_control`. During generated-molecule filtering, Morgan-fingerprint/Tanimoto similarity to the nearest benchmark control is recorded as `nearest_benchmark_control_name`, `nearest_benchmark_tanimoto`, and `is_too_similar_to_benchmark`.
+
+- Benchmark controls loaded: {summary.get("benchmark_controls_loaded", 0)}
+- Benchmark controls used for training: {summary.get("benchmark_controls_used_for_training", False)}
+- Training records held out as benchmark controls: {summary.get("training_molecules_held_out_benchmark_controls", 0)}
+- Generated candidates above benchmark-similarity threshold: {summary.get("benchmark_similarity", {}).get("too_similar_count", 0)}
+
+Candidates that are too similar to a benchmark control are excluded from the final docking export when `benchmark_similarity.exclude_too_similar_candidates` is true. These are computational similarity comparisons only; the report does not claim any generated molecule is clinically better than risdiplam or another benchmark control.
+
 ## Neural Model
 
 - Architecture: {summary.get("model_architecture", config.get("model", {}).get("architecture", "transformer_decoder"))}
+- Generation conditioning: unconditional; no SMN2 sequence or structure conditioning
 - Epochs completed: {summary.get("epochs_completed", "NA")}
+- Final training loss: {summary.get("training_curve_summary", {}).get("final_train_loss", "NA")}
+- Final validation loss: {summary.get("training_curve_summary", {}).get("final_validation_loss", "NA")}
+- Best validation loss: {summary.get("training_curve_summary", {}).get("best_validation_loss", "NA")}
 - Token vocabulary written: `token_vocabulary.json`
 - Training log written: `model_training_log.tsv`
 
@@ -272,14 +297,20 @@ The module uses RDKit to parse and canonicalize decoded SMILES, remove invalid m
 
 ## Prioritization
 
+- Raw samples requested: {summary.get("generation_accounting", {}).get("requested_raw_samples", "NA")}
 - Raw generated SMILES: {summary.get("raw_generated_count")}
+- Generation yield relative to request: {summary.get("generation_accounting", {}).get("emitted_fraction_of_requested", "NA")}
 - Valid molecules: {summary.get("valid_count")}
+- Unique valid molecules: {summary.get("valid_unique_count", "NA")}
 - Filtered molecules retained: {summary.get("filtered_count")}
+- Novel filtered molecules: {summary.get("novel_filtered_count", "NA")}
 - Rejected molecules: {summary.get("rejected_count")}
-- Validity fraction: {summary.get("validity_fraction"):.4f}
+- Validity fraction among emitted strings: {summary.get("validity_fraction"):.4f}
 - Unique-valid fraction: {summary.get("unique_valid_fraction"):.4f}
 - Novel-filtered fraction: {summary.get("novel_filtered_fraction"):.4f}
 - Candidates exported for docking: {summary.get("selected_for_docking_count", "NA")}
+
+The validity denominator is `{summary.get("validity_fraction_denominator", "NA")}`. It is not the total number of model sampling attempts. This distinction matters when generated-string deduplication is enabled before RDKit validation.
 
 Filtered molecules receive scaffold annotations, novelty scores against the training set, diversity cluster identifiers, RNA-ligand-like scores, chemical quality scores, and final generation selection scores. The docking export is ranked by quality-weighted score and diversity-selected with Morgan-fingerprint/Tanimoto filtering when enabled. These values support downstream prioritization but are not substitutes for Module 4 docking or experimental validation.
 
@@ -292,6 +323,10 @@ Filtered molecules receive scaffold annotations, novelty scores against the trai
 ## Diversity Analysis
 
 Molecules are assigned scaffold-based diversity cluster identifiers. A runtime-capped sample of pairwise Morgan-fingerprint Tanimoto similarities is used for the diversity distribution figure.
+
+- Unique Bemis-Murcko scaffold labels in the filtered set: {summary.get("diversity_summary", {}).get("filtered_unique_scaffolds", "NA")}
+- Unique Bemis-Murcko scaffold labels in the docking export: {summary.get("diversity_summary", {}).get("docking_unique_scaffolds", "NA")}
+- Mean sampled pairwise Tanimoto similarity: {summary.get("diversity_summary", {}).get("mean_pairwise_tanimoto", "NA")}
 
 ## Figures
 

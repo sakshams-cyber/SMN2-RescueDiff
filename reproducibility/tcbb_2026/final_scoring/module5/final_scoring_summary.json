@@ -1,0 +1,31 @@
+{
+  "module": "Predicted Splicing-Rescue Scoring and Final SRSI Ranking",
+  "run_name": "module5_stage_c_147_pose_contacts",
+  "num_candidates_loaded": 147,
+  "num_candidates_scored": 147,
+  "num_high_priority_candidates": 0,
+  "num_medium_priority_candidates": 3,
+  "num_low_priority_candidates": 71,
+  "num_not_recommended": 73,
+  "top_candidate_id": "MolGen_048239",
+  "top_candidate_srsi": 24.113413,
+  "missing_selectivity_gap_count": 0,
+  "candidates_with_selectivity_gap_count": 147,
+  "used_real_docking_inputs": true,
+  "used_dry_run_inputs": false,
+  "pose_based_scoring_count": 147,
+  "feature_based_fallback_count": 0,
+  "benchmark_controls_loaded": 2,
+  "benchmark_controls_with_scores": 0,
+  "warnings": [
+    "U1 support landmark was inferred from the 5 prime splice-site window; exact U1 coordinates were not available."
+  ],
+  "limitations": [
+    "Docking scores are computational predictions and do not prove experimental binding.",
+    "Predicted splicing-rescue scores are proxy scores, not measured exon 7 inclusion results.",
+    "SRSI is a prioritization metric, not proof of biological activity, safety, or therapeutic effect.",
+    "Top candidates require experimental validation before any biological interpretation.",
+    "Dry-run results are simulated pipeline tests and are not scientific results.",
+    "This module does not provide chemical synthesis instructions or human, animal, or cell testing procedures."
+  ]
+}

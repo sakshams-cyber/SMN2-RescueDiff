@@ -1,0 +1,2346 @@
+{
+  "MolGen_048239": {
+    "rank": 1,
+    "canonical_smiles": "Cc1noc(C)c1C=C1C=CN=C(Nc2ccc(N3CCC3)nc2)N=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 348.41000000000014,
+      "logp": 3.346140000000002,
+      "hbd": 1,
+      "hba": 7,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9201168408976468,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.940269
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.4194,
+      "best_decoy_deltaG": -8.54,
+      "weighted_mean_decoy_deltaG": -2.153113,
+      "weighted_selectivity_gap": 6.266287,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.460658,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.359175,
+      "splice_site_occlusion_penalty": 0.349754,
+      "srsi_score": 24.113413,
+      "srsi_percentile": 100.0,
+      "candidate_tier": "medium_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.4194; weighted_selectivity_gap=6.266287; splicing_rescue_proxy=0.359175; off_target_risk=0.460658; confidence=moderate"
+    }
+  },
+  "MolGen_038292": {
+    "rank": 2,
+    "canonical_smiles": "O=C1CC(Nc2nccc(N3CCOCC3)n2)C=CC=Cc2ccccc2N1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 377.44800000000026,
+      "logp": 2.7055000000000007,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8562556436551682,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.929893
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.928999999999998,
+      "best_decoy_deltaG": -9.607,
+      "weighted_mean_decoy_deltaG": -2.307485,
+      "weighted_selectivity_gap": 6.621515,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.581158,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.376852,
+      "splice_site_occlusion_penalty": 0.349731,
+      "srsi_score": 20.829101,
+      "srsi_percentile": 99.32,
+      "candidate_tier": "medium_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.928999999999998; weighted_selectivity_gap=6.621515; splicing_rescue_proxy=0.376852; off_target_risk=0.581158; confidence=moderate"
+    }
+  },
+  "MolGen_038175": {
+    "rank": 3,
+    "canonical_smiles": "O=c1nc(-c2ccccc2[C@H]2C[CH]N3C=C(CC=CC=COCC3)O2)[nH]o1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 366.3970000000001,
+      "logp": 3.286690000000001,
+      "hbd": 1,
+      "hba": 6,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8784616307831128,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.932698
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.7186,
+      "best_decoy_deltaG": -10.28,
+      "weighted_mean_decoy_deltaG": -2.299147,
+      "weighted_selectivity_gap": 6.419453,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.350244,
+      "splice_site_occlusion_penalty": 0.349578,
+      "srsi_score": 14.16985,
+      "srsi_percentile": 98.639,
+      "candidate_tier": "medium_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.7186; weighted_selectivity_gap=6.419453; splicing_rescue_proxy=0.350244; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_048471": {
+    "rank": 4,
+    "canonical_smiles": "COc1ccc(NC(=O)C2NN=C(c3ccccn3)C=CN=CS2)cc1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 367.434,
+      "logp": 2.6375,
+      "hbd": 2,
+      "hba": 7,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.8673118354670235,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.933515
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.4502,
+      "best_decoy_deltaG": -9.433,
+      "weighted_mean_decoy_deltaG": -2.171788,
+      "weighted_selectivity_gap": 6.278412,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.596466,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.340064,
+      "splice_site_occlusion_penalty": 0.349859,
+      "srsi_score": 12.957373,
+      "srsi_percentile": 97.959,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.4502; weighted_selectivity_gap=6.278412; splicing_rescue_proxy=0.340064; off_target_risk=0.596466; confidence=moderate"
+    }
+  },
+  "MolGen_030154": {
+    "rank": 5,
+    "canonical_smiles": "CC=C1N=CC2C(=CC=C3CC=NN3Cc3ccccc3)NC(=O)CN12",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 347.422,
+      "logp": 2.3920000000000003,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9132746096572348,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.93755
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.7244,
+      "best_decoy_deltaG": -8.188,
+      "weighted_mean_decoy_deltaG": -1.99283,
+      "weighted_selectivity_gap": 5.73157,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.492566,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.303171,
+      "splice_site_occlusion_penalty": 0.349616,
+      "srsi_score": 12.777051,
+      "srsi_percentile": 97.279,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.7244; weighted_selectivity_gap=5.73157; splicing_rescue_proxy=0.303171; off_target_risk=0.492566; confidence=moderate"
+    }
+  },
+  "MolGen_020104": {
+    "rank": 6,
+    "canonical_smiles": "CC1c2ccccc2CN1C(=O)C1=CN=CN(C(=O)c2ccccc2)N1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 346.39,
+      "logp": 2.6201000000000008,
+      "hbd": 1,
+      "hba": 4,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.9090401163302204,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.933245
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.428799999999999,
+      "best_decoy_deltaG": -10.54,
+      "weighted_mean_decoy_deltaG": -2.249115,
+      "weighted_selectivity_gap": 6.179685,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.328983,
+      "splice_site_occlusion_penalty": 0.349528,
+      "srsi_score": 10.926726,
+      "srsi_percentile": 96.599,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.428799999999999; weighted_selectivity_gap=6.179685; splicing_rescue_proxy=0.328983; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_021804": {
+    "rank": 7,
+    "canonical_smiles": "CC=CC=C1OC(c2ccccc2)=NC(=O)NCC(=O)C1Nc1ccccc1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 375.4280000000001,
+      "logp": 3.682800000000003,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.8542653326004112,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.929744
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0608,
+      "best_decoy_deltaG": -8.781,
+      "weighted_mean_decoy_deltaG": -1.954052,
+      "weighted_selectivity_gap": 6.106748,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.579058,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.314261,
+      "splice_site_occlusion_penalty": 0.349584,
+      "srsi_score": 10.744834,
+      "srsi_percentile": 95.918,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0608; weighted_selectivity_gap=6.106748; splicing_rescue_proxy=0.314261; off_target_risk=0.579058; confidence=moderate"
+    }
+  },
+  "MolGen_022148": {
+    "rank": 8,
+    "canonical_smiles": "Cc1cc(C(=O)O)ccc1NC1C=C(F)C=CCC2=c3cccnc3=NC2=CC1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 389.4300000000001,
+      "logp": 3.440120000000001,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8433976342253651,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.924093
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.656,
+      "best_decoy_deltaG": -10.78,
+      "weighted_mean_decoy_deltaG": -2.265797,
+      "weighted_selectivity_gap": 6.390203,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.345611,
+      "splice_site_occlusion_penalty": 0.349883,
+      "srsi_score": 9.977359,
+      "srsi_percentile": 95.238,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.656; weighted_selectivity_gap=6.390203; splicing_rescue_proxy=0.345611; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_030809": {
+    "rank": 9,
+    "canonical_smiles": "CC=C1C=CC(Nc2nc(-c3ccccn3)nc(N3CCOCC3)n2)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 348.4100000000002,
+      "logp": 2.5820999999999996,
+      "hbd": 1,
+      "hba": 7,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.9098510920096186,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.929769
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.422799999999999,
+      "best_decoy_deltaG": -10.69,
+      "weighted_mean_decoy_deltaG": -2.272918,
+      "weighted_selectivity_gap": 6.149882,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.327971,
+      "splice_site_occlusion_penalty": 0.349558,
+      "srsi_score": 9.944393,
+      "srsi_percentile": 94.558,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.422799999999999; weighted_selectivity_gap=6.149882; splicing_rescue_proxy=0.327971; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_047257": {
+    "rank": 10,
+    "canonical_smiles": "C=c1oc(=O)[nH]c1=CC=CN1N=CC23CC(=CC=C12)C(=O)Nc1ccc(C)cc13",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 386.41100000000023,
+      "logp": 1.3863199999999998,
+      "hbd": 2,
+      "hba": 5,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8160981733693902,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.923687
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.6,
+      "best_decoy_deltaG": -10.15,
+      "weighted_mean_decoy_deltaG": -2.360375,
+      "weighted_selectivity_gap": 6.239625,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.341534,
+      "splice_site_occlusion_penalty": 0.349633,
+      "srsi_score": 9.739493,
+      "srsi_percentile": 93.878,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.6; weighted_selectivity_gap=6.239625; splicing_rescue_proxy=0.341534; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_030656": {
+    "rank": 11,
+    "canonical_smiles": "Cc1nc(NCc2ccccc2)nc2c1=CNN=C1C=2C2=CC1CO2",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 331.3790000000001,
+      "logp": 0.7889199999999994,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8700458770145784,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.928519
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.508799999999999,
+      "best_decoy_deltaG": -11.0,
+      "weighted_mean_decoy_deltaG": -2.331717,
+      "weighted_selectivity_gap": 6.177083,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.3354,
+      "splice_site_occlusion_penalty": 0.349697,
+      "srsi_score": 9.684163,
+      "srsi_percentile": 93.197,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.508799999999999; weighted_selectivity_gap=6.177083; splicing_rescue_proxy=0.3354; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_013361": {
+    "rank": 12,
+    "canonical_smiles": "C=C1C(N2CCNCC2N)=NC=CC1C1C=NC=CC=Cc2c(noc2C)C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 378.48000000000025,
+      "logp": 2.04122,
+      "hbd": 2,
+      "hba": 7,
+      "rotatable_bonds": 1,
+      "formal_charge": 0,
+      "qed": 0.7802101879474231,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.923711
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.5556,
+      "best_decoy_deltaG": -10.63,
+      "weighted_mean_decoy_deltaG": -2.246018,
+      "weighted_selectivity_gap": 6.309582,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.338277,
+      "splice_site_occlusion_penalty": 0.349622,
+      "srsi_score": 9.196473,
+      "srsi_percentile": 92.517,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.5556; weighted_selectivity_gap=6.309582; splicing_rescue_proxy=0.338277; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_048033": {
+    "rank": 13,
+    "canonical_smiles": "CC=C1C=CC(c2nn(C)cc2-c2cc(N3CCC(C(N)=O)CC3)nc(N)n2)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 391.47900000000016,
+      "logp": 2.0604999999999993,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.8240586350455977,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.922504
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.4666,
+      "best_decoy_deltaG": -10.1,
+      "weighted_mean_decoy_deltaG": -2.279368,
+      "weighted_selectivity_gap": 6.187232,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.331168,
+      "splice_site_occlusion_penalty": 0.349699,
+      "srsi_score": 7.508346,
+      "srsi_percentile": 91.837,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.4666; weighted_selectivity_gap=6.187232; splicing_rescue_proxy=0.331168; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_002248": {
+    "rank": 14,
+    "canonical_smiles": "CC=C1C=CC(Nc2nc3ccccc3nc2NC2CCOCC2)=N1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 335.41100000000023,
+      "logp": 3.5047000000000015,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8980494357928431,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.931776
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.180800000000001,
+      "best_decoy_deltaG": -10.6,
+      "weighted_mean_decoy_deltaG": -2.231905,
+      "weighted_selectivity_gap": 5.948895,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.311354,
+      "splice_site_occlusion_penalty": 0.349501,
+      "srsi_score": 7.331901,
+      "srsi_percentile": 91.156,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.180800000000001; weighted_selectivity_gap=5.948895; splicing_rescue_proxy=0.311354; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_038346": {
+    "rank": 15,
+    "canonical_smiles": "CCN(C)C(=O)C1=CC=CC2(COc3ccc(cc3)C(=O)C=CN=C2N)C1=N",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 378.4320000000002,
+      "logp": 2.11327,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8213052021813607,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.929971
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.3102,
+      "best_decoy_deltaG": -11.08,
+      "weighted_mean_decoy_deltaG": -2.265778,
+      "weighted_selectivity_gap": 6.044422,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.319699,
+      "splice_site_occlusion_penalty": 0.349626,
+      "srsi_score": 6.309618,
+      "srsi_percentile": 90.476,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.3102; weighted_selectivity_gap=6.044422; splicing_rescue_proxy=0.319699; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_019997": {
+    "rank": 16,
+    "canonical_smiles": "Cc1c(F)cccc1N1C(=O)CCc2nc(NC3C=CC=CC(=O)NC3)ncc21",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 393.4220000000001,
+      "logp": 2.5577200000000007,
+      "hbd": 2,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8369799198738297,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.92892
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.2844,
+      "best_decoy_deltaG": -10.39,
+      "weighted_mean_decoy_deltaG": -2.401613,
+      "weighted_selectivity_gap": 5.882787,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.317818,
+      "splice_site_occlusion_penalty": 0.349534,
+      "srsi_score": 5.903971,
+      "srsi_percentile": 89.796,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.2844; weighted_selectivity_gap=5.882787; splicing_rescue_proxy=0.317818; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_023153": {
+    "rank": 17,
+    "canonical_smiles": "O=C(NC1=CC=COCC1)C1=NC(Cc2nnc(C(F)(F)F)s2)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 356.329,
+      "logp": 2.3720000000000008,
+      "hbd": 1,
+      "hba": 6,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.8986339391867472,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.942733
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.5378,
+      "best_decoy_deltaG": -8.385,
+      "weighted_mean_decoy_deltaG": -1.974497,
+      "weighted_selectivity_gap": 5.563303,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.550116,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.280415,
+      "splice_site_occlusion_penalty": 0.349704,
+      "srsi_score": 5.709854,
+      "srsi_percentile": 89.116,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.5378; weighted_selectivity_gap=5.563303; splicing_rescue_proxy=0.280415; off_target_risk=0.550116; confidence=moderate"
+    }
+  },
+  "MolGen_038811": {
+    "rank": 18,
+    "canonical_smiles": "O=C(O)c1ccc(-n2cc(CC3=NN=CC4=CC=COC43)nn2)cc1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 335.32300000000004,
+      "logp": 1.7873,
+      "hbd": 1,
+      "hba": 6,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.9174883644351084,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.932124
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0974,
+      "best_decoy_deltaG": -9.809,
+      "weighted_mean_decoy_deltaG": -2.145496,
+      "weighted_selectivity_gap": 5.951904,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.304084,
+      "splice_site_occlusion_penalty": 0.349617,
+      "srsi_score": 5.650863,
+      "srsi_percentile": 88.435,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0974; weighted_selectivity_gap=5.951904; splicing_rescue_proxy=0.304084; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_034091": {
+    "rank": 19,
+    "canonical_smiles": "O=C1C=CC=C(Cn2cc(-c3ccc4c(c3)OCCO4)nn2)COCCCN1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 382.4200000000002,
+      "logp": 1.7353999999999996,
+      "hbd": 1,
+      "hba": 6,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8700578240094514,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.930924
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.203999999999999,
+      "best_decoy_deltaG": -9.866,
+      "weighted_mean_decoy_deltaG": -2.248621,
+      "weighted_selectivity_gap": 5.955379,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.311342,
+      "splice_site_occlusion_penalty": 0.349599,
+      "srsi_score": 5.634266,
+      "srsi_percentile": 87.755,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.203999999999999; weighted_selectivity_gap=5.955379; splicing_rescue_proxy=0.311342; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_013479": {
+    "rank": 20,
+    "canonical_smiles": "NC(=O)c1noc(-c2ccccc2C2=CC=CC=CC=COCC2)n1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 335.3630000000001,
+      "logp": 3.2653000000000008,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9292933275851014,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.942638
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0462,
+      "best_decoy_deltaG": -9.867,
+      "weighted_mean_decoy_deltaG": -2.170695,
+      "weighted_selectivity_gap": 5.875505,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.300884,
+      "splice_site_occlusion_penalty": 0.349697,
+      "srsi_score": 5.579928,
+      "srsi_percentile": 87.075,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0462; weighted_selectivity_gap=5.875505; splicing_rescue_proxy=0.300884; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_029478": {
+    "rank": 21,
+    "canonical_smiles": "C=C1C(C(=O)Nc2nc(C(C)C)no2)=CC=CC2COC=CC=C12",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 325.3680000000001,
+      "logp": 3.270400000000002,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9226415780871382,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.939653
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.932599999999999,
+      "best_decoy_deltaG": -9.673,
+      "weighted_mean_decoy_deltaG": -2.166513,
+      "weighted_selectivity_gap": 5.766087,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.29202,
+      "splice_site_occlusion_penalty": 0.349381,
+      "srsi_score": 5.355957,
+      "srsi_percentile": 86.395,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.932599999999999; weighted_selectivity_gap=5.766087; splicing_rescue_proxy=0.29202; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_015056": {
+    "rank": 22,
+    "canonical_smiles": "CC1C=NC(c2cc3cc(CN4CCNCC4)ccc3[nH]c2=O)=CCC1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 350.466,
+      "logp": 2.7749000000000006,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8947917884486811,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.933012
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.1342,
+      "best_decoy_deltaG": -10.17,
+      "weighted_mean_decoy_deltaG": -2.17749,
+      "weighted_selectivity_gap": 5.95671,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.307901,
+      "splice_site_occlusion_penalty": 0.349762,
+      "srsi_score": 5.239088,
+      "srsi_percentile": 85.714,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.1342; weighted_selectivity_gap=5.95671; splicing_rescue_proxy=0.307901; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_042094": {
+    "rank": 23,
+    "canonical_smiles": "C=CN1C2CC1CN(C(=O)C1=CC=CC(=O)NCc3ccccc3OC1)C2",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 365.43300000000016,
+      "logp": 1.6063999999999998,
+      "hbd": 1,
+      "hba": 4,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.864983282500294,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.926078
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0632,
+      "best_decoy_deltaG": -9.604,
+      "weighted_mean_decoy_deltaG": -2.169893,
+      "weighted_selectivity_gap": 5.893307,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.295337,
+      "splice_site_occlusion_penalty": 0.349315,
+      "srsi_score": 5.2385,
+      "srsi_percentile": 85.034,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0632; weighted_selectivity_gap=5.893307; splicing_rescue_proxy=0.295337; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_006870": {
+    "rank": 24,
+    "canonical_smiles": "N#Cc1c(C2=CNCC(C3=CC=CCC=C3)N2)oc2ccccc2c1=O",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 343.386,
+      "logp": 2.9669800000000013,
+      "hbd": 2,
+      "hba": 5,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8764435823787062,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.935827
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.1326,
+      "best_decoy_deltaG": -9.921,
+      "weighted_mean_decoy_deltaG": -2.25551,
+      "weighted_selectivity_gap": 5.87709,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.306666,
+      "splice_site_occlusion_penalty": 0.349626,
+      "srsi_score": 5.116968,
+      "srsi_percentile": 84.354,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.1326; weighted_selectivity_gap=5.87709; splicing_rescue_proxy=0.306666; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_028512": {
+    "rank": 25,
+    "canonical_smiles": "CC(=O)N1CCC2CC(NC(=O)c3cccc(-c4nnc(C)o4)c3)CC1C2",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 368.4370000000002,
+      "logp": 2.5643200000000004,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8994438139260211,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.928935
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.146799999999999,
+      "best_decoy_deltaG": -9.34,
+      "weighted_mean_decoy_deltaG": -2.194723,
+      "weighted_selectivity_gap": 5.952077,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.639525,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.311018,
+      "splice_site_occlusion_penalty": 0.349935,
+      "srsi_score": 4.841719,
+      "srsi_percentile": 83.673,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.146799999999999; weighted_selectivity_gap=5.952077; splicing_rescue_proxy=0.311018; off_target_risk=0.639525; confidence=moderate"
+    }
+  },
+  "MolGen_012212": {
+    "rank": 26,
+    "canonical_smiles": "C=C1COCCN1S(=O)(=O)C1C=CC(=O)Nc2ccc(F)c(F)c2C(F)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 400.3780000000002,
+      "logp": 2.3278000000000008,
+      "hbd": 1,
+      "hba": 4,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8269558781336634,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.923382
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.174000000000001,
+      "best_decoy_deltaG": -10.69,
+      "weighted_mean_decoy_deltaG": -2.296817,
+      "weighted_selectivity_gap": 5.877183,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.310287,
+      "splice_site_occlusion_penalty": 0.349509,
+      "srsi_score": 4.570792,
+      "srsi_percentile": 82.993,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.174000000000001; weighted_selectivity_gap=5.877183; splicing_rescue_proxy=0.310287; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_032277": {
+    "rank": 27,
+    "canonical_smiles": "CC=C1C=CC(C(=O)Nc2nnc(C)c(-c3ccc(C#N)cc3)n2)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 329.363,
+      "logp": 3.0997000000000012,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9339307076977488,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.93971
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.925400000000001,
+      "best_decoy_deltaG": -9.38,
+      "weighted_mean_decoy_deltaG": -2.116738,
+      "weighted_selectivity_gap": 5.808662,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.292592,
+      "splice_site_occlusion_penalty": 0.34965,
+      "srsi_score": 4.421906,
+      "srsi_percentile": 82.313,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.925400000000001; weighted_selectivity_gap=5.808662; splicing_rescue_proxy=0.292592; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_044501": {
+    "rank": 28,
+    "canonical_smiles": "CC=C1C=CC(C=C2N=NN2Cc2nc3ccc(Cl)cc3c(=O)[nH]2)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 351.797,
+      "logp": 4.043200000000002,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9062852940465148,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.932393
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0098,
+      "best_decoy_deltaG": -10.07,
+      "weighted_mean_decoy_deltaG": -2.145381,
+      "weighted_selectivity_gap": 5.864419,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.297658,
+      "splice_site_occlusion_penalty": 0.349593,
+      "srsi_score": 4.302358,
+      "srsi_percentile": 81.633,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0098; weighted_selectivity_gap=5.864419; splicing_rescue_proxy=0.297658; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_005961": {
+    "rank": 29,
+    "canonical_smiles": "NC(=O)c1sc(-c2cccc3c2OCCO3)nc1C1C=CC=COC1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 356.4030000000001,
+      "logp": 2.8639,
+      "hbd": 1,
+      "hba": 6,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9141477951765916,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.941608
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0776,
+      "best_decoy_deltaG": -9.175,
+      "weighted_mean_decoy_deltaG": -2.196011,
+      "weighted_selectivity_gap": 5.881589,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.303163,
+      "splice_site_occlusion_penalty": 0.349888,
+      "srsi_score": 4.276145,
+      "srsi_percentile": 80.952,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0776; weighted_selectivity_gap=5.881589; splicing_rescue_proxy=0.303163; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_025490": {
+    "rank": 30,
+    "canonical_smiles": "Clc1ccccc1Nc1ncc2c(n1)N=CN1C=NC=CC2C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 324.77500000000003,
+      "logp": 3.4882000000000017,
+      "hbd": 1,
+      "hba": 6,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.9179746984042836,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.93405
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.974799999999999,
+      "best_decoy_deltaG": -10.37,
+      "weighted_mean_decoy_deltaG": -2.278746,
+      "weighted_selectivity_gap": 5.696054,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.294538,
+      "splice_site_occlusion_penalty": 0.349474,
+      "srsi_score": 3.881999,
+      "srsi_percentile": 80.272,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.974799999999999; weighted_selectivity_gap=5.696054; splicing_rescue_proxy=0.294538; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_010441": {
+    "rank": 31,
+    "canonical_smiles": "O=C1c2ccccc2CCC1CN1CCNC2=CC=CC(=O)C1C2",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 322.4080000000001,
+      "logp": 2.1184,
+      "hbd": 1,
+      "hba": 4,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.9060112465636222,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.931604
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.1434,
+      "best_decoy_deltaG": -9.982,
+      "weighted_mean_decoy_deltaG": -2.182412,
+      "weighted_selectivity_gap": 5.960988,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.307982,
+      "splice_site_occlusion_penalty": 0.349964,
+      "srsi_score": 3.809494,
+      "srsi_percentile": 79.592,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.1434; weighted_selectivity_gap=5.960988; splicing_rescue_proxy=0.307982; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_028007": {
+    "rank": 32,
+    "canonical_smiles": "C=C1CN(c2ccc(F)cc2)Cc2c(NC3C=CC=COC3)ncnc21",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 350.3970000000001,
+      "logp": 3.529700000000002,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9177108399369318,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.936522
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.793200000000001,
+      "best_decoy_deltaG": -9.867,
+      "weighted_mean_decoy_deltaG": -2.078258,
+      "weighted_selectivity_gap": 5.714942,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.282921,
+      "splice_site_occlusion_penalty": 0.349412,
+      "srsi_score": 3.655817,
+      "srsi_percentile": 78.912,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.793200000000001; weighted_selectivity_gap=5.714942; splicing_rescue_proxy=0.282921; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_020041": {
+    "rank": 33,
+    "canonical_smiles": "Cc1cc(N2CC3CC(C3)C2)nc(NC2C=CC=COC2)n1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 298.39000000000004,
+      "logp": 2.511820000000001,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9289715268585368,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.939036
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.7834,
+      "best_decoy_deltaG": -9.354,
+      "weighted_mean_decoy_deltaG": -2.099051,
+      "weighted_selectivity_gap": 5.684349,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.281636,
+      "splice_site_occlusion_penalty": 0.349398,
+      "srsi_score": 3.649828,
+      "srsi_percentile": 78.231,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.7834; weighted_selectivity_gap=5.684349; splicing_rescue_proxy=0.281636; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_005593": {
+    "rank": 34,
+    "canonical_smiles": "O=C(NCc1cccc(C(F)(F)F)c1)C1=CC2=NNCC2=NC=N1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 335.289,
+      "logp": 1.6475999999999993,
+      "hbd": 2,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8809146978451556,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.92647
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0056,
+      "best_decoy_deltaG": -9.583,
+      "weighted_mean_decoy_deltaG": -2.154494,
+      "weighted_selectivity_gap": 5.851106,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.297917,
+      "splice_site_occlusion_penalty": 0.349593,
+      "srsi_score": 3.461901,
+      "srsi_percentile": 77.551,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0056; weighted_selectivity_gap=5.851106; splicing_rescue_proxy=0.297917; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_046634": {
+    "rank": 35,
+    "canonical_smiles": "NS(=O)(=O)c1ccc(-c2nnc(C3C=CC=COCCCOC3)o2)cc1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 377.4220000000001,
+      "logp": 1.9744,
+      "hbd": 1,
+      "hba": 7,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.868635315031732,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.928747
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0138,
+      "best_decoy_deltaG": -9.484,
+      "weighted_mean_decoy_deltaG": -2.23552,
+      "weighted_selectivity_gap": 5.77828,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.2974,
+      "splice_site_occlusion_penalty": 0.349471,
+      "srsi_score": 3.43309,
+      "srsi_percentile": 76.871,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0138; weighted_selectivity_gap=5.77828; splicing_rescue_proxy=0.2974; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_022004": {
+    "rank": 36,
+    "canonical_smiles": "NC1=N[C](c2c(F)ccc3c2C=CCC=CC=CC(=O)N3)C[C@H]2C[C@H]2O1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 352.38900000000007,
+      "logp": 3.2970900000000016,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 1,
+      "formal_charge": 0,
+      "qed": 0.8140997319331826,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.922993
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.2872,
+      "best_decoy_deltaG": -10.13,
+      "weighted_mean_decoy_deltaG": -2.429264,
+      "weighted_selectivity_gap": 5.857936,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.317428,
+      "splice_site_occlusion_penalty": 0.349754,
+      "srsi_score": 3.130111,
+      "srsi_percentile": 76.19,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.2872; weighted_selectivity_gap=5.857936; splicing_rescue_proxy=0.317428; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_033370": {
+    "rank": 37,
+    "canonical_smiles": "C=C1C(C(=O)NC2CCOCC2C)=CC=CC12COc1ccc(cc1)CNN=N2",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 394.47500000000025,
+      "logp": 2.8682000000000016,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8078817831323586,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.922165
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.1782,
+      "best_decoy_deltaG": -9.947,
+      "weighted_mean_decoy_deltaG": -2.351729,
+      "weighted_selectivity_gap": 5.826471,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.309455,
+      "splice_site_occlusion_penalty": 0.349548,
+      "srsi_score": 3.119354,
+      "srsi_percentile": 75.51,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.1782; weighted_selectivity_gap=5.826471; splicing_rescue_proxy=0.309455; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_002336": {
+    "rank": 38,
+    "canonical_smiles": "CC1=CCNC(=O)c2ccc(Cn3cc(C(=O)O)nn3)cc2CCC=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 352.39400000000006,
+      "logp": 2.2031,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.882564951197345,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.932316
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.9268,
+      "best_decoy_deltaG": -10.6,
+      "weighted_mean_decoy_deltaG": -2.180946,
+      "weighted_selectivity_gap": 5.745854,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.291575,
+      "splice_site_occlusion_penalty": 0.349532,
+      "srsi_score": 2.818056,
+      "srsi_percentile": 74.83,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.9268; weighted_selectivity_gap=5.745854; splicing_rescue_proxy=0.291575; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_031804": {
+    "rank": 39,
+    "canonical_smiles": "CC=C1C=CC(C=C2N=c3nc(N)ccc3=C2OCCC2CC3CC(N2)O3)=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 376.4600000000001,
+      "logp": 1.6152000000000002,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 5,
+      "formal_charge": 0,
+      "qed": 0.8160839065834323,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.926511
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.1578,
+      "best_decoy_deltaG": -10.11,
+      "weighted_mean_decoy_deltaG": -2.105959,
+      "weighted_selectivity_gap": 6.051841,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.30848,
+      "splice_site_occlusion_penalty": 0.349896,
+      "srsi_score": 2.695734,
+      "srsi_percentile": 74.15,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.1578; weighted_selectivity_gap=6.051841; splicing_rescue_proxy=0.30848; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_024013": {
+    "rank": 40,
+    "canonical_smiles": "CN1C(=Cc2cn(C)[nH]2)C=C1N1CCCC(C(=O)N2CCC(F)(F)CC2)C1N",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 394.47,
+      "logp": 1.7353999999999998,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8191246005960257,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.921763
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.1902,
+      "best_decoy_deltaG": -9.935,
+      "weighted_mean_decoy_deltaG": -2.148103,
+      "weighted_selectivity_gap": 6.042097,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.310859,
+      "splice_site_occlusion_penalty": 0.34989,
+      "srsi_score": 2.606425,
+      "srsi_percentile": 73.469,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.1902; weighted_selectivity_gap=6.042097; splicing_rescue_proxy=0.310859; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_022013": {
+    "rank": 41,
+    "canonical_smiles": "CC1=CCc2nc(NC3CCNCC3)ncc2C(=O)N2CCCC2=NO1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 356.4300000000002,
+      "logp": 1.6664999999999996,
+      "hbd": 2,
+      "hba": 7,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8374383454722626,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.926046
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0788,
+      "best_decoy_deltaG": -9.598,
+      "weighted_mean_decoy_deltaG": -2.28138,
+      "weighted_selectivity_gap": 5.79742,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.302154,
+      "splice_site_occlusion_penalty": 0.349593,
+      "srsi_score": 2.562445,
+      "srsi_percentile": 72.789,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0788; weighted_selectivity_gap=5.79742; splicing_rescue_proxy=0.302154; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_001488": {
+    "rank": 42,
+    "canonical_smiles": "COc1cc2ccc1CCCC(=O)Nc1ccc(S(N)(=O)=O)cc1C2",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 360.4350000000001,
+      "logp": 2.2081999999999997,
+      "hbd": 2,
+      "hba": 4,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.8576287590416869,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.92704
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.8836,
+      "best_decoy_deltaG": -9.917,
+      "weighted_mean_decoy_deltaG": -2.117712,
+      "weighted_selectivity_gap": 5.765888,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.289542,
+      "splice_site_occlusion_penalty": 0.349509,
+      "srsi_score": 2.273587,
+      "srsi_percentile": 72.109,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.8836; weighted_selectivity_gap=5.765888; splicing_rescue_proxy=0.289542; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_018116": {
+    "rank": 43,
+    "canonical_smiles": "CNC1=C(C=C2N=CC(NC(=O)C3CC3c3cc(C(F)(F)F)ccn3)=N2)C=N1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 388.353,
+      "logp": 2.1597999999999997,
+      "hbd": 2,
+      "hba": 6,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.8282047264906539,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.92657
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.9922,
+      "best_decoy_deltaG": -9.239,
+      "weighted_mean_decoy_deltaG": -2.14054,
+      "weighted_selectivity_gap": 5.85166,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.662183,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.296154,
+      "splice_site_occlusion_penalty": 0.349586,
+      "srsi_score": 2.155444,
+      "srsi_percentile": 71.429,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.9922; weighted_selectivity_gap=5.85166; splicing_rescue_proxy=0.296154; off_target_risk=0.662183; confidence=moderate"
+    }
+  },
+  "MolGen_003935": {
+    "rank": 44,
+    "canonical_smiles": "C=NC1=NC(c2ccc(-c3nn[nH]n3)cc2)=NC=CC1=CC1=CC=COC1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 357.37700000000007,
+      "logp": 2.636400000000001,
+      "hbd": 1,
+      "hba": 7,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.8533385909855393,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.933808
+    },
+    "module_4_evidence": {
+      "target_deltaG": -8.0426,
+      "best_decoy_deltaG": -9.746,
+      "weighted_mean_decoy_deltaG": -2.166708,
+      "weighted_selectivity_gap": 5.875892,
+      "percent_decoys_stronger_than_target": 2.061856,
+      "off_target_risk_score": 0.657216,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.300594,
+      "splice_site_occlusion_penalty": 0.34989,
+      "srsi_score": 2.1545,
+      "srsi_percentile": 70.748,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-8.0426; weighted_selectivity_gap=5.875892; splicing_rescue_proxy=0.300594; off_target_risk=0.657216; confidence=moderate"
+    }
+  },
+  "MolGen_003349": {
+    "rank": 45,
+    "canonical_smiles": "O=C1NCCN1C1=CC=C(N2Cc3ccc(F)c(F)c3C2)OC=C1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 331.32200000000006,
+      "logp": 2.5748000000000006,
+      "hbd": 1,
+      "hba": 3,
+      "rotatable_bonds": 2,
+      "formal_charge": 0,
+      "qed": 0.905892664332315,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.93442
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.751600000000001,
+      "best_decoy_deltaG": -9.666,
+      "weighted_mean_decoy_deltaG": -2.209564,
+      "weighted_selectivity_gap": 5.542036,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.278745,
+      "splice_site_occlusion_penalty": 0.349315,
+      "srsi_score": 2.009591,
+      "srsi_percentile": 70.068,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.751600000000001; weighted_selectivity_gap=5.542036; splicing_rescue_proxy=0.278745; off_target_risk=0.660825; confidence=moderate"
+    }
+  },
+  "MolGen_046365": {
+    "rank": 46,
+    "canonical_smiles": "COC=CC1=C(C(=O)Nc2cccc(C)c2)C(N2CCC[C@@H](N)C2)=N1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 340.42700000000013,
+      "logp": 2.18292,
+      "hbd": 2,
+      "hba": 5,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.8235255227217485,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.922644
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.7246,
+      "best_decoy_deltaG": -8.815,
+      "weighted_mean_decoy_deltaG": -1.943608,
+      "weighted_selectivity_gap": 5.780992,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.610158,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.284689,
+      "splice_site_occlusion_penalty": 0.349646,
+      "srsi_score": 1.934855,
+      "srsi_percentile": 69.388,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.7246; weighted_selectivity_gap=5.780992; splicing_rescue_proxy=0.284689; off_target_risk=0.610158; confidence=moderate"
+    }
+  },
+  "MolGen_017672": {
+    "rank": 47,
+    "canonical_smiles": "O=C(Nc1ccnc(C2=CC=COCC2)n1)c1cc(F)cc(F)c1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 329.30600000000004,
+      "logp": 3.3245000000000022,
+      "hbd": 1,
+      "hba": 4,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9380538032370372,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.936999
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.7366,
+      "best_decoy_deltaG": -9.534,
+      "weighted_mean_decoy_deltaG": -2.152652,
+      "weighted_selectivity_gap": 5.583948,
+      "percent_decoys_stronger_than_target": 4.123711,
+      "off_target_risk_score": 0.664433,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.277059,
+      "splice_site_occlusion_penalty": 0.349456,
+      "srsi_score": 1.702077,
+      "srsi_percentile": 68.707,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.7366; weighted_selectivity_gap=5.583948; splicing_rescue_proxy=0.277059; off_target_risk=0.664433; confidence=moderate"
+    }
+  },
+  "MolGen_036113": {
+    "rank": 48,
+    "canonical_smiles": "CCc1cnc(-c2ccccc2)nc1N1CCCNC(=O)C2=CC=CC21",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 346.4340000000001,
+      "logp": 2.897100000000002,
+      "hbd": 1,
+      "hba": 4,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9283646598969508,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.936078
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.7676,
+      "best_decoy_deltaG": -9.501,
+      "weighted_mean_decoy_deltaG": -2.124277,
+      "weighted_selectivity_gap": 5.643323,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.278436,
+      "splice_site_occlusion_penalty": 0.349611,
+      "srsi_score": 1.57694,
+      "srsi_percentile": 68.027,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.7676; weighted_selectivity_gap=5.643323; splicing_rescue_proxy=0.278436; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_003756": {
+    "rank": 49,
+    "canonical_smiles": "CC(C)n1cnnc1-c1cccc(NC(=O)C2C=CC=COC2)n1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 325.37200000000007,
+      "logp": 2.5758,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 4,
+      "formal_charge": 0,
+      "qed": 0.9340511680037732,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.931547
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.928399999999999,
+      "best_decoy_deltaG": -9.447,
+      "weighted_mean_decoy_deltaG": -2.155023,
+      "weighted_selectivity_gap": 5.773377,
+      "percent_decoys_stronger_than_target": 1.030928,
+      "off_target_risk_score": 0.653608,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.292771,
+      "splice_site_occlusion_penalty": 0.349969,
+      "srsi_score": 1.359513,
+      "srsi_percentile": 67.347,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.928399999999999; weighted_selectivity_gap=5.773377; splicing_rescue_proxy=0.292771; off_target_risk=0.653608; confidence=moderate"
+    }
+  },
+  "MolGen_048315": {
+    "rank": 50,
+    "canonical_smiles": "COc1ccc(-c2cc(C(=O)N3CCCC4(CCNCC4)C3)on2)cc1",
+    "why_ranked_high": [
+      "Strong predicted SMN2 target binding",
+      "Positive weighted selectivity gap against HuRDA decoys",
+      "Acceptable Lipinski-style chemical property profile"
+    ],
+    "main_concerns": [
+      "Computational prediction only",
+      "Requires experimental validation before biological interpretation",
+      "Elevated HuRDA off-target risk proxy"
+    ],
+    "module_3_evidence": {
+      "source_generator": "neural_transformer_decoder",
+      "molecular_weight": 355.43800000000005,
+      "logp": 2.9560000000000013,
+      "hbd": 1,
+      "hba": 5,
+      "rotatable_bonds": 3,
+      "formal_charge": 0,
+      "qed": 0.9167811702843448,
+      "sa_score": "NA",
+      "lipinski_pass": true,
+      "pains_alert": false,
+      "pre_docking_candidate_score": 0.933249
+    },
+    "module_4_evidence": {
+      "target_deltaG": -7.635800000000001,
+      "best_decoy_deltaG": -9.244,
+      "weighted_mean_decoy_deltaG": -2.06799,
+      "weighted_selectivity_gap": 5.56781,
+      "percent_decoys_stronger_than_target": 3.092784,
+      "off_target_risk_score": 0.660825,
+      "is_dry_run_input": false
+    },
+    "module_5_evidence": {
+      "predicted_splicing_rescue_score": 0.270251,
+      "splice_site_occlusion_penalty": 0.349286,
+      "srsi_score": 1.342583,
+      "srsi_percentile": 66.667,
+      "candidate_tier": "low_priority_computational_candidate",
+      "confidence_level": "moderate",
+      "recommended_next_step": "future experimental validation required",
+      "evidence_summary": "target_deltaG=-7.635800000000001; weighted_selectivity_gap=5.56781; splicing_rescue_proxy=0.270251; off_target_risk=0.660825; confidence=moderate"
+    }
+  }
+}

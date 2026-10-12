@@ -1,0 +1,123 @@
+project_name: SMN2-RescueDiff
+module_name: SMN2 Target Docking and HuRDA Off-Target Counter-Screening
+
+inputs:
+  molecules_filtered: data/processed/molecule_generation/runs/module3_final_final_rigorous_x10/generated_molecules_for_docking.tsv
+  smn2_target_fasta: data/processed/target_definition/smn2_target_windows.fasta
+  smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+  smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+  decoy_atlas_full: data/processed/decoy_atlas/hurda_missing_47_only.tsv
+  decoy_atlas_summary: data/processed/decoy_atlas/hurda_summary.json
+  raw_structure_dir: data/raw/structures
+
+outputs:
+  output_dir: data/processed/docking/stage_b_decoy_200x47_missing
+  ligand_dir: data/processed/docking/stage_b_decoy_200x47_missing/ligands
+  receptor_dir: data/processed/docking/receptors
+  pose_dir: data/processed/docking/stage_b_decoy_200x47_missing/poses
+  log_dir: data/processed/docking/stage_b_decoy_200x47_missing/logs
+  simulation_dir: data/processed/docking/stage_b_decoy_200x47_missing/simulation
+  report_path: reports/docking_counter_screening_200x47_missing_report.md
+  figure_dir: figures/docking/stage_b_decoy_200x47_missing
+
+run:
+  random_seed: 42
+  run_name: decoy_benchmark_200x47_missing
+  run_mode: target_plus_decoy_docking
+  max_molecules_to_dock: 200
+  require_real_docking_for_scientific_results: true
+  allow_dry_run_simulation: false
+  parallel_jobs: 1
+  resume_existing_results: false
+  save_intermediate_every_n_jobs: 25
+
+staged_docking:
+  enabled: true
+  stage_name: stage_b_top200_x100_hard_decoys
+  select_top_from_target_scores: true
+  ignore_advance_filters_for_benchmark: true
+  target_scores_path: data/processed/docking/target_only_1000_rerun/smn2_target_docking_scores.tsv
+  top_molecules_from_target_scores: 200
+  reuse_prior_target_scores: true
+
+docking_engine:
+  engine: vina
+  vina_executable: vina
+  exhaustiveness: 8
+  num_modes: 10
+  energy_range: 3
+  timeout_seconds_per_job: 120
+
+receptor:
+  receptor_mode: user_provided
+  smn2_receptor_file: data/processed/docking/receptors/smn2_target_model1.pdbqt
+  receptor_format: pdbqt
+  docking_box:
+    center_x: 24.896
+    center_y: 20.352
+    center_z: 24.973
+    size_x: 44.963
+    size_y: 34.551
+    size_z: 44.652
+  require_user_to_confirm_box: false
+
+ligand_preparation:
+  input_smiles_column: canonical_smiles
+  add_hydrogens: true
+  generate_3d_conformers: true
+  optimize_geometry: true
+  max_conformer_attempts: 20
+  output_format: sdf
+  prepare_pdbqt: true
+
+decoy_panel:
+  use_decoy_panel: true
+  total_decoys_for_docking: 47
+  include_categories:
+    - smn2_like_hard_decoy
+    - five_prime_splice_site
+    - three_prime_splice_site
+  min_smn2_similarity: 0.45
+  min_biological_weight: 0.8
+  category_targets:
+    smn2_like_hard_decoy: 60
+    five_prime_splice_site: 25
+    three_prime_splice_site: 15
+    exonic_regulatory: 0
+    intronic_regulatory: 0
+    scrambled_smn2_control: 0
+    mutated_smn2_control: 0
+    random_bias_matched: 0
+  prioritize_high_similarity_decoys: true
+  prioritize_high_biological_weight: true
+  allow_sequence_only_decoy_panel: false
+  decoy_receptor_mode: prepared_pdbqt_if_available
+  decoy_receptor_file_column: decoy_receptor_file
+
+selectivity_scoring:
+  target_score_column: target_deltaG
+  lower_deltaG_is_better: true
+  use_biological_weights: true
+  off_target_risk_threshold_deltaG: -7.0
+  selectivity_gap_threshold: 1.0
+  advance_target_deltaG_threshold: 0.0
+  advance_weighted_gap_threshold: 1.0
+  advance_off_target_risk_threshold: 0.40
+  advance_min_decoys_with_scores: 100
+
+live_simulation:
+  enable_live_logging: true
+  write_jsonl_log: true
+  live_log_file: data/processed/docking/simulation/live_docking_events.jsonl
+  live_state_file: data/processed/docking/simulation/current_docking_state.json
+  dashboard_refresh_seconds: 2
+  include_molecule_images: true
+  include_score_animation: true
+  include_target_vs_decoy_scatter: true
+  include_heatmap: true
+  dry_run_animation_speed: 0.05
+
+figures:
+  make_figures: true
+  max_heatmap_molecules: 50
+  max_heatmap_decoys: 50

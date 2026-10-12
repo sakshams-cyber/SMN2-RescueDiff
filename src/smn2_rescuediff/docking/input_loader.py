@@ -11,7 +11,13 @@ import pandas as pd
 
 def load_molecules(path: str | Path) -> pd.DataFrame:
     """Load Module 3 filtered molecules."""
-    df = pd.read_csv(path, sep="\t")
+    df = pd.read_csv(
+        path,
+        sep="\t",
+        dtype=str,
+        keep_default_na=False,
+        low_memory=False,
+    )
     required = {"molecule_id", "canonical_smiles"}
     missing = required - set(df.columns)
     if missing:
@@ -28,7 +34,13 @@ def load_molecules(path: str | Path) -> pd.DataFrame:
 
 def load_decoy_atlas(path: str | Path) -> pd.DataFrame:
     """Load HuRDA atlas table."""
-    df = pd.read_csv(path, sep="\t")
+    df = pd.read_csv(
+        path,
+        sep="\t",
+        dtype=str,
+        keep_default_na=False,
+        low_memory=False,
+    )
     required = {"decoy_id", "decoy_category", "sequence_rna"}
     missing = required - set(df.columns)
     if missing:

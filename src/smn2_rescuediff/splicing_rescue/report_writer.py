@@ -45,6 +45,7 @@ NUMERIC_OUTPUT_COLUMNS = {
     "qed",
     "sa_score",
     "pre_docking_candidate_score",
+    "nearest_benchmark_tanimoto",
     "srsi_score",
     "srsi_percentile",
     "splicing_rescue_score_percentile",
@@ -89,6 +90,7 @@ def build_summary(
     used_dry_run_inputs: bool,
     pose_contact_features: pd.DataFrame,
     warnings: list[str],
+    benchmark_reference_scores: pd.DataFrame | None = None,
 ) -> dict[str, Any]:
     """Build final Module 5 summary JSON."""
     tier_counts = final_ranked.get("candidate_tier", pd.Series(dtype=str)).value_counts().to_dict() if not final_ranked.empty else {}
@@ -112,6 +114,12 @@ def build_summary(
         "used_dry_run_inputs": bool(used_dry_run_inputs),
         "pose_based_scoring_count": int((pose_status == "pose_based_proxy").sum()),
         "feature_based_fallback_count": int(pose_status.str.contains("fallback|missing|failed|no_receptor", case=False, regex=True).sum()) if len(pose_status) else 0,
+        "benchmark_controls_loaded": int(len(benchmark_reference_scores)) if benchmark_reference_scores is not None else 0,
+        "benchmark_controls_with_scores": (
+            int((benchmark_reference_scores.get("reference_status", pd.Series(dtype=str)) == "scored_reference_baseline").sum())
+            if benchmark_reference_scores is not None and not benchmark_reference_scores.empty
+            else 0
+        ),
         "warnings": warnings,
         "limitations": LIMITATIONS,
     }
@@ -130,6 +138,8 @@ def _top_table(df: pd.DataFrame, top_n: int) -> str:
         "weighted_selectivity_gap",
         "off_target_risk_score",
         "predicted_splicing_rescue_score",
+        "nearest_benchmark_control_name",
+        "nearest_benchmark_tanimoto",
         "srsi_score",
         "candidate_tier",
         "confidence_level",
@@ -172,6 +182,7 @@ def write_final_candidate_report(
     evidence: dict[str, Any],
     output_files: list[str],
     path: str | Path,
+    benchmark_reference_scores: pd.DataFrame | None = None,
 ) -> None:
     """Write the final project-style candidate report."""
     top_n = int(config.get("run", {}).get("top_n_report_candidates", 10))
@@ -180,6 +191,20 @@ def write_final_candidate_report(
     warning_text = "\n".join(f"- {item}" for item in summary.get("warnings", [])) or "- No warnings were recorded."
     limitations = "\n".join(f"- {item}" for item in LIMITATIONS)
     ablation_note = "Ablation analysis was not available." if ablation.empty else _top_table(ablation.rename(columns={"full_srsi_rank": "final_rank"}), min(top_n, len(ablation)))
+    benchmark_text = "No held-out benchmark controls were loaded for this run."
+    if benchmark_reference_scores is not None and not benchmark_reference_scores.empty:
+        benchmark_columns = [
+            "benchmark_control_name",
+            "target_deltaG",
+            "weighted_selectivity_gap",
+            "selectivity_gap",
+            "off_target_risk_score",
+            "srsi_score",
+            "confidence_level",
+            "reference_status",
+        ]
+        available = [column for column in benchmark_columns if column in benchmark_reference_scores.columns]
+        benchmark_text = _markdown_table(benchmark_reference_scores[available].head(top_n))
     selectivity_note = (
         f"{summary.get('missing_selectivity_gap_count', 0)} ranked candidates have missing `weighted_selectivity_gap` values. "
         "Blank selectivity fields indicate that no usable real decoy selectivity value was available for that molecule; values were not fabricated."
@@ -224,6 +249,14 @@ The predicted splicing-rescue score rewards target binding near beneficial exon 
 ## Top {top_n} Candidates
 
 {_top_table(final_ranked, top_n)}
+
+## Held-Out Benchmark Controls
+
+Benchmark controls were not used for model training.
+
+Known splicing modifiers provided through `inputs.benchmark_controls.splicing_controls` are reported separately as reference baselines when Module 4 docking or selectivity scores are available for them. These comparisons are limited to computational values such as docking score, selectivity gap, off-target-risk proxy, and SRSI. They do not show that any generated molecule is clinically better than risdiplam or another benchmark control.
+
+{benchmark_text}
 
 ## Candidate Evidence Summaries
 

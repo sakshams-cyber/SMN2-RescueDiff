@@ -35,6 +35,9 @@ FINAL_COLUMNS = [
     "lipinski_pass",
     "pains_alert",
     "pre_docking_candidate_score",
+    "nearest_benchmark_control_name",
+    "nearest_benchmark_tanimoto",
+    "is_too_similar_to_benchmark",
     "srsi_score",
     "srsi_percentile",
     "candidate_tier",
@@ -66,6 +69,7 @@ NUMERIC_FINAL_COLUMNS = {
     "qed",
     "sa_score",
     "pre_docking_candidate_score",
+    "nearest_benchmark_tanimoto",
     "srsi_score",
     "srsi_percentile",
 }

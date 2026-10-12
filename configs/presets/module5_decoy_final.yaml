@@ -12,6 +12,8 @@ inputs:
   generated_molecules_filtered: data/processed/molecule_generation/generated_molecules_filtered.tsv
   generated_molecules_for_docking: data/processed/molecule_generation/generated_molecules_for_docking.tsv
   molecule_generation_summary: data/processed/molecule_generation/generated_molecule_summary.json
+  benchmark_controls:
+    splicing_controls: data/raw/molecules/benchmark_controls/splicing_benchmark_controls.smi
 
   target_docking_scores: data/processed/docking/stage_c_decoy_750/smn2_target_docking_scores.tsv
   decoy_docking_scores: data/processed/docking/stage_c_decoy_750/decoy_docking_scores.tsv

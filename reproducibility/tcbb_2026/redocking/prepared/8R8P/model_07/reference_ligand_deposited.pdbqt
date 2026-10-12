@@ -1,0 +1,46 @@
+REMARK  Name = /Users/saksham/Documents/Regeneron ISEF SMA Project/SMN2-RescueDiff/data/processed/redocking_validation/prepared/8R8P/model_07/reference_ligand_deposited.pdb
+REMARK  4 active torsions:
+REMARK  status: ('A' for Active; 'I' for Inactive)
+REMARK    1  A    between atoms: C13_2  and  N24_24
+REMARK    2  A    between atoms: C19_5  and  C1_10
+REMARK    3  A    between atoms: C9_17  and  C10_18
+REMARK    4  A    between atoms: N27_26  and  C28_27
+REMARK                            x       y       z     vdW  Elec       q    Type
+REMARK                         _______ _______ _______ _____ _____    ______ ____
+ROOT
+ATOM      1  C12 YB3 B 101      10.630  29.643  33.970  1.00  0.00    +0.021 C 
+ATOM      2  C13 YB3 B 101       9.483  30.349  34.372  1.00  0.00    +0.030 C 
+ATOM      3  C14 YB3 B 101       8.607  30.844  33.395  1.00  0.00    +0.030 C 
+ATOM      4  C16 YB3 B 101      10.001  29.904  31.645  1.00  0.00    +0.108 C 
+ATOM      5  C19 YB3 B 101       9.248  30.133  29.416  1.00  0.00    +0.128 C 
+ATOM      6  C21 YB3 B 101       7.965  31.060  31.064  1.00  0.00    +0.119 C 
+ATOM      7  C15 YB3 B 101       8.859  30.608  32.038  1.00  0.00    +0.002 C 
+ATOM      8  C17 YB3 B 101      10.893  29.422  32.609  1.00  0.00    +0.008 C 
+ATOM      9  N18 YB3 B 101      10.232  29.694  30.292  1.00  0.00    -0.313 N 
+ATOM     10  N20 YB3 B 101       8.151  30.826  29.762  1.00  0.00    -0.239 NA
+ATOM     11  H18 YB3 B 101      11.077  29.250  29.960  1.00  0.00    +0.149 HD
+ENDROOT
+BRANCH   5  12
+ATOM     12  C1  YB3 B 101       9.376  29.836  27.989  1.00  0.00    +0.034 A 
+ATOM     13  C2  YB3 B 101      10.507  29.068  27.547  1.00  0.00    +0.055 A 
+ATOM     14  C3  YB3 B 101      10.613  28.786  26.207  1.00  0.00    +0.167 A 
+ATOM     15  C5  YB3 B 101       9.673  29.220  25.300  1.00  0.00    +0.174 A 
+ATOM     16  N6  YB3 B 101       8.635  29.954  25.829  1.00  0.00    -0.303 N 
+ATOM     17  C7  YB3 B 101       8.398  30.317  27.141  1.00  0.00    +0.104 A 
+ATOM     18  C8  YB3 B 101       7.843  30.266  24.742  1.00  0.00    +0.115 A 
+ATOM     19  C9  YB3 B 101       8.464  29.701  23.656  1.00  0.00    +0.057 A 
+ATOM     20  C10 YB3 B 101       7.926  29.800  22.258  1.00  0.00    +0.067 C 
+ATOM     21  N11 YB3 B 101       9.613  29.042  23.998  1.00  0.00    -0.230 NA
+ATOM     22  F4  YB3 B 101      11.654  28.066  25.771  1.00  0.00    -0.202 F 
+ENDBRANCH   5  12
+BRANCH   2  26
+ATOM     23  C22 YB3 B 101       8.396  29.078  37.507  1.00  0.00    -0.060 C 
+ATOM     24  C23 YB3 B 101       9.640  29.619  36.777  1.00  0.00    +0.086 C 
+ATOM     25  C26 YB3 B 101       7.155  31.146  36.949  1.00  0.00    -0.060 C 
+ATOM     26  N24 YB3 B 101       9.201  30.544  35.721  1.00  0.00    -0.333 N 
+ATOM     27  C25 YB3 B 101       8.404  31.679  36.222  1.00  0.00    +0.086 C 
+ATOM     28  N27 YB3 B 101       7.478  30.156  38.057  1.00  0.00    +0.380 N 
+ATOM     29  C28 YB3 B 101       8.157  30.874  39.207  1.00  0.00    -0.096 C 
+ATOM     30  H27 YB3 B 101       6.601  29.731  38.391  1.00  0.00    -0.082 HD
+ENDBRANCH   2  26
+TORSDOF 2

@@ -1,0 +1,29 @@
+{
+  "project": "SMN2-RescueDiff",
+  "module": "SMN2 Target Docking and HuRDA Off-Target Counter-Screening",
+  "run_mode": "target_plus_decoy_docking",
+  "stage_name": "stage_b_top200_x100_hard_decoys",
+  "dry_run_warning": "",
+  "molecules_evaluated": 150,
+  "target_scores": {
+    "count": 147,
+    "min": -9.037,
+    "mean": -7.810272108843538
+  },
+  "decoy_scores": {
+    "count": 6909,
+    "min": -8.978,
+    "mean": -1.9662127921551602
+  },
+  "advanced_candidates": 89,
+  "warnings": [],
+  "limitations": [
+    "Docking scores are model-based computational predictions and do not prove experimental binding.",
+    "Dry-run scores are simulated for pipeline testing and visualization only.",
+    "This module does not prove splicing rescue, safety, therapeutic efficacy, or clinical relevance.",
+    "Sequence-only RNA target windows cannot replace real 3D receptor structures for scientific docking.",
+    "No chemical synthesis or biological testing instructions are provided."
+  ],
+  "run_name": "decoy_150x47_after_target5",
+  "run_folder": "data/processed/docking/stage_b_decoy_150x47_after_target5/runs/decoy_150x47_after_target5"
+}

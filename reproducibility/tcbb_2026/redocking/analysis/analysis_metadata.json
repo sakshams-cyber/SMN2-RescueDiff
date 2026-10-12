@@ -1,0 +1,32 @@
+{
+  "status": "completed",
+  "protocol_sha256": "93a483b1490b68ab6f5496688aa03569875be4cc3b3d5ae125793cb45abb77a6",
+  "docking_run_metadata": {
+    "status": "completed",
+    "started_utc": "2026-10-12T03:34:07.690373+00:00",
+    "protocol_path": "data/processed/redocking_validation/redocking_protocol.yaml",
+    "protocol_sha256": "93a483b1490b68ab6f5496688aa03569875be4cc3b3d5ae125793cb45abb77a6",
+    "vina_version": "AutoDock Vina v1.2.7",
+    "total_jobs": 225,
+    "parallel_workers": 4,
+    "completed_utc": "2026-10-12T04:27:36.906424+00:00",
+    "completed_jobs": 225,
+    "failed_jobs": 0,
+    "modes_scored": 4488,
+    "all_scores_are_real": true
+  },
+  "structures_analyzed": 4,
+  "pose_rows": 4488,
+  "pose_to_reference_rmsd_rows": 64535,
+  "all_rmsd_values_symmetry_corrected": true,
+  "ligand_superposition_used": false,
+  "rna_alignment_used": true,
+  "contact_cutoff_angstrom": 4.0,
+  "software_versions": {
+    "spyrmsd": "0.9.0",
+    "rdkit": "2025.9.5",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "networkx": "3.6.1"
+  }
+}

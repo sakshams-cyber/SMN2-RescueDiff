@@ -1,0 +1,113 @@
+protocol_name: SMN2-RescueDiff RNA redocking validation
+locked_before_docking_and_rmsd: true
+created_utc: '2026-10-12T03:33:50.951020+00:00'
+git_commit: 7366492f66caff531fa3c4c7e09d872986904cbe
+software:
+  vina: AutoDock Vina v1.2.7
+  open_babel: Open Babel 3.2.1 -- Jul 11 2026 -- 19:21:27
+  rmsd: spyrmsd.symmrmsd with center=false and minimize=false
+ligand_preparation:
+  function: smn2_rescuediff.docking.ligand_preparer.prepare_ligands
+  fresh_conformer_seed: 61453
+  embedding: RDKit ETKDGv3
+  optimization: MMFF with UFF fallback
+  pdbqt_conversion: Open Babel with Gasteiger partial charges
+  smiles_selection: RCSB component SMILES_CANONICAL from CACTVS; when RDKit cannot
+    parse that string, convert the RCSB component InChI to RDKit canonical SMILES
+  deposited_coordinates_used_for_docking: false
+receptor_preparation:
+  repository_function_reviewed: smn2_rescuediff.docking.receptor_preparer.prepare_receptor
+  repository_function_limitation: Validation and metadata only; it does not create
+    receptor PDBQT files.
+  conversion: obabel receptor_rna.pdb -O receptor_rna.pdbqt --partialcharge gasteiger
+    -xr
+  rigid_output_reason: Open Babel writes ROOT/BRANCH ligand records unless -xr is
+    used; Vina rejects those records in a rigid receptor.
+  production_receptor_audit: The existing SMN2 production receptor was not reused
+    because it contains Y59 deposited-ligand atoms; this validation uses ligand-free
+    RNA receptors.
+  included: RNA polymer atoms, including PSU
+  excluded: Deposited ligand, solvent, monatomic ions, and non-RNA heterogens
+grid_definition:
+  center: Centroid of deposited ligand heavy atoms in model 1
+  padding_angstrom_each_side: 8.0
+  size_formula: heavy-atom coordinate extent + 16.0 Angstrom on each axis
+docking:
+  exhaustiveness: 32
+  num_modes: 20
+  energy_range: 10
+  cpu_per_job: 1
+  parallel_workers: 4
+  seeds:
+  - 61453
+  - 61459
+  - 61463
+  - 61469
+  - 61471
+  primary_receptor_model: 1
+  ensemble_docking: all deposited models
+  timeout_seconds_per_job: 1800
+analysis:
+  rmsd_threshold_angstrom_strictly_less_than: 2.0
+  symmetry_correction: spyrmsd graph-isomorphism correction
+  center_before_rmsd: false
+  minimize_by_ligand_superposition: false
+  receptor_alignment: Reference ensemble RNA heavy atoms aligned to each docked receptor
+    model before ligand RMSD
+  contact_cutoff_angstrom: 4.0
+  contact_identity: RNA chain, residue number, insertion code, residue name, and receptor
+    atom name
+  operational_meaningful_contact_recall_minimum: 0.5
+  operational_meaningful_contact_jaccard_minimum: 0.33
+  headline_pose: Lowest-affinity mode across the five model-1 seed runs
+  seed_success: Each seed's rank-1 model-1 mode has RMSD <2.0 Angstrom to at least
+    one aligned deposited ensemble model
+structures:
+  8R62:
+    ligand_name: Risdiplam
+    ligand_component_id: Y59
+    experimental_method: SOLUTION NMR
+    ensemble_models: 14
+    grid_box:
+      center_x: 33.0209
+      center_y: 17.991567
+      center_z: 30.289333
+      size_x: 31.815
+      size_y: 21.53
+      size_z: 23.376
+  8R8P:
+    ligand_name: SMN-CX
+    ligand_component_id: YB3
+    experimental_method: SOLID-STATE NMR
+    ensemble_models: 15
+    grid_box:
+      center_x: 8.930821
+      center_y: 29.857
+      center_z: 30.511607
+      size_x: 20.475
+      size_y: 19.683
+      size_z: 32.939
+  5KX9:
+    ligand_name: Ribocil analogue 6YG
+    ligand_component_id: 6YG
+    experimental_method: X-RAY DIFFRACTION
+    ensemble_models: 1
+    grid_box:
+      center_x: 27.734481
+      center_y: 38.909778
+      center_z: 21.570074
+      size_x: 19.326
+      size_y: 25.682
+      size_z: 24.841
+  8R63:
+    ligand_name: Branaplam
+    ligand_component_id: Y53
+    experimental_method: SOLUTION NMR
+    ensemble_models: 15
+    grid_box:
+      center_x: 9.960103
+      center_y: 38.603138
+      center_z: 31.099241
+      size_x: 22.195
+      size_y: 25.392
+      size_z: 29.393

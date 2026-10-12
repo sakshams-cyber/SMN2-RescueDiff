@@ -26,6 +26,12 @@ from smn2_rescuediff.docking.ligand_preparer import prepare_ligands
 from smn2_rescuediff.docking.live_logger import LiveLogger
 from smn2_rescuediff.docking.molecule_selector import select_molecules_for_docking
 from smn2_rescuediff.docking.selectivity_scorer import calculate_selectivity_scores
+from smn2_rescuediff.docking.docking_engine import DockingResult
+from smn2_rescuediff.docking.target_conformer_panel import (
+    calculate_target_conformer_robustness,
+    filter_target_conformer_candidates,
+    load_target_conformer_panel,
+)
 from smn2_rescuediff.docking.vina_runner import validate_vina_input_files
 
 
@@ -190,6 +196,51 @@ def test_decoy_panel_selector_filters_hard_decoys_and_preserves_receptor_file(tm
     assert panel["decoy_receptor_file"].str.endswith(".pdbqt").all()
 
 
+def test_decoy_panel_selector_requires_existing_pdbqt_when_sequence_only_is_disabled(tmp_path):
+    decoys = pd.read_csv(_decoys(tmp_path / "decoys.tsv"), sep="\t")
+    decoys["decoy_receptor_file"] = [str(tmp_path / f"decoy_{idx}.pdbqt") for idx in range(len(decoys))]
+    for idx in [0, 3]:
+        Path(decoys.loc[idx, "decoy_receptor_file"]).write_text("REMARK prepared receptor\n", encoding="utf-8")
+    panel = select_decoy_panel(
+        decoys,
+        {
+            "decoy_panel": {
+                "use_decoy_panel": True,
+                "total_decoys_for_docking": 2,
+                "include_categories": ["smn2_like_hard_decoy"],
+                "category_targets": {"smn2_like_hard_decoy": 2},
+                "allow_sequence_only_decoy_panel": False,
+                "decoy_receptor_file_column": "decoy_receptor_file",
+            }
+        },
+        project_root=tmp_path,
+    )
+    assert len(panel) == 2
+    assert set(panel["decoy_id"]) == {"HuRDA_000001", "HuRDA_000004"}
+    assert panel["notes"].str.contains("existing, nonempty receptor PDBQT").all()
+
+
+def test_decoy_panel_selector_fails_if_requested_prepared_panel_is_too_large(tmp_path):
+    decoys = pd.read_csv(_decoys(tmp_path / "decoys.tsv"), sep="\t")
+    decoys["decoy_receptor_file"] = [str(tmp_path / f"decoy_{idx}.pdbqt") for idx in range(len(decoys))]
+    Path(decoys.loc[0, "decoy_receptor_file"]).write_text("REMARK prepared receptor\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="Requested 2 dockable HuRDA decoys"):
+        select_decoy_panel(
+            decoys,
+            {
+                "decoy_panel": {
+                    "use_decoy_panel": True,
+                    "total_decoys_for_docking": 2,
+                    "include_categories": ["smn2_like_hard_decoy"],
+                    "category_targets": {"smn2_like_hard_decoy": 2},
+                    "allow_sequence_only_decoy_panel": False,
+                    "decoy_receptor_file_column": "decoy_receptor_file",
+                }
+            },
+            project_root=tmp_path,
+        )
+
+
 def test_staged_docking_reuses_prior_target_scores(tmp_path):
     molecules = pd.DataFrame(
         [
@@ -274,6 +325,167 @@ def test_benchmark_staged_selection_fails_when_request_is_underfilled(tmp_path):
         _benchmark_molecule_selection_from_target_scores(config, tmp_path)
 
 
+def _target_conformer_manifest(tmp_path: Path, count: int = 5) -> Path:
+    rows = []
+    for idx in range(count):
+        receptor = tmp_path / "receptors" / f"smn2_target_model{idx + 1:02d}.pdbqt"
+        receptor.parent.mkdir(parents=True, exist_ok=True)
+        receptor.write_text(f"REMARK receptor {idx + 1}\n", encoding="utf-8")
+        rows.append(
+            {
+                "conformer_id": f"SMN2_CONF_{idx + 1:02d}",
+                "receptor_file": str(receptor),
+                "source_structure": "test",
+                "source_model": f"model{idx + 1:02d}",
+            }
+        )
+    manifest = tmp_path / "target_conformer_panel_5.tsv"
+    pd.DataFrame(rows).to_csv(manifest, sep="\t", index=False)
+    return manifest
+
+
+def test_target_conformer_manifest_requires_exactly_five_receptors(tmp_path):
+    manifest = _target_conformer_manifest(tmp_path, count=4)
+    config = {"target_conformer_panel": {"enabled": True, "manifest": str(manifest), "require_all_conformers": True, "expected_conformer_count": 5}}
+    with pytest.raises(ValueError, match="exactly 5 receptors"):
+        load_target_conformer_panel(config, tmp_path)
+
+
+def test_target_conformer_robustness_ranks_by_worst_then_mean_range_and_std():
+    long_scores = pd.DataFrame(
+        [
+            {"molecule_id": "Mol_A", "conformer_id": "C1", "target_deltaG": -9.0, "dock_status": "completed"},
+            {"molecule_id": "Mol_A", "conformer_id": "C2", "target_deltaG": -5.0, "dock_status": "completed"},
+            {"molecule_id": "Mol_B", "conformer_id": "C1", "target_deltaG": -7.0, "dock_status": "completed"},
+            {"molecule_id": "Mol_B", "conformer_id": "C2", "target_deltaG": -6.8, "dock_status": "completed"},
+        ]
+    )
+    robustness = calculate_target_conformer_robustness(long_scores, expected_conformer_count=2)
+    passed = filter_target_conformer_candidates(
+        robustness,
+        {
+            "target_conformer_panel": {"expected_conformer_count": 2, "require_all_conformers": True},
+            "target_conformer_filter": {"top_n_to_advance": 2, "require_all_conformers_completed": True},
+        },
+    )
+    assert passed["molecule_id"].tolist() == ["Mol_B", "Mol_A"]
+    assert passed.iloc[0]["worst_target_deltaG"] == -6.8
+
+
+def test_target_conformer_panel_cli_writes_long_and_robust_outputs(tmp_path, monkeypatch):
+    import smn2_rescuediff.docking.target_conformer_panel as panel_runner
+
+    molecules = _molecules(tmp_path / "molecules.tsv")
+    manifest = _target_conformer_manifest(tmp_path, count=5)
+    output_dir = tmp_path / "target5_2"
+
+    def fake_prepare_ligands(selected: pd.DataFrame, ligand_dir: str | Path, config: dict) -> pd.DataFrame:
+        rows = []
+        ligand_path = Path(ligand_dir)
+        ligand_path.mkdir(parents=True, exist_ok=True)
+        for _, row in selected.iterrows():
+            pdbqt = ligand_path / f"{row['molecule_id']}.pdbqt"
+            pdbqt.write_text("REMARK ligand pdbqt\n", encoding="utf-8")
+            rows.append({"molecule_id": row["molecule_id"], "canonical_smiles": row["canonical_smiles"], "pdbqt_file": str(pdbqt), "prep_status": "prepared"})
+        return pd.DataFrame(rows)
+
+    def fake_run_vina(*, receptor_file: str, ligand_file: str, pose_file: str, config: dict) -> DockingResult:
+        Path(pose_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(pose_file).write_text("REMARK pose\n", encoding="utf-8")
+        molecule_bonus = -0.5 if "Mol_002" in ligand_file else 0.0
+        conformer_penalty = float(Path(receptor_file).stem[-2:]) / 10.0
+        score = round(-7.0 + molecule_bonus + conformer_penalty, 3)
+        return DockingResult("completed", score, 1, 1, pose_file, "vina", "real_docking", False, "fake vina score")
+
+    monkeypatch.setattr(panel_runner, "prepare_ligands", fake_prepare_ligands)
+    monkeypatch.setattr(panel_runner, "run_vina", fake_run_vina)
+    config = tmp_path / "module4_target_conformer.yaml"
+    config.write_text(
+        f"""
+project_name: SMN2-RescueDiff
+module_name: SMN2 Target Docking and HuRDA Off-Target Counter-Screening
+inputs:
+  molecules_for_docking: {molecules}
+  smn2_target_fasta: {tmp_path / "target.fasta"}
+  smn2_target_profile: {tmp_path / "target.tsv"}
+  smn2_target_metadata: {tmp_path / "target.json"}
+  decoy_atlas_full: {tmp_path / "decoys.tsv"}
+  decoy_atlas_summary: {tmp_path / "decoys.json"}
+  raw_structure_dir: {tmp_path / "raw_structures"}
+outputs:
+  output_dir: {output_dir}
+  ligand_dir: {output_dir / "ligands"}
+  receptor_dir: {tmp_path / "receptors"}
+  pose_dir: {output_dir / "poses"}
+  log_dir: {output_dir / "logs"}
+  simulation_dir: {output_dir / "simulation"}
+  report_path: {tmp_path / "report.md"}
+  figure_dir: {tmp_path / "figures"}
+run:
+  random_seed: 13
+  run_name: target5_2
+  run_mode: target_conformer_panel_docking
+  max_molecules_to_dock: 2
+  overwrite_existing: false
+  require_real_docking_for_scientific_results: true
+  allow_dry_run_simulation: false
+target_conformer_panel:
+  enabled: true
+  manifest: {manifest}
+  require_all_conformers: true
+  expected_conformer_count: 5
+target_conformer_filter:
+  require_all_conformers_completed: true
+  top_n_to_advance: 1
+docking_engine:
+  engine: vina
+  vina_executable: vina
+  exhaustiveness: 1
+  num_modes: 1
+  energy_range: 3
+  random_seed_policy: fixed_run_seed
+  timeout_seconds_per_job: 5
+receptor:
+  receptor_mode: conformer_panel
+  smn2_receptor_file: {tmp_path / "receptors" / "smn2_target_model01.pdbqt"}
+  receptor_format: pdbqt
+  docking_box:
+    center_x: 0
+    center_y: 0
+    center_z: 0
+    size_x: 20
+    size_y: 20
+    size_z: 20
+  require_user_to_confirm_box: false
+ligand_preparation:
+  prepare_pdbqt: true
+decoy_panel:
+  use_decoy_panel: false
+live_simulation:
+  enable_live_logging: false
+  live_log_file: {output_dir / "simulation" / "events.jsonl"}
+  live_state_file: {output_dir / "simulation" / "state.json"}
+figures:
+  make_figures: false
+""",
+        encoding="utf-8",
+    )
+    assert run(config) == 0
+    long_scores = pd.read_csv(output_dir / "target_conformer_scores_long.tsv", sep="\t")
+    robustness = pd.read_csv(output_dir / "target_conformer_robustness_scores.tsv", sep="\t")
+    passed = pd.read_csv(output_dir / "molecules_passed_target_conformer_filter.tsv", sep="\t")
+    assert len(long_scores) == 10
+    assert set(long_scores["conformer_id"]) == {f"SMN2_CONF_{idx:02d}" for idx in range(1, 6)}
+    assert (long_scores["is_dry_run_score"] == False).all()  # noqa: E712
+    assert robustness["num_conformers_completed"].tolist() == [5, 5]
+    assert len(passed) == 1
+    assert (output_dir / "selected_molecules.tsv").exists()
+    assert (output_dir / "conformer_panel_used.tsv").exists()
+    assert (output_dir / "config_used.yaml").exists()
+    assert (output_dir / "SMN2_CONF_01" / "target_docking_scores.tsv").exists()
+    assert (output_dir / "SMN2_CONF_05" / "poses").exists()
+
+
 def test_dry_run_docker_deterministic_scores():
     molecule = pd.Series({"molecule_id": "Mol_001", "qed": 0.5, "molecular_weight": 250, "logp": 2.0})
     left = dry_run_target_score(molecule, 42)
@@ -307,6 +519,148 @@ def test_live_jsonl_event_logging_and_state_update(tmp_path):
     state = logger.state(run_status="running", jobs_completed=1, total_jobs=2, last_message="half")
     assert (tmp_path / "events.jsonl").read_text(encoding="utf-8").strip()
     assert state["percent_complete"] == 50.0
+
+
+def test_real_decoy_docking_invokes_vina_with_prepared_decoy_pdbqt(tmp_path, monkeypatch):
+    import smn2_rescuediff.docking.cli as docking_cli
+
+    molecules = _molecules(tmp_path / "molecules.tsv")
+    decoys_path = _decoys(tmp_path / "decoys.tsv")
+    decoys = pd.read_csv(decoys_path, sep="\t").head(1)
+    decoy_receptor = tmp_path / "receptors" / "HuRDA_000001.pdbqt"
+    decoy_receptor.parent.mkdir(parents=True)
+    decoy_receptor.write_text("REMARK decoy receptor\n", encoding="utf-8")
+    decoys["decoy_receptor_file"] = str(decoy_receptor)
+    decoys.to_csv(decoys_path, sep="\t", index=False)
+
+    fasta, profile, metadata = _target_files(tmp_path)
+    decoy_summary = tmp_path / "hurda_summary.json"
+    decoy_summary.write_text(json.dumps({"total_decoys": 1}), encoding="utf-8")
+    raw_structures = tmp_path / "raw_structures"
+    raw_structures.mkdir()
+    target_receptor = tmp_path / "receptors" / "smn2_target.pdbqt"
+    target_receptor.write_text("REMARK target receptor\n", encoding="utf-8")
+    output_dir = tmp_path / "docking"
+
+    def fake_prepare_ligands(selected: pd.DataFrame, ligand_dir: str | Path, config: dict) -> pd.DataFrame:
+        ligand_path = Path(ligand_dir)
+        ligand_path.mkdir(parents=True, exist_ok=True)
+        rows = []
+        for _, row in selected.iterrows():
+            pdbqt = ligand_path / f"{row['molecule_id']}.pdbqt"
+            pdbqt.write_text("REMARK ligand\n", encoding="utf-8")
+            rows.append(
+                {
+                    "molecule_id": row["molecule_id"],
+                    "canonical_smiles": row["canonical_smiles"],
+                    "pdbqt_file": str(pdbqt),
+                    "prep_status": "prepared",
+                }
+            )
+        return pd.DataFrame(rows)
+
+    calls: list[tuple[str, str]] = []
+
+    def fake_run_vina(*, receptor_file: str, ligand_file: str, pose_file: str, config: dict) -> DockingResult:
+        calls.append((receptor_file, ligand_file))
+        Path(pose_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(pose_file).write_text("REMARK pose\n", encoding="utf-8")
+        return DockingResult("completed", -7.0, 1, 1, pose_file, "vina", "real_docking", False, "test")
+
+    monkeypatch.setattr(docking_cli, "prepare_ligands", fake_prepare_ligands)
+    monkeypatch.setattr(
+        docking_cli,
+        "prepare_receptor",
+        lambda config, receptor_file, mode: pd.DataFrame(
+            [{"receptor_file": str(receptor_file), "prep_status": "prepared", "notes": "test"}]
+        ),
+    )
+    monkeypatch.setattr(docking_cli, "run_vina", fake_run_vina)
+
+    config_path = tmp_path / "real_decoy.yaml"
+    config_path.write_text(
+        f"""
+project_name: SMN2-RescueDiff
+module_name: SMN2 Target Docking and HuRDA Off-Target Counter-Screening
+inputs:
+  molecules_for_docking: {molecules}
+  molecules_filtered: {molecules}
+  smn2_target_fasta: {fasta}
+  smn2_target_profile: {profile}
+  smn2_target_metadata: {metadata}
+  decoy_atlas_full: {decoys_path}
+  decoy_atlas_summary: {decoy_summary}
+  raw_structure_dir: {raw_structures}
+outputs:
+  output_dir: {output_dir}
+  ligand_dir: {output_dir / 'ligands'}
+  receptor_dir: {tmp_path / 'receptors'}
+  pose_dir: {output_dir / 'poses'}
+  log_dir: {output_dir / 'logs'}
+  simulation_dir: {output_dir / 'simulation'}
+  report_path: {tmp_path / 'report.md'}
+  figure_dir: {tmp_path / 'figures'}
+run:
+  random_seed: 42
+  run_name: real_decoy_regression
+  run_mode: target_plus_decoy_docking
+  max_molecules_to_dock: 1
+  require_real_docking_for_scientific_results: true
+  allow_dry_run_simulation: false
+  overwrite_existing: false
+docking_engine:
+  engine: vina
+  vina_executable: vina
+  exhaustiveness: 1
+  num_modes: 1
+  energy_range: 3
+  timeout_seconds_per_job: 5
+receptor:
+  receptor_mode: user_provided
+  smn2_receptor_file: {target_receptor}
+  receptor_format: pdbqt
+  docking_box:
+    center_x: 0
+    center_y: 0
+    center_z: 0
+    size_x: 20
+    size_y: 20
+    size_z: 20
+  require_user_to_confirm_box: false
+ligand_preparation:
+  input_smiles_column: canonical_smiles
+  prepare_pdbqt: true
+decoy_panel:
+  use_decoy_panel: true
+  total_decoys_for_docking: 1
+  include_categories: [smn2_like_hard_decoy]
+  category_targets:
+    smn2_like_hard_decoy: 1
+  min_smn2_similarity: 0.0
+  min_biological_weight: 0.0
+  allow_sequence_only_decoy_panel: false
+  decoy_receptor_file_column: decoy_receptor_file
+selectivity_scoring:
+  advance_min_decoys_with_scores: 1
+live_simulation:
+  enable_live_logging: false
+  live_log_file: {output_dir / 'simulation' / 'events.jsonl'}
+  live_state_file: {output_dir / 'simulation' / 'state.json'}
+figures:
+  make_figures: false
+""",
+        encoding="utf-8",
+    )
+
+    assert run(config_path) == 0
+    assert len(calls) == 2
+    assert calls[0][0] == str(target_receptor)
+    assert calls[1][0] == str(decoy_receptor)
+    assert all(ligand.endswith(".pdbqt") for _, ligand in calls)
+    scores = pd.read_csv(output_dir / "decoy_docking_scores.tsv", sep="\t")
+    assert scores.loc[0, "dock_status"] == "completed"
+    assert bool(scores.loc[0, "is_dry_run_score"]) is False
+    assert scores.loc[0, "decoy_receptor_file"] == str(decoy_receptor)
 
 
 def test_docking_cli_runs_in_dry_run_mode_on_tiny_inputs(tmp_path):

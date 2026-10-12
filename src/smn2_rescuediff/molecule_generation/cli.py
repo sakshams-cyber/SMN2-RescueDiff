@@ -15,6 +15,7 @@ import pandas as pd
 import yaml
 
 from .baseline_generator import NGramSmilesGenerator
+from .benchmark_controls import annotate_benchmark_similarity, load_configured_benchmark_controls
 from .candidate_prioritizer import add_candidate_scores, select_docking_candidates
 from .chemical_filter import process_generated_smiles, require_rdkit, write_table
 from .config import ensure_output_dirs, load_config, optional_context_status, resolve_paths
@@ -62,6 +63,9 @@ FINAL_FILTERED_COLUMNS = [
     "filter_pass",
     "rejection_reason",
     "max_tanimoto_to_training",
+    "nearest_benchmark_control_name",
+    "nearest_benchmark_tanimoto",
+    "is_too_similar_to_benchmark",
     "bemis_murcko_scaffold",
     "novelty_vs_training_set",
     "rna_ligand_like_score",
@@ -233,6 +237,12 @@ def run(config_path: str | Path) -> int:
     print("Building merged cleaned training dataset.")
     canonical_training, dataset_summary, _rejected, dataset_warnings = build_training_dataset(config, paths.project_root, output_dir)
     warnings.extend(dataset_warnings)
+    benchmark_controls, benchmark_warnings = load_configured_benchmark_controls(
+        config,
+        paths.project_root,
+        remove_salts=bool(config.get("chemical_filters", {}).get("remove_salts", True)),
+    )
+    warnings.extend(benchmark_warnings)
     toy_dataset = TOY_WARNING in warnings or dataset_summary.get("training_molecules_cleaned", 0) < int(config.get("data_processing", {}).get("min_training_molecules_warning", 1000))
 
     representation, representation_warnings = choose_representation(config)
@@ -295,6 +305,10 @@ def run(config_path: str | Path) -> int:
     filtered = add_scaffolds(filtered)
     filtered = assign_diversity_clusters(filtered)
     filtered = add_candidate_scores(filtered)
+    filtered, benchmark_summary, benchmark_similarity_warnings = annotate_benchmark_similarity(filtered, benchmark_controls, config)
+    warnings.extend(benchmark_similarity_warnings)
+    if not benchmark_controls.empty:
+        write_table(benchmark_controls, output_dir / "benchmark_controls_held_out.tsv")
     docking_candidates = select_docking_candidates(filtered, config) if bool(config.get("candidate_prioritization", {}).get("enabled", True)) else filtered.copy()
     selected_set = set(docking_candidates["canonical_smiles"]) if not docking_candidates.empty else set()
     filtered["selected_for_docking"] = filtered["canonical_smiles"].isin(selected_set)
@@ -321,6 +335,11 @@ def run(config_path: str | Path) -> int:
         rejected=rejected,
         warnings=warnings,
     )
+    scaffold_column = "bemis_murcko_scaffold"
+    filtered_scaffolds = filtered[scaffold_column].dropna().astype(str) if scaffold_column in filtered else pd.Series(dtype=str)
+    docking_scaffolds = docking_candidates[scaffold_column].dropna().astype(str) if scaffold_column in docking_candidates else pd.Series(dtype=str)
+    final_train_loss = pd.to_numeric(training_log.get("train_loss", pd.Series(dtype=float)), errors="coerce").dropna()
+    final_validation_loss = pd.to_numeric(training_log.get("validation_loss", pd.Series(dtype=float)), errors="coerce").dropna()
     summary.update(
         {
             "module": "Deep Neural Molecular Generation Model",
@@ -332,6 +351,10 @@ def run(config_path: str | Path) -> int:
             "training_molecules_deduplicated": dataset_summary.get("training_molecules_deduplicated", 0),
             "training_molecules_cleaned": dataset_summary.get("training_molecules_cleaned", 0),
             "training_molecules_weighted": dataset_summary.get("training_molecules_weighted", dataset_summary.get("training_molecules_cleaned", 0)),
+            "training_molecules_held_out_benchmark_controls": dataset_summary.get("training_molecules_held_out_benchmark_controls", 0),
+            "benchmark_controls_loaded": int(len(benchmark_controls)),
+            "benchmark_controls_used_for_training": False,
+            "benchmark_similarity": benchmark_summary,
             "quality_training_manifest": dataset_summary.get("training_source_manifest", "NA"),
             "quality_source_balance": dataset_summary.get("source_balance", []),
             "representation": representation,
@@ -340,6 +363,25 @@ def run(config_path: str | Path) -> int:
             "unique_count": int(filtered["canonical_smiles"].nunique()) if "canonical_smiles" in filtered else 0,
             "novel_count": int((filtered["is_novel_vs_training"] == True).sum()) if "is_novel_vs_training" in filtered else 0,  # noqa: E712
             "selected_for_docking_count": int(len(docking_candidates)),
+            "generation_accounting": {
+                "requested_raw_samples": requested_raw,
+                "unique_generated_strings_emitted": int(len(raw_generated)),
+                "emitted_fraction_of_requested": float(len(raw_generated) / requested_raw) if requested_raw else 0.0,
+                "generated_string_deduplication_enabled": bool(config.get("sampling", {}).get("remove_duplicate_generated_strings", True)),
+            },
+            "training_curve_summary": {
+                "final_train_loss": float(final_train_loss.iloc[-1]) if not final_train_loss.empty else None,
+                "final_validation_loss": float(final_validation_loss.iloc[-1]) if not final_validation_loss.empty else None,
+                "best_validation_loss": float(final_validation_loss.min()) if not final_validation_loss.empty else None,
+            },
+            "diversity_summary": {
+                "filtered_unique_scaffolds": int(filtered_scaffolds.nunique()),
+                "docking_unique_scaffolds": int(docking_scaffolds.nunique()),
+                "sampled_pair_count": int(len(diversity_values)),
+                "mean_pairwise_tanimoto": float(pd.Series(diversity_values, dtype=float).mean()) if diversity_values else None,
+                "median_pairwise_tanimoto": float(pd.Series(diversity_values, dtype=float).median()) if diversity_values else None,
+            },
+            "generation_conditioning": "unconditional; SMN2 sequence and structure features are not model inputs",
         }
     )
     write_summary_json(summary, output_dir / "generated_molecule_summary.json")
@@ -373,6 +415,8 @@ def run(config_path: str | Path) -> int:
         str(output_dir / "rl_finetuning_log.tsv"),
         str(output_dir / "molecule_generation_config_used.yaml"),
     ]
+    if (output_dir / "benchmark_controls_held_out.tsv").exists():
+        output_files.append(str(output_dir / "benchmark_controls_held_out.tsv"))
     quality_outputs = [
         output_dir / "quality_training" / "quality_training_unique.tsv",
         output_dir / "quality_training" / "quality_training_weighted.tsv",

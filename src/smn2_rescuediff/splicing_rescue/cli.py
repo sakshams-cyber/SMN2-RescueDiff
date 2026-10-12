@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .ablation_analysis import run_ablation_analysis
+from .benchmark_controls import assemble_benchmark_control_scores
 from .config import ensure_output_dirs, load_config, resolve_paths, save_config_used, validate_weights
 from .contact_analyzer import analyze_contacts
 from .evidence_writer import write_evidence_json, write_warnings_json
@@ -138,6 +139,7 @@ def _output_file_list(paths) -> list[str]:
         _display_path(paths, paths.table_dir / "splicing_rescue_scores.tsv"),
         _display_path(paths, paths.table_dir / "final_srsi_ranked_candidates.tsv"),
         _display_path(paths, paths.table_dir / "top_10_final_candidates.tsv"),
+        _display_path(paths, paths.table_dir / "benchmark_control_reference_scores.tsv"),
         _display_path(paths, paths.table_dir / "ablation_rank_comparison.tsv"),
         _display_path(paths, paths.evidence_dir / "top_candidate_evidence.json"),
         _display_path(paths, paths.evidence_dir / "scoring_warnings.json"),
@@ -215,6 +217,8 @@ def run(config_path: str | Path) -> int:
     write_table(final_ranked, paths.table_dir / "final_srsi_ranked_candidates.tsv")
     top_report_n = int(config.get("run", {}).get("top_n_report_candidates", 10))
     write_table(final_ranked.head(top_report_n), paths.table_dir / "top_10_final_candidates.tsv")
+    benchmark_reference_scores = assemble_benchmark_control_scores(inputs, final_ranked)
+    write_table(benchmark_reference_scores, paths.table_dir / "benchmark_control_reference_scores.tsv")
 
     log("Running ablation analysis.")
     ablation = run_ablation_analysis(final_ranked, config)
@@ -231,6 +235,7 @@ def run(config_path: str | Path) -> int:
         used_dry_run_inputs=used_dry_run_inputs,
         pose_contact_features=contacts,
         warnings=warnings,
+        benchmark_reference_scores=benchmark_reference_scores,
     )
     write_summary_json(summary, paths.output_dir / "final_scoring_summary.json")
     save_config_used(config, paths.output_dir / "splicing_rescue_scoring_config_used.yaml")
@@ -251,6 +256,7 @@ def run(config_path: str | Path) -> int:
         evidence=evidence,
         output_files=output_files,
         path=paths.final_report_path,
+        benchmark_reference_scores=benchmark_reference_scores,
     )
     write_splicing_method_report(
         config=config,

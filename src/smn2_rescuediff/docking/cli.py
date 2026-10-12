@@ -24,6 +24,7 @@ from .molecule_selector import select_molecules_for_docking
 from .receptor_preparer import prepare_receptor
 from .report_writer import build_summary, write_report, write_summary_json
 from .selectivity_scorer import calculate_selectivity_scores
+from .target_conformer_panel import conformer_panel_enabled, run_target_conformer_panel
 from .vina_runner import run_vina, validate_vina_input_files
 
 
@@ -394,6 +395,8 @@ def run(config_path: str | Path) -> int:
     stable_paths = resolve_paths(config, config_path)
     mode = run_mode(config)
     _run_name(config, mode)
+    if conformer_panel_enabled(config):
+        return run_target_conformer_panel(config, stable_paths, mode)
     paths = _run_paths(stable_paths, config, mode)
     ensure_output_dirs(stable_paths)
     ensure_output_dirs(paths)
@@ -472,7 +475,7 @@ def run(config_path: str | Path) -> int:
 
         if config.get("decoy_panel", {}).get("use_decoy_panel", True):
             decoys = load_decoy_atlas(paths.decoy_atlas_full)
-            decoy_panel = select_decoy_panel(decoys, config)
+            decoy_panel = select_decoy_panel(decoys, config, project_root=paths.project_root)
         else:
             decoy_panel = pd.DataFrame()
         _write(decoy_panel, paths.output_dir / "selected_decoy_docking_panel.tsv")

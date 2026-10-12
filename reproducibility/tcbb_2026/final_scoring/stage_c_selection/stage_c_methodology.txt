@@ -1,0 +1,8 @@
+Stage C partial HuRDA ensemble selectivity methodology
+
+This analysis uses the actual completed HuRDA decoy docking rows and does not impute missing scores.
+The primary target metric is mean_target_deltaG across five completed SMN2 target conformers.
+The primary selectivity metric is weighted_mean_decoy_deltaG - mean_target_deltaG.
+The conservative selectivity metric is best_decoy_deltaG - worst_target_deltaG.
+Eligible molecules are restricted to evidence_status=PARTIAL_HURDA_97_COMPLETE.
+Ranking is preliminary computational Proof-of-Concept prioritization, not SRSI and not biological validation.

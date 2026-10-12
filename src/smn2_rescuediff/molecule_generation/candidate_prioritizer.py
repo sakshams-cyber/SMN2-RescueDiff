@@ -121,8 +121,16 @@ def select_docking_candidates(molecules: pd.DataFrame, config: dict[str, Any]) -
     if molecules.empty:
         return molecules.copy()
     cfg = config.get("candidate_prioritization", {})
+    benchmark_cfg = config.get("benchmark_similarity", {})
     max_count = int(cfg.get("max_candidates_to_export_for_docking", 10000))
     work = add_candidate_scores(molecules)
+    if (
+        bool(benchmark_cfg.get("enabled", False))
+        and bool(benchmark_cfg.get("exclude_too_similar_candidates", True))
+        and "is_too_similar_to_benchmark" in work
+    ):
+        too_similar = work["is_too_similar_to_benchmark"].astype(str).str.lower().isin({"true", "1", "yes"})
+        work = work[~too_similar].copy()
     score_column = "final_generation_selection_score" if "final_generation_selection_score" in work else "pre_docking_candidate_score"
     min_quality = float(cfg.get("min_final_generation_selection_score", 0.0))
     work = work[pd.to_numeric(work[score_column], errors="coerce").fillna(0.0) >= min_quality].copy()

@@ -9,6 +9,7 @@ from typing import Any
 import pandas as pd
 
 from .config import SplicingRescuePaths
+from smn2_rescuediff.molecule_generation.benchmark_controls import BENCHMARK_COLUMNS, load_benchmark_controls
 
 
 class SplicingRescueInputError(ValueError):
@@ -161,6 +162,17 @@ def load_all_inputs(paths: SplicingRescuePaths) -> dict[str, Any]:
     # Load only a small metadata preview of the full HuRDA atlas by default; the
     # Module 4 selectivity table already contains molecule-level decoy evidence.
     decoy_atlas_preview = read_tsv(paths.decoy_atlas_full, required=False, nrows=1000)
+    benchmark_controls = pd.DataFrame(columns=BENCHMARK_COLUMNS)
+    if paths.benchmark_splicing_controls is not None:
+        if paths.benchmark_splicing_controls.exists():
+            try:
+                benchmark_controls = load_benchmark_controls(paths.benchmark_splicing_controls)
+                if benchmark_controls.empty:
+                    warnings.append(f"Benchmark splicing-control file had no valid controls: {paths.benchmark_splicing_controls}.")
+            except ImportError as exc:
+                warnings.append(f"Benchmark splicing controls could not be parsed because RDKit is unavailable: {exc}")
+        else:
+            warnings.append(f"Benchmark splicing-control file is configured but missing: {paths.benchmark_splicing_controls}.")
     decoy_scores_available = Path(paths.decoy_docking_scores).exists()
     if not decoy_scores_available:
         warnings.append("Decoy docking score file is unavailable; selectivity table will be used as the decoy evidence summary.")
@@ -176,6 +188,7 @@ def load_all_inputs(paths: SplicingRescuePaths) -> dict[str, Any]:
         "target_scores": target_scores,
         "selectivity": selectivity,
         "candidates_for_rescue": candidates_for_rescue,
+        "benchmark_controls": benchmark_controls,
         "warnings": warnings,
         "used_dry_run_inputs": detect_dry_run(target_scores, selectivity, docking_summary),
     }

@@ -32,8 +32,9 @@ def _toy_project(tmp_path: Path) -> Path:
     decoy = tmp_path / "data" / "processed" / "decoy_atlas"
     mol = tmp_path / "data" / "processed" / "molecule_generation"
     dock = tmp_path / "data" / "processed" / "docking"
+    benchmark = tmp_path / "data" / "raw" / "molecules" / "benchmark_controls"
     poses = dock / "poses"
-    for path in [target, decoy, mol, dock, poses]:
+    for path in [target, decoy, mol, dock, benchmark, poses]:
         path.mkdir(parents=True, exist_ok=True)
     (target / "smn2_target_windows.fasta").write_text(">exon7\nAUGGUAAGU\n", encoding="utf-8")
     _write_tsv(
@@ -99,6 +100,7 @@ def _toy_project(tmp_path: Path) -> Path:
     _write_tsv(mol / "generated_molecules_filtered.tsv", molecule_rows)
     _write_tsv(mol / "generated_molecules_for_docking.tsv", molecule_rows)
     (mol / "generated_molecule_summary.json").write_text(json.dumps({"filtered_count": 2}), encoding="utf-8")
+    (benchmark / "splicing_benchmark_controls.smi").write_text("CCO risdiplam\n", encoding="utf-8")
     _write_tsv(
         dock / "smn2_target_docking_scores.tsv",
         [
@@ -179,6 +181,8 @@ inputs:
   generated_molecules_filtered: {mol / "generated_molecules_filtered.tsv"}
   generated_molecules_for_docking: {mol / "generated_molecules_for_docking.tsv"}
   molecule_generation_summary: {mol / "generated_molecule_summary.json"}
+  benchmark_controls:
+    splicing_controls: {benchmark / "splicing_benchmark_controls.smi"}
   target_docking_scores: {dock / "smn2_target_docking_scores.tsv"}
   decoy_docking_scores: {dock / "decoy_docking_scores.tsv"}
   molecule_selectivity_scores: {dock / "molecule_selectivity_scores.tsv"}
@@ -447,6 +451,7 @@ def test_splicing_rescue_cli_runs_on_tiny_inputs(tmp_path):
     assert (table_dir / "final_srsi_ranked_candidates.tsv").exists()
     assert (table_dir / "splicing_rescue_scores.tsv").exists()
     assert (table_dir / "top_10_final_candidates.tsv").exists()
+    assert (table_dir / "benchmark_control_reference_scores.tsv").exists()
     assert (table_dir / "ablation_rank_comparison.tsv").exists()
     assert (evidence_dir / "top_candidate_evidence.json").exists()
     output_dir = Path(config["outputs"]["output_dir"])
@@ -457,7 +462,12 @@ def test_splicing_rescue_cli_runs_on_tiny_inputs(tmp_path):
     assert (run_dir / "RUN_SUMMARY.md").exists()
     assert (run_dir / "run_metrics.json").exists()
     final = pd.read_csv(table_dir / "final_srsi_ranked_candidates.tsv", sep="\t")
-    assert {"molecule_id", "srsi_score", "candidate_tier", "confidence_level"}.issubset(final.columns)
+    assert {"molecule_id", "srsi_score", "candidate_tier", "confidence_level", "nearest_benchmark_tanimoto"}.issubset(final.columns)
+    benchmark = pd.read_csv(table_dir / "benchmark_control_reference_scores.tsv", sep="\t")
+    assert "risdiplam" in set(benchmark["benchmark_control_name"])
+    report = Path(config["outputs"]["final_report_path"]).read_text(encoding="utf-8")
+    assert "Benchmark controls were not used for model training." in report
+    assert "clinically better than risdiplam" in report
 
 
 def test_splicing_rescue_cli_handles_literal_na_numeric_inputs(tmp_path):

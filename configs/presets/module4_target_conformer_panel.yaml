@@ -1,0 +1,117 @@
+project_name: SMN2-RescueDiff
+module_name: SMN2 Target Docking and HuRDA Off-Target Counter-Screening
+
+target_conformer_panel:
+  enabled: true
+  manifest: configs/target_conformer_panel_5.tsv
+  require_all_conformers: true
+  expected_conformer_count: 5
+
+  aggregation:
+    primary_metric: worst_target_deltaG
+    secondary_metric: mean_target_deltaG
+    prefer_lower_standard_deviation: true
+    prefer_lower_score_range: true
+
+  filtering:
+    require_completed_conformers: 5
+    selection_mode: top_n
+    top_n_to_advance: 150
+
+inputs:
+  molecules_for_docking: data/processed/molecule_generation/runs/module3_final_final_rigorous_x10/generated_molecules_for_docking.tsv
+  smn2_target_fasta: data/processed/target_definition/smn2_target_windows.fasta
+  smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+  smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+  decoy_atlas_full: data/processed/decoy_atlas/hurda_180k_full.tsv
+  decoy_atlas_summary: data/processed/decoy_atlas/hurda_summary.json
+  raw_structure_dir: data/raw/structures
+
+outputs:
+  output_dir: data/processed/docking/target_conformer_runs/target5_500
+  ligand_dir: data/processed/docking/target_conformer_runs/target5_500/ligands
+  receptor_dir: data/processed/docking/receptors
+  pose_dir: data/processed/docking/target_conformer_runs/target5_500/poses
+  log_dir: data/processed/docking/target_conformer_runs/target5_500/logs
+  simulation_dir: data/processed/docking/target_conformer_runs/target5_500/simulation
+  report_path: reports/docking_target_conformer_panel_500x5_report.md
+  figure_dir: figures/docking/target_conformer_runs/target5_500
+
+run:
+  random_seed: 42
+  run_name: target5_500
+  run_mode: target_conformer_panel_docking
+  max_molecules_to_dock: 500
+  overwrite_existing: false
+  require_real_docking_for_scientific_results: true
+  allow_dry_run_simulation: false
+  parallel_jobs: 1
+  resume_existing_results: false
+  save_intermediate_every_n_jobs: 25
+
+target_conformer_panel:
+  enabled: true
+  manifest: configs/target_conformer_panel_5.tsv
+  require_all_conformers: true
+  expected_conformer_count: 5
+
+target_conformer_filter:
+  require_all_conformers_completed: true
+  top_n_to_advance: 150
+  top_fraction_to_advance: null
+
+docking_engine:
+  engine: vina
+  vina_executable: vina
+  exhaustiveness: 8
+  num_modes: 10
+  energy_range: 3
+  random_seed_policy: fixed_run_seed
+  timeout_seconds_per_job: 120
+
+receptor:
+  receptor_mode: conformer_panel
+  smn2_receptor_file: data/processed/docking/receptors/target_conformers/smn2_target_model01.pdbqt
+  receptor_format: pdbqt
+  docking_box:
+    center_x: 24.896
+    center_y: 20.352
+    center_z: 24.973
+    size_x: 44.963
+    size_y: 34.551
+    size_z: 44.652
+  require_user_to_confirm_box: false
+
+ligand_preparation:
+  input_smiles_column: canonical_smiles
+  add_hydrogens: true
+  generate_3d_conformers: true
+  optimize_geometry: true
+  max_conformer_attempts: 20
+  output_format: sdf
+  prepare_pdbqt: true
+  open_babel_executable: obabel
+
+decoy_panel:
+  use_decoy_panel: false
+  allow_sequence_only_decoy_panel: false
+  decoy_receptor_mode: disabled_for_target_conformer_panel
+
+selectivity_scoring:
+  target_score_column: target_deltaG
+  lower_deltaG_is_better: true
+  advance_target_deltaG_threshold: -7.0
+  advance_weighted_gap_threshold: 1.0
+  advance_off_target_risk_threshold: 0.40
+  advance_min_decoys_with_scores: 0
+
+live_simulation:
+  enable_live_logging: false
+  write_jsonl_log: false
+  live_log_file: data/processed/docking/target_conformer_runs/target5_500/simulation/live_docking_events.jsonl
+  live_state_file: data/processed/docking/target_conformer_runs/target5_500/simulation/current_docking_state.json
+
+figures:
+  make_figures: true
+  max_heatmap_molecules: 50
+  max_heatmap_decoys: 0

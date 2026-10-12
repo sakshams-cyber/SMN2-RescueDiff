@@ -12,6 +12,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
 from smn2_rescuediff.molecule_generation.candidate_prioritizer import add_candidate_scores, select_docking_candidates
+from smn2_rescuediff.molecule_generation.benchmark_controls import annotate_benchmark_similarity, load_benchmark_controls
 from smn2_rescuediff.molecule_generation.chemical_filter import (
     calculate_properties,
     mol_from_smiles,
@@ -213,6 +214,23 @@ def test_training_smiles_loads_and_cleans(tmp_path):
     assert any("too small" in warning for warning in warnings)
 
 
+def test_benchmark_controls_are_held_out_from_training(tmp_path):
+    training = tmp_path / "training.smi"
+    controls = tmp_path / "splicing_benchmark_controls.smi"
+    training.write_text("CCO\nCCN\nc1ccccc1\n", encoding="utf-8")
+    controls.write_text("CCO risdiplam\n", encoding="utf-8")
+    config_path = _tiny_cli_config(tmp_path)
+    config = load_config(config_path)
+    config["inputs"]["training_smiles"] = [str(training)]
+    config["inputs"]["benchmark_controls"] = {"splicing_controls": str(controls)}
+    output_dir = tmp_path / "dataset_out"
+    cleaned, summary, rejected, _warnings = build_training_dataset(config, tmp_path, output_dir)
+    assert "CCO" not in cleaned
+    assert summary["benchmark_controls_used_for_training"] is False
+    assert summary["training_molecules_held_out_benchmark_controls"] == 1
+    assert "held_out_benchmark_control" in set(rejected["reason"])
+
+
 def test_quality_training_manifest_builds_weighted_source_tables(tmp_path):
     source_a = tmp_path / "chembl.smi"
     source_b = tmp_path / "rna.smi"
@@ -240,6 +258,29 @@ def test_quality_training_manifest_builds_weighted_source_tables(tmp_path):
     assert (quality_dir / "quality_training_unique.tsv").exists()
     assert (quality_dir / "quality_training_weighted.tsv").exists()
     assert (quality_dir / "source_balance_report.tsv").exists()
+
+
+def test_quality_training_manifest_excludes_benchmark_controls(tmp_path):
+    source = tmp_path / "rna.smi"
+    source.write_text("CCO\nCCN\nCCOC\n", encoding="utf-8")
+    controls = tmp_path / "controls.smi"
+    controls.write_text("CCO risdiplam\n", encoding="utf-8")
+    manifest = tmp_path / "sources.tsv"
+    manifest.write_text(
+        "source_name\tpath\tsource_type\tsource_weight\tmax_rows\tquality_tier\tnotes\n"
+        f"rna\t{source}\trna_ligand_like\t2.0\t100\ttier1\ttest\n",
+        encoding="utf-8",
+    )
+    config_path = _tiny_cli_config(tmp_path)
+    config = load_config(config_path)
+    config["inputs"].pop("training_smiles", None)
+    config["inputs"]["training_source_manifest"] = str(manifest)
+    config["inputs"]["benchmark_controls"] = {"splicing_controls": str(controls)}
+    config["data_processing"]["min_molecular_weight_training"] = 20
+    cleaned, summary, rejected, _warnings = build_training_dataset(config, tmp_path, tmp_path / "quality_out")
+    assert "CCO" not in cleaned
+    assert summary["training_molecules_held_out_benchmark_controls"] == 1
+    assert "held_out_benchmark_control" in set(rejected["reason"])
 
 
 def test_selfies_conversion_round_trips_known_smiles():
@@ -366,6 +407,28 @@ def test_quality_weighted_docking_selection_exports_diverse_top_candidates():
     assert selected["final_generation_selection_score"].notna().all()
 
 
+def test_benchmark_similarity_flags_and_excludes_exact_control(tmp_path):
+    controls_path = tmp_path / "controls.smi"
+    controls_path.write_text("CCO risdiplam\n", encoding="utf-8")
+    controls = load_benchmark_controls(controls_path)
+    molecules = pd.DataFrame(
+        [
+            {"canonical_smiles": "CCO", "is_valid": True, "is_duplicate": False, "is_novel_vs_training": True, "max_tanimoto_to_training": 0.2, **calculate_properties(mol_from_smiles("CCO"))},
+            {"canonical_smiles": "c1ccncc1", "is_valid": True, "is_duplicate": False, "is_novel_vs_training": True, "max_tanimoto_to_training": 0.2, **calculate_properties(mol_from_smiles("c1ccncc1"))},
+        ]
+    )
+    config = {
+        "benchmark_similarity": {"enabled": True, "max_allowed_tanimoto_to_benchmark": 0.70, "exclude_too_similar_candidates": True},
+        "candidate_prioritization": {"max_candidates_to_export_for_docking": 2, "morgan_diversity_selection_enabled": False},
+    }
+    annotated, summary, warnings = annotate_benchmark_similarity(molecules, controls, config)
+    assert summary["too_similar_count"] == 1
+    assert bool(annotated.loc[annotated["canonical_smiles"] == "CCO", "is_too_similar_to_benchmark"].iloc[0]) is True
+    assert warnings
+    selected = select_docking_candidates(annotated, config)
+    assert "CCO" not in set(selected["canonical_smiles"])
+
+
 def test_summary_json_contains_required_fields(tmp_path):
     generated = pd.DataFrame(
         {
@@ -398,6 +461,10 @@ def test_summary_json_contains_required_fields(tmp_path):
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["module"] == "Deep Neural Molecular Generation Model"
     assert payload["generator_mode"] == "inference_only"
+    assert payload["valid_unique_count"] == 1
+    assert payload["valid_duplicate_count"] == 0
+    assert payload["novel_filtered_count"] == 0
+    assert "unique generated strings emitted" in payload["validity_fraction_denominator"]
     assert "property_summary" in payload
 
 

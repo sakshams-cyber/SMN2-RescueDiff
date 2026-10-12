@@ -65,6 +65,7 @@ def build_quality_training_dataset(
     project_root: Path,
     output_dir: Path,
     data_cfg: dict[str, Any],
+    exclude_canonical_smiles: set[str] | None = None,
 ) -> tuple[list[str], dict[str, Any], pd.DataFrame, list[str]]:
     """Build unique and weighted quality-training tables from a source manifest."""
     require_rdkit()
@@ -88,16 +89,29 @@ def build_quality_training_dataset(
     raw_total = 0
     valid_total = 0
     duplicate_total = 0
+    benchmark_holdout_total = 0
+    held_out = exclude_canonical_smiles or set()
 
     for source in manifest.to_dict(orient="records"):
         source_name = str(source["source_name"])
         source_path = Path(str(source["resolved_path"]))
         source_weight = _as_weight(source.get("source_weight", 1.0))
         max_rows = _as_int(source.get("max_rows"), None)
-        source_raw = source_valid = source_invalid = source_duplicates = source_used_weighted = 0
+        source_raw = source_valid = source_invalid = source_duplicates = source_benchmark_holdouts = source_used_weighted = 0
         if not source_path.exists():
             warnings.append(f"Training source missing and skipped: {source_name} ({source_path})")
-            source_rows.append({**source, "loaded_rows": 0, "valid_rows": 0, "invalid_rows": 0, "deduplicated_rows": 0, "unique_used_rows": 0, "weighted_used_rows": 0})
+            source_rows.append(
+                {
+                    **source,
+                    "loaded_rows": 0,
+                    "valid_rows": 0,
+                    "invalid_rows": 0,
+                    "benchmark_holdout_rows": 0,
+                    "deduplicated_rows": 0,
+                    "unique_used_rows": 0,
+                    "weighted_used_rows": 0,
+                }
+            )
             continue
 
         extracted = iter_smiles_lines(source_path.read_text(encoding="utf-8").splitlines())
@@ -128,6 +142,11 @@ def build_quality_training_dataset(
             if not _allowed_atoms(mol, allowed_atoms):
                 source_invalid += 1
                 rejected.append({"source_name": source_name, "raw_smiles": smiles, "canonical_smiles": canonical, "reason": "disallowed_atom"})
+                continue
+            if canonical in held_out:
+                source_benchmark_holdouts += 1
+                benchmark_holdout_total += 1
+                rejected.append({"source_name": source_name, "raw_smiles": smiles, "canonical_smiles": canonical, "reason": "held_out_benchmark_control"})
                 continue
 
             source_valid += 1
@@ -178,6 +197,7 @@ def build_quality_training_dataset(
                 "loaded_rows": source_raw,
                 "valid_rows": source_valid,
                 "invalid_rows": source_invalid,
+                "benchmark_holdout_rows": source_benchmark_holdouts,
                 "deduplicated_rows": source_duplicates,
                 "unique_used_rows": source_valid - source_duplicates,
                 "weighted_used_rows": source_used_weighted,
@@ -203,6 +223,7 @@ def build_quality_training_dataset(
         "training_molecules_valid": int(valid_total),
         "training_molecules_invalid": int(len(rejected_df)),
         "training_molecules_deduplicated": int(duplicate_total),
+        "training_molecules_held_out_benchmark_controls": int(benchmark_holdout_total),
         "training_molecules_cleaned": int(len(unique_df)),
         "training_molecules_weighted": int(len(weighted_df)),
         "source_balance": source_report.to_dict(orient="records"),

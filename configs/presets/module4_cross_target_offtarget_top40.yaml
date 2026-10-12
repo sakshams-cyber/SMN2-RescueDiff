@@ -1,0 +1,27 @@
+experiment:
+  name: cross_target_offtarget_top40x20_v1
+  description: >
+    Orthogonal non-RNA human macromolecular off-target
+    screen for top SMN2 computational candidates.
+
+inputs:
+  molecules: data/processed/docking/stage_b_decoy_150x100_after_target5_partial_merged/top40_for_cross_target_screen.tsv
+  receptor_manifest: data/processed/docking/cross_target_offtargets/non_rna_receptor_panel_20.tsv
+
+run:
+  expected_molecules: 40
+  expected_receptors: 20
+
+  real_docking_required: true
+  allow_dry_run: false
+
+  exhaustiveness: 8
+  num_modes: 9
+  energy_range: 3
+  seed: 42
+
+outputs:
+  output_dir: data/processed/docking/cross_target_offtargets/top40x20_v1
+  score_file: data/processed/docking/cross_target_offtargets/top40x20_v1/cross_target_docking_scores.tsv
+  pose_dir: data/processed/docking/cross_target_offtargets/top40x20_v1/poses
+  log_dir: data/processed/docking/cross_target_offtargets/top40x20_v1/logs

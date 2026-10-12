@@ -2,7 +2,18 @@ project_name: SMN2-RescueDiff
 module_name: Deep Neural Molecular Generation Model
 
 inputs:
+  training_smiles:
+    - data/raw/molecules/chembl_quality_subset_training_smiles.smi
+    - data/raw/molecules/zinc_quality_druglike_training_smiles.smi
+    - data/raw/molecules/rbind_rna_ligand_training_smiles.smi
+    - data/raw/molecules/smmrna_training_smiles.smi
+
   training_source_manifest: configs/molecule_training_sources_quality.tsv
+  training_manifest: configs/molecule_training_sources_quality.tsv
+
+  benchmark_controls:
+    splicing_controls: data/raw/molecules/benchmark_controls/splicing_benchmark_controls.smi
+
   optional_context:
     smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
     smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
@@ -17,7 +28,7 @@ outputs:
 
 run:
   random_seed: 42
-  device: auto
+  device: cpu
   run_name: module3_final_final_rigorous_x10
   overwrite_existing: false
   save_config_used: true
@@ -136,6 +147,11 @@ candidate_prioritization:
   morgan_diversity_selection_enabled: true
   tanimoto_similarity_threshold_for_diversity: 0.82
   min_final_generation_selection_score: 0.20
+
+benchmark_similarity:
+  enabled: true
+  max_allowed_tanimoto_to_benchmark: 0.70
+  exclude_too_similar_candidates: true
 
 analysis:
   calculate_qed: true

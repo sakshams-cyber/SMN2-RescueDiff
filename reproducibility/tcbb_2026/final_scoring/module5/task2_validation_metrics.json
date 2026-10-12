@@ -1,0 +1,97 @@
+{
+  "random_seed": 42,
+  "git_commit": "7366492f66caff531fa3c4c7e09d872986904cbe",
+  "pose_contact_features_path": "data/processed/final_scoring/stage_c_147/tables/pose_contact_features.tsv",
+  "pose_contact_features_sha256": "9746cf29ad86151dcbd1bd3ab16d258b42e5b2076bf5225534f13754952c98a7",
+  "row_count": 147,
+  "unique_molecule_count": 147,
+  "stage_c_cohort_count": 147,
+  "all_pose_ids_in_stage_c_147": true,
+  "pose_ids_equal_stage_c_147": true,
+  "unexpected_pose_ids": [],
+  "missing_stage_c_ids": [],
+  "pose_analysis_status_distribution": {
+    "pose_based_proxy": 147
+  },
+  "feature_statistics": {
+    "num_close_contacts": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 1631.0,
+      "minimum": 1301.0,
+      "maximum": 2153.0,
+      "range": 852.0
+    },
+    "num_contacts_with_beneficial_landmarks": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 1223.0,
+      "minimum": 975.0,
+      "maximum": 1614.0,
+      "range": 639.0
+    },
+    "num_contacts_with_caution_landmarks": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 570.0,
+      "minimum": 455.0,
+      "maximum": 753.0,
+      "range": 298.0
+    },
+    "minimum_distance_to_u1_region": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 1.6534,
+      "minimum": 0.9704,
+      "maximum": 2.1387,
+      "range": 1.1683
+    },
+    "hydrogen_bond_proxy_count": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 197.0,
+      "minimum": 107.0,
+      "maximum": 323.0,
+      "range": 216.0
+    },
+    "stacking_proxy_count": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 522.0,
+      "minimum": 323.0,
+      "maximum": 716.0,
+      "range": 393.0
+    },
+    "pose_support_score": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 1.0,
+      "minimum": 0.927586,
+      "maximum": 1.0,
+      "range": 0.07241399999999998
+    },
+    "splice_site_occlusion_penalty": {
+      "count_numeric": 147,
+      "count_missing": 0,
+      "median": 0.349666,
+      "minimum": 0.349254,
+      "maximum": 0.35,
+      "range": 0.0007459999999999689
+    }
+  },
+  "occlusion_near_degeneracy": {
+    "stage_c_147_minimum": 0.349254,
+    "stage_c_147_maximum": 0.35,
+    "stage_c_147_range": 0.0007459999999999689,
+    "stage_c_147_unique_values": 120,
+    "earlier_200_minimum": 0.349254,
+    "earlier_200_maximum": 0.35,
+    "earlier_200_range": 0.0007459999999999689,
+    "earlier_200_unique_values": 155,
+    "near_degeneracy_holds": true
+  },
+  "input_hash_manifest_path": "data/processed/final_scoring/stage_c_147_inputs_20261011/input_file_sha256.tsv",
+  "input_hash_manifest_sha256": "f376b4ae2e5b81b251a47a23e1664aa08f3e7c88b50996cb25265e3d052a80ac",
+  "earlier_200_row_count": 200,
+  "earlier_200_overlap_count": 0
+}

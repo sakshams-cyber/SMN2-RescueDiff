@@ -6,6 +6,8 @@ inputs:
     - data/raw/molecules/chembl_training_smiles.smi
     - data/raw/molecules/zinc_training_smiles.smi
     - data/raw/molecules/rna_ligand_training_smiles.smi
+  benchmark_controls:
+    splicing_controls: data/raw/molecules/benchmark_controls/splicing_benchmark_controls.smi
   optional_context:
     smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
     smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
@@ -137,6 +139,11 @@ candidate_prioritization:
   max_candidates_to_export_for_docking: 50000
   diversity_selection_enabled: true
   tanimoto_similarity_threshold_for_diversity: 0.85
+
+benchmark_similarity:
+  enabled: true
+  max_allowed_tanimoto_to_benchmark: 0.70
+  exclude_too_similar_candidates: true
 
 analysis:
   calculate_qed: true

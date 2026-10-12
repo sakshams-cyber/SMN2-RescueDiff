@@ -1,0 +1,5 @@
+source_name	configured_path	source_type	source_weight	loaded_rows	valid_rows	invalid_rows	unique_used_rows	weighted_used_rows	file_exists	file_bytes	file_sha256
+chembl_quality_subset	data/raw/molecules/chembl_quality_subset_training_smiles.smi	broad_bioactive	1.5	75000	74558	442	74558	149116	True	3980105	ee63311485a248af4bfb0c0d21fbfb90a29545527f7b3fb1f72077737486bc89
+zinc_quality_druglike	data/raw/molecules/zinc_quality_druglike_training_smiles.smi	broad_druglike	0.8	75000	74976	24	74976	74976	True	10028968	f88194be325bb4c6b16e142f816ad570b8d8770f378c1942406b1c9a951525a2
+rbind_rna_ligands	data/raw/molecules/rbind_rna_ligand_training_smiles.smi	rna_ligand	8.0	0	0	0	0	0	True	0	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+smmrna_ligands	data/raw/molecules/smmrna_training_smiles.smi	rna_ligand	8.0	0	0	0	0	0	False	0	missing

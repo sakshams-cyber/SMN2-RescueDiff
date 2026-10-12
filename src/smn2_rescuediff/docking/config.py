@@ -75,7 +75,7 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> DockingPat
     return DockingPaths(
         config_path=path,
         project_root=project_root,
-        molecules_filtered=resolve(inputs.get("molecules_filtered"), "inputs.molecules_filtered"),
+        molecules_filtered=resolve(inputs.get("molecules_for_docking") or inputs.get("molecules_filtered"), "inputs.molecules_for_docking"),
         smn2_target_fasta=resolve(inputs.get("smn2_target_fasta"), "inputs.smn2_target_fasta"),
         smn2_target_profile=resolve(inputs.get("smn2_target_profile"), "inputs.smn2_target_profile"),
         smn2_target_metadata=resolve(inputs.get("smn2_target_metadata"), "inputs.smn2_target_metadata"),
@@ -114,7 +114,7 @@ def ensure_output_dirs(paths: DockingPaths) -> None:
 def run_mode(config: dict[str, Any]) -> str:
     """Return validated run mode."""
     mode = str(config.get("run", {}).get("run_mode", "dry_run")).strip()
-    allowed = {"dry_run", "prepare_only", "target_only_docking", "target_plus_decoy_docking", "analyze_existing"}
+    allowed = {"dry_run", "prepare_only", "target_only_docking", "target_plus_decoy_docking", "target_conformer_panel_docking", "analyze_existing"}
     if mode not in allowed:
         raise DockingConfigError(f"run.run_mode must be one of {sorted(allowed)}")
     return mode

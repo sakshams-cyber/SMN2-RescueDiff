@@ -1,0 +1,5 @@
+source_name	path	source_type	source_weight	max_rows	quality_tier	notes	resolved_path	loaded_rows	valid_rows	invalid_rows	benchmark_holdout_rows	deduplicated_rows	unique_used_rows	weighted_used_rows
+chembl_quality_subset	data/raw/molecules/chembl_quality_subset_training_smiles.smi	broad_bioactive	1.5	75000	high	Quality-filtered subset from existing ChEMBL SMILES file	data/raw/molecules/chembl_quality_subset_training_smiles.smi	75000	74558	442	0	0	74558	149116
+zinc_quality_druglike	data/raw/molecules/zinc_quality_druglike_training_smiles.smi	broad_druglike	0.8	75000	medium	ZINC diversity source, lower weight so it does not dominate RNA-focused ligands	data/raw/molecules/zinc_quality_druglike_training_smiles.smi	75000	74976	24	0	0	74976	74976
+rbind_rna_ligands	data/raw/molecules/rbind_rna_ligand_training_smiles.smi	rna_ligand	8.0	50000	very_high	RNA-targeting ligand bias	data/raw/molecules/rbind_rna_ligand_training_smiles.smi	0	0	0	0	0	0	0
+smmrna_ligands	data/raw/molecules/smmrna_training_smiles.smi	rna_ligand	8.0	50000	very_high	Optional SMMRNA RNA ligand source	data/raw/molecules/smmrna_training_smiles.smi	0	0	0	0	0	0	0

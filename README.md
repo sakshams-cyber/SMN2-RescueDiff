@@ -255,6 +255,23 @@ figures/molecule_generation/diversity_distribution.png
 
 The most recent run also copies `generated_molecules_filtered.tsv`, `generated_molecules_for_docking.tsv`, and `generated_molecule_summary.json` into `data/processed/molecule_generation/` so Module 4 can consume them without knowing the run name.
 
+### Held-Out Benchmark Controls
+
+Known splicing modifiers such as risdiplam can be provided as held-out benchmark controls:
+
+```yaml
+inputs:
+  benchmark_controls:
+    splicing_controls: data/raw/molecules/benchmark_controls/splicing_benchmark_controls.smi
+
+benchmark_similarity:
+  enabled: true
+  max_allowed_tanimoto_to_benchmark: 0.70
+  exclude_too_similar_candidates: true
+```
+
+Benchmark controls are not used for model training. If a benchmark-control SMILES appears in a training source by accident, Module 3 rejects it as `held_out_benchmark_control`. Generated candidates receive `nearest_benchmark_control_name`, `nearest_benchmark_tanimoto`, and `is_too_similar_to_benchmark`; candidates above the threshold are excluded from `generated_molecules_for_docking.tsv` unless explicitly allowed.
+
 ### Module 3 Limitations
 
 Generated molecules are computational candidates only. This module does not provide synthesis instructions, does not test molecules in humans, animals, or cells, and does not prove that any molecule binds SMN2, rescues exon 7 inclusion, treats SMA, or is safe. Reward diagnostics and chemical filters are computational screens for future prioritization.
@@ -292,6 +309,7 @@ FASTA sequence windows alone cannot be used for real molecular docking without a
 - `dry_run`: deterministic simulated docking scores for pipeline testing and dashboard visualization only.
 - `prepare_only`: prepare ligands, validate receptor configuration, and select the decoy panel without docking.
 - `target_only_docking`: run real docking against the SMN2 receptor only.
+- `target_conformer_panel_docking`: run real Vina target docking against the fixed five-conformer SMN2 receptor panel.
 - `target_plus_decoy_docking`: run real target docking and decoy counter-screening when receptor files are available.
 - `analyze_existing`: regenerate summaries, scores, figures, and reports from existing outputs.
 
@@ -326,6 +344,37 @@ receptor:
     size_y: 24.0
     size_z: 24.0
 ```
+
+### Fixed Five-Conformer Target Panel
+
+For final target docking, Module 4 supports a permanent five-receptor SMN2 target conformer panel. Every molecule selected from `inputs.molecules_for_docking` is docked independently against each receptor listed in `configs/target_conformer_panel_5.tsv`. The panel is validated before docking: exactly five receptors must be present, each receptor must be a non-empty `.pdbqt` file, and the run fails if fewer molecules than `run.max_molecules_to_dock` are available.
+
+```bash
+PYTHONPATH=src python3 -m smn2_rescuediff.docking.cli --config configs/presets/module4_target_conformer_panel_500x5.yaml
+```
+
+The 500x5 preset writes to:
+
+```text
+data/processed/docking/target_conformer_runs/target5_500
+```
+
+It uses real Vina docking only, keeps `is_dry_run_score=false`, and refuses to overwrite an existing non-empty run folder unless `run.overwrite_existing: true` is explicitly set.
+
+Primary outputs:
+
+```text
+selected_molecules.tsv
+conformer_panel_used.tsv
+config_used.yaml
+SMN2_CONF_01/target_docking_scores.tsv
+SMN2_CONF_01/poses/
+target_conformer_scores_long.tsv
+target_conformer_robustness_scores.tsv
+molecules_passed_target_conformer_filter.tsv
+```
+
+Robust target ranking requires all five conformers to complete. Molecules are ranked first by `worst_target_deltaG` ascending, then `mean_target_deltaG` ascending, then smaller `target_deltaG_range`, then smaller `std_target_deltaG`. This prevents one unusually favorable receptor conformer from dominating advancement.
 
 ### Expected Module 4 Outputs
 
@@ -382,6 +431,7 @@ data/processed/decoy_atlas/hurda_summary.json
 data/processed/molecule_generation/generated_molecules_filtered.tsv
 data/processed/molecule_generation/generated_molecules_for_docking.tsv
 data/processed/molecule_generation/generated_molecule_summary.json
+data/raw/molecules/benchmark_controls/splicing_benchmark_controls.smi
 data/processed/docking/smn2_target_docking_scores.tsv
 data/processed/docking/decoy_docking_scores.tsv
 data/processed/docking/molecule_selectivity_scores.tsv
@@ -419,6 +469,7 @@ data/processed/final_scoring/tables/pose_contact_features.tsv
 data/processed/final_scoring/tables/splicing_rescue_scores.tsv
 data/processed/final_scoring/tables/final_srsi_ranked_candidates.tsv
 data/processed/final_scoring/tables/top_10_final_candidates.tsv
+data/processed/final_scoring/tables/benchmark_control_reference_scores.tsv
 data/processed/final_scoring/tables/ablation_rank_comparison.tsv
 data/processed/final_scoring/evidence/top_candidate_evidence.json
 data/processed/final_scoring/evidence/scoring_warnings.json
@@ -429,6 +480,8 @@ reports/splicing_rescue_scoring_report.md
 reports/final_candidate_report.md
 figures/final_scoring/
 ```
+
+Module 5 reports held-out benchmark controls separately as computational reference baselines when target docking and/or decoy selectivity values are available. Benchmark controls were not used for model training, and comparisons are limited to computed values such as docking score, selectivity gap, off-target-risk proxy, and SRSI. The reports do not claim that any generated molecule is clinically better than risdiplam or another benchmark control.
 
 ### How To Interpret Results
 
@@ -547,6 +600,22 @@ Runtime warnings to take seriously:
 - Missing receptor PDBQT files means real docking cannot run for that target.
 - Sequence-only HuRDA decoys are useful for panel design, but real decoy docking requires prepared decoy receptor PDBQT files.
 - Dry-run outputs are for software checks only and must not be mixed into final scientific claims.
+
+## Reproducibility Snapshot And Claim Scope
+
+The production molecular generator is an **unconditional autoregressive SELFIES Transformer decoder**. It is not a diffusion model, and SMN2 sequence or structure features do not condition generation. Target information enters later through docking and scoring. Repository documentation and manuscript text should describe the method accordingly.
+
+Build the frozen peer-review reproducibility snapshot with:
+
+```bash
+PYTHONPATH=src python scripts/build_tcbb_reproducibility_release.py
+```
+
+The builder validates recorded counts before copying any result. It fails rather than changing data when the observed experiment no longer matches the frozen audit. The output is written to `reproducibility/tcbb_2026/` and includes source/release hashes, generation accounting, target and decoy receptor PDBQT files, prepared ligand PDBQT files, per-job score/status tables, missing-job records, run configurations, Module 5 ablations, and the redocking protocol and RMSD tables.
+
+The original HuRDA structural screen is explicitly reported as a partial observed design: 14,259 completed, non-dry-run Vina pairs covering 147 molecules and 97 decoys, with 741 missing pairs relative to the intended 150 by 100 experiment. Missing values are not imputed. A later complete 200 by 100 run is a separate experiment and must not be used to retroactively fill the original result.
+
+See `docs/PEER_REVIEW_RESPONSE_ACTIONS.md` for the exact audited generation statistics, redocking-number reconciliation, repository changes, and manuscript-only revisions that cannot be made without the paper source.
 
 ## Tests
 

@@ -8,6 +8,7 @@ from typing import Any
 
 import pandas as pd
 
+from .benchmark_controls import benchmark_control_set, load_configured_benchmark_controls
 from .chemical_filter import canonicalize_smiles, require_rdkit
 from .quality_training import build_quality_training_dataset
 from .smiles_cleaner import clean_smiles_strings, iter_smiles_lines
@@ -30,14 +31,22 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
     require_rdkit()
     inputs = config.get("inputs", {})
     data_cfg = config.get("data_processing", {})
-    manifest = inputs.get("training_source_manifest")
+    remove_salts = bool(data_cfg.get("remove_salts", True))
+    benchmark_controls, benchmark_warnings = load_configured_benchmark_controls(config, project_root, remove_salts=remove_salts)
+    benchmark_holdouts = benchmark_control_set(benchmark_controls)
+    manifest = inputs.get("training_source_manifest") or inputs.get("training_manifest")
     if manifest:
         accepted, summary, rejected_df, warnings = build_quality_training_dataset(
             manifest_path=str(manifest),
             project_root=project_root,
             output_dir=output_dir,
             data_cfg=data_cfg,
+            exclude_canonical_smiles=benchmark_holdouts,
         )
+        warnings.extend(benchmark_warnings)
+        if benchmark_holdouts:
+            summary["benchmark_controls_loaded"] = int(len(benchmark_holdouts))
+            summary["benchmark_controls_used_for_training"] = False
         min_warning = int(data_cfg.get("min_training_molecules_warning", 1000))
         if summary.get("training_molecules_cleaned", 0) < min_warning:
             warnings.append(
@@ -58,7 +67,7 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
 
     raw_value = inputs.get("training_smiles", [])
     paths = normalize_training_paths(raw_value) if raw_value else []
-    warnings: list[str] = []
+    warnings: list[str] = list(benchmark_warnings)
     resolved: list[Path] = []
     for item in paths:
         path = Path(item)
@@ -78,7 +87,6 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
 
     max_len = int(data_cfg.get("max_input_smiles_length", 160))
     cleaned_text = clean_smiles_strings(raw_smiles, max_length=max_len)
-    remove_salts = bool(data_cfg.get("remove_salts", True))
     remove_mixtures = bool(data_cfg.get("remove_mixtures", True))
     canonicalize = bool(data_cfg.get("canonicalize_smiles", True))
     remove_duplicates = bool(data_cfg.get("remove_duplicates", True))
@@ -105,6 +113,9 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
             continue
         if not _allowed_atoms(mol, allowed_atoms):
             rejected.append({"raw_smiles": smiles, "canonical_smiles": canonical, "reason": "disallowed_atom"})
+            continue
+        if canonical in benchmark_holdouts:
+            rejected.append({"raw_smiles": smiles, "canonical_smiles": canonical, "reason": "held_out_benchmark_control"})
             continue
         if remove_duplicates and final_smiles in seen:
             rejected.append({"raw_smiles": smiles, "canonical_smiles": canonical, "reason": "duplicate"})
@@ -134,6 +145,9 @@ def build_training_dataset(config: dict[str, Any], project_root: Path, output_di
         "training_molecules_raw": int(len(raw_smiles)),
         "training_molecules_after_text_cleaning": int(len(cleaned_text)),
         "training_molecules_cleaned": int(len(accepted)),
+        "training_molecules_held_out_benchmark_controls": int((rejected_df["reason"] == "held_out_benchmark_control").sum()) if not rejected_df.empty else 0,
+        "benchmark_controls_loaded": int(len(benchmark_holdouts)),
+        "benchmark_controls_used_for_training": False,
         "raw_count_by_file": raw_count_by_file,
         "rejected_count": int(len(rejected_df)),
         "warnings": warnings,

@@ -1,0 +1,16 @@
+{
+  "created_at": "2026-08-16T00:15:25.500852",
+  "experiment": "HuRDA 150x100 partial merged receptor-decoy screen",
+  "expected_full_jobs": 15000,
+  "successful_jobs": 14259,
+  "missing_jobs": 741,
+  "molecules_expected": 150,
+  "decoys_expected": 100,
+  "complete_15000": false,
+  "important_note": "This dataset contains only successfully completed real docking jobs from the original 150x53 and 150x47 runs. Missing docking scores were not fabricated or imputed.",
+  "source_53": "data/processed/docking/stage_b_decoy_150x53_after_target5/runs/decoy_150x53_after_target5/decoy_docking_scores.tsv",
+  "source_47": "data/processed/docking/stage_b_decoy_150x47_after_target5/runs/decoy_150x47_after_target5/decoy_docking_scores.tsv",
+  "merged_file": "data/processed/docking/stage_b_decoy_150x100_after_target5_partial_merged/decoy_docking_scores.tsv",
+  "coverage_file": "data/processed/docking/stage_b_decoy_150x100_after_target5_partial_merged/molecule_decoy_coverage.tsv",
+  "missing_jobs_file": "data/processed/docking/stage_b_decoy_150x100_after_target5_partial_merged/missing_jobs.tsv"
+}

@@ -27,6 +27,7 @@ class SplicingRescuePaths:
     generated_molecules_filtered: Path
     generated_molecules_for_docking: Path
     molecule_generation_summary: Path
+    benchmark_splicing_controls: Path | None
     target_docking_scores: Path
     decoy_docking_scores: Path
     molecule_selectivity_scores: Path
@@ -76,6 +77,7 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> SplicingRe
         return candidate if candidate.is_absolute() else project_root / candidate
 
     output_dir = resolve(outputs.get("output_dir"), "outputs.output_dir")
+    raw_benchmark_controls = inputs.get("benchmark_controls", {}).get("splicing_controls") if isinstance(inputs.get("benchmark_controls", {}), dict) else None
     table_dir = resolve(outputs.get("table_dir") or str(output_dir / "tables"), "outputs.table_dir")
     evidence_dir = resolve(outputs.get("evidence_dir") or str(output_dir / "evidence"), "outputs.evidence_dir")
     log_dir = resolve(outputs.get("log_dir") or str(output_dir / "logs"), "outputs.log_dir")
@@ -90,6 +92,7 @@ def resolve_paths(config: dict[str, Any], config_path: str | Path) -> SplicingRe
         generated_molecules_filtered=resolve(inputs.get("generated_molecules_filtered"), "inputs.generated_molecules_filtered"),
         generated_molecules_for_docking=resolve(inputs.get("generated_molecules_for_docking"), "inputs.generated_molecules_for_docking"),
         molecule_generation_summary=resolve(inputs.get("molecule_generation_summary"), "inputs.molecule_generation_summary"),
+        benchmark_splicing_controls=resolve(str(raw_benchmark_controls), "inputs.benchmark_controls.splicing_controls") if raw_benchmark_controls else None,
         target_docking_scores=resolve(inputs.get("target_docking_scores"), "inputs.target_docking_scores"),
         decoy_docking_scores=resolve(inputs.get("decoy_docking_scores"), "inputs.decoy_docking_scores"),
         molecule_selectivity_scores=resolve(inputs.get("molecule_selectivity_scores"), "inputs.molecule_selectivity_scores"),

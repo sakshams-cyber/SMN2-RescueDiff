@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "analysis_type": "partial_HuRDA_proof_of_concept",
+  "molecules_total": 150,
+  "target_conformers": 5,
+  "decoy_rows_theoretical_full_panel": 15000,
+  "decoy_rows_observed": 14259,
+  "decoy_rows_missing": 741,
+  "molecules_with_HuRDA_scores": 147,
+  "molecules_without_HuRDA_scores": 3,
+  "HuRDA_decoys_theoretical": 100,
+  "HuRDA_decoys_observed_common_panel": 97,
+  "eligible_molecules": 147,
+  "top40_count": 40,
+  "missing_scores_imputed": false,
+  "primary_target_metric": "mean_target_deltaG_across_5_conformers",
+  "primary_selectivity_metric": "weighted_mean_decoy_deltaG_minus_mean_target_deltaG",
+  "conservative_selectivity_metric": "best_decoy_deltaG_minus_worst_target_deltaG",
+  "evidence_status_counts": {
+    "INSUFFICIENT_DECOY_EVIDENCE": 3,
+    "PARTIAL_HURDA_97_COMPLETE": 147
+  },
+  "input_files": {
+    "decoy_scores": "data/processed/docking/stage_b_decoy_150x100_after_target5_partial_merged/decoy_docking_scores.tsv",
+    "target_summary": "data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/target_conformer_robustness_scores_final.tsv",
+    "target_long": "data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/target_conformer_scores_long.tsv",
+    "top150": "data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/top150_for_hurda_100_decoy_docking.tsv",
+    "lower_confidence": "data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/rigid_tree_repair_molecules_lower_confidence.tsv",
+    "conformer_panel": "data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/conformer_panel_used.tsv",
+    "missing_target_jobs": "data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/missing_jobs_after_merge.tsv"
+  },
+  "top150_unique_molecules": 150,
+  "target_conformer_count_distribution": {
+    "5": 150
+  },
+  "decoy_coverage_distribution": {
+    "97": 147
+  },
+  "zero_coverage_molecule_ids": [
+    "MolGen_005024",
+    "MolGen_012374",
+    "MolGen_018383"
+  ],
+  "common_observed_decoys": 97,
+  "duplicate_molecule_decoy_pairs": 0,
+  "output_files": [
+    "data/processed/docking/stage_c_selectivity_150_partial_after_target5/ensemble_selectivity_scores.tsv",
+    "data/processed/docking/stage_c_selectivity_150_partial_after_target5/top40_for_ligand_decoy_control_audit.tsv",
+    "data/processed/docking/stage_c_selectivity_150_partial_after_target5/insufficient_decoy_evidence.tsv",
+    "data/processed/docking/stage_c_selectivity_150_partial_after_target5/stage_c_validation.json",
+    "data/processed/docking/stage_c_selectivity_150_partial_after_target5/stage_c_run_summary.tsv",
+    "data/processed/docking/stage_c_selectivity_150_partial_after_target5/stage_c_methodology.txt"
+  ]
+}

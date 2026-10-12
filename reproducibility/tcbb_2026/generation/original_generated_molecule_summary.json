@@ -1,0 +1,187 @@
+{
+  "project": "SMN2-RescueDiff",
+  "module": "Deep Neural Molecular Generation Model",
+  "training_smiles_path": "data/raw/molecules/chembl_quality_subset_training_smiles.smi, data/raw/molecules/zinc_quality_druglike_training_smiles.smi, data/raw/molecules/rbind_rna_ligand_training_smiles.smi, data/raw/molecules/smmrna_training_smiles.smi",
+  "toy_training_file_used": false,
+  "context_files": {
+    "smn2_target_profile_exists": true,
+    "smn2_target_metadata_exists": true,
+    "decoy_atlas_summary_exists": true,
+    "benchmark_splicing_controls_exists": true
+  },
+  "generator_mode": "neural_transformer",
+  "representation": "selfies",
+  "model_architecture": "transformer_decoder",
+  "raw_generated_count": 49660,
+  "valid_count": 49660,
+  "filtered_count": 40477,
+  "rejected_count": 9183,
+  "validity_fraction": 1.0,
+  "unique_valid_fraction": 0.99655658477648,
+  "novel_filtered_fraction": 0.9982459174345925,
+  "source_generator_counts": {
+    "neural_transformer_decoder": 40477
+  },
+  "property_summary": {
+    "molecular_weight": {
+      "min": 150.152,
+      "max": 649.8340000000002,
+      "mean": 459.0036349778889
+    },
+    "logp": {
+      "min": -1.994629999999992,
+      "max": 5.999900000000006,
+      "mean": 2.5833908674061834
+    },
+    "qed": {
+      "min": 0.0375793719450603,
+      "max": 0.9480501270455607,
+      "mean": 0.49003671466073795
+    },
+    "max_tanimoto_to_training": {
+      "min": 0.142857,
+      "max": 1.0,
+      "mean": 0.33515095854435856
+    },
+    "nearest_benchmark_tanimoto": {
+      "min": 0.0,
+      "max": 0.283582,
+      "mean": 0.10127057783432565
+    },
+    "novelty_vs_training_set": {
+      "min": 0.0,
+      "max": 0.928572,
+      "mean": 0.8315474747387406
+    },
+    "rna_ligand_like_score": {
+      "min": 0.639584,
+      "max": 1.0,
+      "mean": 0.9685686835980928
+    },
+    "chemical_quality_score": {
+      "min": 0.254188,
+      "max": 0.92979,
+      "mean": 0.6818159171628332
+    },
+    "pre_docking_candidate_score": {
+      "min": 0.529787,
+      "max": 0.945747,
+      "mean": 0.8093235032240532
+    },
+    "final_generation_selection_score": {
+      "min": 0.490368,
+      "max": 0.941078,
+      "mean": 0.8126292421375103
+    }
+  },
+  "warnings": [
+    "Training source missing and skipped: smmrna_ligands (data/raw/molecules/smmrna_training_smiles.smi)",
+    "2 molecules could not be converted to selfies.",
+    "Novelty fingerprints limited to first 20,000 canonical training molecules for runtime control."
+  ],
+  "limitations": [
+    "Generated molecules are computational candidates only and are not experimentally validated compounds.",
+    "This module does not perform SMN2 RNA docking, HuRDA off-target counter-screening, transcriptome-wide safety assessment, synthesis planning, or final SRSI ranking.",
+    "Neural generation, SELFIES validity, reward diagnostics, chemical filters, PAINS flags, QED, Lipinski rules, novelty, and diversity metrics are computational prioritization signals, not evidence of SMN2 binding, exon 7 rescue, safety, or efficacy.",
+    "Toy example SMILES are only for software smoke testing and should not be used for scientific conclusions."
+  ],
+  "run_name": "module3_final_final_rigorous_x10",
+  "training_files": [
+    "data/raw/molecules/chembl_quality_subset_training_smiles.smi",
+    "data/raw/molecules/zinc_quality_druglike_training_smiles.smi",
+    "data/raw/molecules/rbind_rna_ligand_training_smiles.smi",
+    "data/raw/molecules/smmrna_training_smiles.smi"
+  ],
+  "training_molecules_raw": 150000,
+  "training_molecules_valid": 149534,
+  "training_molecules_invalid": 466,
+  "training_molecules_deduplicated": 0,
+  "training_molecules_cleaned": 149534,
+  "training_molecules_weighted": 224092,
+  "training_molecules_held_out_benchmark_controls": 0,
+  "benchmark_controls_loaded": 1,
+  "benchmark_controls_used_for_training": false,
+  "benchmark_similarity": {
+    "enabled": true,
+    "benchmark_controls_loaded": 1,
+    "max_allowed_tanimoto_to_benchmark": 0.7,
+    "exclude_too_similar_candidates": true,
+    "too_similar_count": 0,
+    "candidate_count": 40477
+  },
+  "quality_training_manifest": "configs/molecule_training_sources_quality.tsv",
+  "quality_source_balance": [
+    {
+      "source_name": "chembl_quality_subset",
+      "path": "data/raw/molecules/chembl_quality_subset_training_smiles.smi",
+      "source_type": "broad_bioactive",
+      "source_weight": 1.5,
+      "max_rows": 75000,
+      "quality_tier": "high",
+      "notes": "Quality-filtered subset from existing ChEMBL SMILES file",
+      "resolved_path": "data/raw/molecules/chembl_quality_subset_training_smiles.smi",
+      "loaded_rows": 75000,
+      "valid_rows": 74558,
+      "invalid_rows": 442,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 74558,
+      "weighted_used_rows": 149116
+    },
+    {
+      "source_name": "zinc_quality_druglike",
+      "path": "data/raw/molecules/zinc_quality_druglike_training_smiles.smi",
+      "source_type": "broad_druglike",
+      "source_weight": 0.8,
+      "max_rows": 75000,
+      "quality_tier": "medium",
+      "notes": "ZINC diversity source, lower weight so it does not dominate RNA-focused ligands",
+      "resolved_path": "data/raw/molecules/zinc_quality_druglike_training_smiles.smi",
+      "loaded_rows": 75000,
+      "valid_rows": 74976,
+      "invalid_rows": 24,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 74976,
+      "weighted_used_rows": 74976
+    },
+    {
+      "source_name": "rbind_rna_ligands",
+      "path": "data/raw/molecules/rbind_rna_ligand_training_smiles.smi",
+      "source_type": "rna_ligand",
+      "source_weight": 8.0,
+      "max_rows": 50000,
+      "quality_tier": "very_high",
+      "notes": "RNA-targeting ligand bias",
+      "resolved_path": "data/raw/molecules/rbind_rna_ligand_training_smiles.smi",
+      "loaded_rows": 0,
+      "valid_rows": 0,
+      "invalid_rows": 0,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 0,
+      "weighted_used_rows": 0
+    },
+    {
+      "source_name": "smmrna_ligands",
+      "path": "data/raw/molecules/smmrna_training_smiles.smi",
+      "source_type": "rna_ligand",
+      "source_weight": 8.0,
+      "max_rows": 50000,
+      "quality_tier": "very_high",
+      "notes": "Optional SMMRNA RNA ligand source",
+      "resolved_path": "data/raw/molecules/smmrna_training_smiles.smi",
+      "loaded_rows": 0,
+      "valid_rows": 0,
+      "invalid_rows": 0,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 0,
+      "weighted_used_rows": 0
+    }
+  ],
+  "epochs_completed": 10,
+  "unique_count": 40477,
+  "novel_count": 40406,
+  "selected_for_docking_count": 1000
+}
