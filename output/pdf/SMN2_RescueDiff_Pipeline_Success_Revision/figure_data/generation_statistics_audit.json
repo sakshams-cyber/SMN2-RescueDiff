@@ -1,0 +1,77 @@
+{
+  "benchmark_controls": {
+    "controls_in_current_posthoc_audit": [
+      "risdiplam",
+      "branaplam"
+    ],
+    "controls_in_historical_generation_run": [
+      "branaplam"
+    ],
+    "current_posthoc_control_count": 2,
+    "docking_posthoc_summary": {
+      "benchmark_controls_loaded": 2,
+      "candidate_count": 1000,
+      "enabled": true,
+      "exclude_too_similar_candidates": true,
+      "max_allowed_tanimoto_to_benchmark": 0.7,
+      "too_similar_count": 0
+    },
+    "filtered_posthoc_summary": {
+      "benchmark_controls_loaded": 2,
+      "candidate_count": 40477,
+      "enabled": true,
+      "exclude_too_similar_candidates": true,
+      "max_allowed_tanimoto_to_benchmark": 0.7,
+      "too_similar_count": 0
+    },
+    "historical_control_count": 1,
+    "interpretation": "The frozen July generation run screened similarity against branaplam only. Risdiplam was added to the benchmark-control file later and is evaluated here post hoc; this does not retroactively change the historical generation run.",
+    "warnings": []
+  },
+  "diffusion_model": false,
+  "diversity": {
+    "docking_scaffold_label_fraction": 0.977,
+    "docking_unique_scaffold_labels": 977,
+    "filtered_scaffold_label_fraction": 0.8553993626009833,
+    "filtered_unique_scaffold_labels": 34624,
+    "mean_pairwise_morgan_tanimoto": 0.12117030523895608,
+    "median_pairwise_morgan_tanimoto": 0.11510791366906475,
+    "sampled_pair_count": 50000
+  },
+  "generation": {
+    "emitted_fraction_of_requested": 0.9932,
+    "filtered_molecules": 40477,
+    "novel_filtered_fraction": 0.9982459174345925,
+    "novel_filtered_molecules": 40406,
+    "raw_samples_requested": 50000,
+    "rejected_molecules": 9183,
+    "selected_for_docking": 1000,
+    "unique_filtered_molecules": 40477,
+    "unique_generated_strings_emitted": 49660,
+    "unique_valid_fraction": 0.99655658477648,
+    "unique_valid_molecules": 49489,
+    "valid_emitted_strings": 49660,
+    "validity_denominator_note": "The sampler removed duplicate generated strings before RDKit validation. This validity rate is not a rate over all sampling attempts.",
+    "validity_fraction_of_emitted_strings": 1.0
+  },
+  "model_type": "unconditional autoregressive SELFIES Transformer decoder",
+  "run_name": "module3_final_final_rigorous_x10",
+  "source_limitations": [
+    "The configured RBIND and SMMRNA files contributed zero rows to this run.",
+    "Training was therefore based on the available ChEMBL and ZINC subset files, not an RNA-ligand-enriched corpus.",
+    "Novelty fingerprints were limited to the first 20,000 canonical training molecules, as recorded by the run warning.",
+    "The existing n-gram log records sample generation only; it is not a controlled generator-performance baseline."
+  ],
+  "target_conditioned_generation": false,
+  "training": {
+    "best_validation_loss": 0.5722038051621481,
+    "epochs": 10,
+    "final_train_loss": 0.6287246889571854,
+    "final_validation_loss": 0.5722038051621481,
+    "invalid_rows": 466,
+    "raw_rows_loaded": 150000,
+    "unique_rows_used": 149534,
+    "valid_rows": 149534,
+    "weighted_exposure_rows": 224092
+  }
+}
