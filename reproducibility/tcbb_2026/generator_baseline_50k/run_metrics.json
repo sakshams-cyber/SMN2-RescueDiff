@@ -1,0 +1,234 @@
+{
+  "project": "SMN2-RescueDiff",
+  "module": "Deep Neural Molecular Generation Model",
+  "training_smiles_path": "data/raw/molecules/chembl_quality_subset_training_smiles.smi, data/raw/molecules/zinc_quality_druglike_training_smiles.smi, data/raw/molecules/rbind_rna_ligand_training_smiles.smi, data/raw/molecules/smmrna_training_smiles.smi",
+  "toy_training_file_used": false,
+  "context_files": {
+    "smn2_target_profile_exists": true,
+    "smn2_target_metadata_exists": true,
+    "decoy_atlas_summary_exists": true,
+    "benchmark_splicing_controls_exists": true
+  },
+  "generator_mode": "debug_ngram",
+  "representation": "smiles",
+  "model_architecture": "token_3gram",
+  "raw_generated_count": 50000,
+  "valid_count": 915,
+  "valid_unique_count": 535,
+  "valid_duplicate_count": 380,
+  "filtered_count": 163,
+  "novel_filtered_count": 163,
+  "rejected_count": 49837,
+  "validity_fraction": 0.0183,
+  "validity_fraction_denominator": "unique generated strings emitted by the sampler, after optional generated-string deduplication",
+  "unique_valid_fraction": 0.5846994535519126,
+  "novel_filtered_fraction": 1.0,
+  "source_generator_counts": {
+    "debug_ngram": 163
+  },
+  "property_summary": {
+    "molecular_weight": {
+      "min": 150.17699999999996,
+      "max": 522.5990000000003,
+      "mean": 220.42268711656442
+    },
+    "logp": {
+      "min": -1.907099999999999,
+      "max": 5.882700000000004,
+      "mean": 1.0587958282208594
+    },
+    "qed": {
+      "min": 0.17006033258784478,
+      "max": 0.8420805727980051,
+      "mean": 0.5806994559207512
+    },
+    "max_tanimoto_to_training": {
+      "min": 0.156863,
+      "max": 0.457143,
+      "mean": 0.2739152147239264
+    },
+    "nearest_benchmark_tanimoto": {
+      "min": 0.029412,
+      "max": 0.157895,
+      "mean": 0.08759451533742332
+    },
+    "novelty_vs_training_set": {
+      "min": 0.771428,
+      "max": 0.921568,
+      "mean": 0.8630423742331288
+    },
+    "rna_ligand_like_score": {
+      "min": 0.755083,
+      "max": 1.0,
+      "mean": 0.9191036687116564
+    },
+    "chemical_quality_score": {
+      "min": 0.617142,
+      "max": 0.857318,
+      "mean": 0.7557373558282208
+    },
+    "pre_docking_candidate_score": {
+      "min": 0.738499,
+      "max": 0.90118,
+      "mean": 0.8307511840490798
+    },
+    "final_generation_selection_score": {
+      "min": 0.754645,
+      "max": 0.896263,
+      "mean": 0.8345119202453988
+    }
+  },
+  "warnings": [
+    "Training source missing and skipped: smmrna_ligands (data/raw/molecules/smmrna_training_smiles.smi)",
+    "debug_ngram mode is for troubleshooting only and is not the neural-first scientific path.",
+    "Novelty fingerprints limited to first 20,000 canonical training molecules for runtime control."
+  ],
+  "limitations": [
+    "Generated molecules are computational candidates only and are not experimentally validated compounds.",
+    "This module does not perform SMN2 RNA docking, HuRDA off-target counter-screening, transcriptome-wide safety assessment, synthesis planning, or final SRSI ranking.",
+    "Neural generation, SELFIES validity, reward diagnostics, chemical filters, PAINS flags, QED, Lipinski rules, novelty, and diversity metrics are computational prioritization signals, not evidence of SMN2 binding, exon 7 rescue, safety, or efficacy.",
+    "Toy example SMILES are only for software smoke testing and should not be used for scientific conclusions."
+  ],
+  "run_name": "module3_ngram_baseline_50k",
+  "training_files": [
+    "data/raw/molecules/chembl_quality_subset_training_smiles.smi",
+    "data/raw/molecules/zinc_quality_druglike_training_smiles.smi",
+    "data/raw/molecules/rbind_rna_ligand_training_smiles.smi",
+    "data/raw/molecules/smmrna_training_smiles.smi"
+  ],
+  "training_molecules_raw": 150000,
+  "training_molecules_valid": 149534,
+  "training_molecules_invalid": 466,
+  "training_molecules_deduplicated": 0,
+  "training_molecules_cleaned": 149534,
+  "training_molecules_weighted": 224092,
+  "training_molecules_held_out_benchmark_controls": 0,
+  "benchmark_controls_loaded": 2,
+  "benchmark_controls_used_for_training": false,
+  "benchmark_similarity": {
+    "enabled": true,
+    "benchmark_controls_loaded": 2,
+    "max_allowed_tanimoto_to_benchmark": 0.7,
+    "exclude_too_similar_candidates": true,
+    "too_similar_count": 0,
+    "candidate_count": 163
+  },
+  "quality_training_manifest": "configs/molecule_training_sources_quality.tsv",
+  "quality_source_balance": [
+    {
+      "source_name": "chembl_quality_subset",
+      "path": "data/raw/molecules/chembl_quality_subset_training_smiles.smi",
+      "source_type": "broad_bioactive",
+      "source_weight": 1.5,
+      "max_rows": 75000,
+      "quality_tier": "high",
+      "notes": "Quality-filtered subset from existing ChEMBL SMILES file",
+      "resolved_path": "data/raw/molecules/chembl_quality_subset_training_smiles.smi",
+      "loaded_rows": 75000,
+      "valid_rows": 74558,
+      "invalid_rows": 442,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 74558,
+      "weighted_used_rows": 149116
+    },
+    {
+      "source_name": "zinc_quality_druglike",
+      "path": "data/raw/molecules/zinc_quality_druglike_training_smiles.smi",
+      "source_type": "broad_druglike",
+      "source_weight": 0.8,
+      "max_rows": 75000,
+      "quality_tier": "medium",
+      "notes": "ZINC diversity source, lower weight so it does not dominate RNA-focused ligands",
+      "resolved_path": "data/raw/molecules/zinc_quality_druglike_training_smiles.smi",
+      "loaded_rows": 75000,
+      "valid_rows": 74976,
+      "invalid_rows": 24,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 74976,
+      "weighted_used_rows": 74976
+    },
+    {
+      "source_name": "rbind_rna_ligands",
+      "path": "data/raw/molecules/rbind_rna_ligand_training_smiles.smi",
+      "source_type": "rna_ligand",
+      "source_weight": 8.0,
+      "max_rows": 50000,
+      "quality_tier": "very_high",
+      "notes": "RNA-targeting ligand bias",
+      "resolved_path": "data/raw/molecules/rbind_rna_ligand_training_smiles.smi",
+      "loaded_rows": 0,
+      "valid_rows": 0,
+      "invalid_rows": 0,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 0,
+      "weighted_used_rows": 0
+    },
+    {
+      "source_name": "smmrna_ligands",
+      "path": "data/raw/molecules/smmrna_training_smiles.smi",
+      "source_type": "rna_ligand",
+      "source_weight": 8.0,
+      "max_rows": 50000,
+      "quality_tier": "very_high",
+      "notes": "Optional SMMRNA RNA ligand source",
+      "resolved_path": "data/raw/molecules/smmrna_training_smiles.smi",
+      "loaded_rows": 0,
+      "valid_rows": 0,
+      "invalid_rows": 0,
+      "benchmark_holdout_rows": 0,
+      "deduplicated_rows": 0,
+      "unique_used_rows": 0,
+      "weighted_used_rows": 0
+    }
+  ],
+  "epochs_completed": 0,
+  "unique_count": 163,
+  "novel_count": 163,
+  "selected_for_docking_count": 163,
+  "generation_accounting": {
+    "requested_raw_samples": 50000,
+    "unique_generated_strings_emitted": 50000,
+    "emitted_fraction_of_requested": 1.0,
+    "generated_string_deduplication_enabled": true
+  },
+  "training_curve_summary": {
+    "final_train_loss": null,
+    "final_validation_loss": null,
+    "best_validation_loss": null
+  },
+  "diversity_summary": {
+    "filtered_unique_scaffolds": 132,
+    "docking_unique_scaffolds": 132,
+    "sampled_pair_count": 13203,
+    "mean_pairwise_tanimoto": 0.11019564143913786,
+    "median_pairwise_tanimoto": 0.10416666666666667
+  },
+  "generation_conditioning": "unconditional; SMN2 sequence and structure features are not model inputs",
+  "run_folder": "data/processed/molecule_generation/runs/module3_ngram_baseline_50k",
+  "output_files": [
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/training_smiles_merged_cleaned.smi",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/training_dataset_summary.json",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/training_dataset_rejected.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/token_vocabulary.json",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/tokenizer_metadata.json",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_strings_raw.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_smiles_raw.smi",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_smiles_raw.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_molecules_valid.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_molecules_filtered.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_molecules_rejected.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_molecules_for_docking.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/generated_molecule_summary.json",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/model_training_log.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/rl_finetuning_log.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/molecule_generation_config_used.yaml",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/benchmark_controls_held_out.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/quality_training/quality_training_unique.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/quality_training/quality_training_weighted.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/quality_training/source_balance_report.tsv",
+    "data/processed/molecule_generation/runs/module3_ngram_baseline_50k/quality_training/quality_training_rejected.tsv"
+  ]
+}

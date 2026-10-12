@@ -1,0 +1,148 @@
+project_name: SMN2-RescueDiff
+module_name: Controlled 3-gram Molecular Generator Baseline
+inputs:
+  training_smiles:
+  - data/raw/molecules/chembl_quality_subset_training_smiles.smi
+  - data/raw/molecules/zinc_quality_druglike_training_smiles.smi
+  - data/raw/molecules/rbind_rna_ligand_training_smiles.smi
+  - data/raw/molecules/smmrna_training_smiles.smi
+  training_source_manifest: configs/molecule_training_sources_quality.tsv
+  training_manifest: configs/molecule_training_sources_quality.tsv
+  benchmark_controls:
+    splicing_controls: data/raw/molecules/benchmark_controls/splicing_benchmark_controls.smi
+  optional_context:
+    smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+    smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+    decoy_atlas_summary: data/processed/decoy_atlas/hurda_summary.json
+outputs:
+  output_dir: data/processed/molecule_generation
+  checkpoint_dir: data/processed/molecule_generation/checkpoints
+  log_dir: data/processed/molecule_generation/logs
+  report_path: reports/molecule_generation_report.md
+  figure_dir: figures/molecule_generation
+run:
+  random_seed: 42
+  device: cpu
+  run_name: module3_ngram_baseline_50k
+  overwrite_existing: false
+  save_config_used: true
+  publish_stable_outputs: false
+data_processing:
+  min_training_molecules_warning: 1000
+  max_input_smiles_length: 160
+  remove_salts: true
+  remove_mixtures: true
+  canonicalize_smiles: true
+  remove_duplicates: true
+  require_rdkit_valid: true
+  allowed_atoms:
+  - C
+  - H
+  - N
+  - O
+  - S
+  - P
+  - F
+  - Cl
+  - Br
+  - I
+  max_molecular_weight_training: 850
+  min_molecular_weight_training: 80
+tokenization:
+  representation: smiles
+  fallback_to_smiles_if_selfies_missing: true
+  add_start_end_tokens: true
+  pad_token: <PAD>
+  start_token: <START>
+  end_token: <END>
+  unk_token: <UNK>
+generation:
+  generator_mode: debug_ngram
+model:
+  architecture: token_3gram
+  fallback_architecture: token_3gram
+  embedding_dim: 1
+  num_layers: 1
+  num_heads: 1
+  feedforward_dim: 1
+  hidden_dim: 1
+  dropout: 0.0
+  max_sequence_length: 160
+training:
+  enabled: false
+  epochs: 0
+  batch_size: 128
+  learning_rate: 0.0005
+  weight_decay: 1.0e-05
+  validation_fraction: 0.1
+  early_stopping_patience: 1
+  gradient_clip_norm: 1.0
+  save_checkpoint_every_epoch: false
+  resume_from_checkpoint: null
+sampling:
+  num_raw_to_generate: 50000
+  batch_size_generate: 1000
+  temperature: 0.78
+  top_k: 50
+  top_p: 0.95
+  max_generated_length: 160
+  remove_duplicate_generated_strings: true
+rl_finetuning:
+  enabled: false
+  episodes: 0
+  samples_per_episode: 0
+  learning_rate: 5.0e-05
+  reward_name: disabled_for_controlled_baseline
+  save_rl_checkpoints: false
+reward_weights:
+  validity: 2.0
+  uniqueness: 1.0
+  novelty: 1.0
+  qed: 1.5
+  lipinski: 1.0
+  molecular_weight_range: 0.8
+  logp_range: 0.8
+  hbond_balance: 0.6
+  aromatic_ring_balance: 0.5
+  heteroatom_presence: 0.7
+  nitrogen_heterocycle_bonus: 0.8
+  pains_penalty: -2.0
+  excessive_charge_penalty: -1.0
+  large_molecule_penalty: -1.0
+  duplicate_penalty: -1.0
+chemical_filters:
+  min_molecular_weight: 150
+  max_molecular_weight: 650
+  min_logp: -2.0
+  max_logp: 6.0
+  max_hbd: 8
+  max_hba: 15
+  max_rotatable_bonds: 12
+  max_formal_charge_abs: 2
+  require_lipinski_pass: false
+  remove_pains: true
+  remove_invalid_smiles: true
+  remove_duplicates: true
+  remove_salts: true
+candidate_prioritization:
+  enabled: true
+  prioritize_rna_ligand_like_features: true
+  max_candidates_to_export_for_docking: 1000
+  diversity_selection_enabled: true
+  morgan_diversity_selection_enabled: true
+  tanimoto_similarity_threshold_for_diversity: 0.82
+  min_final_generation_selection_score: 0.2
+benchmark_similarity:
+  enabled: true
+  max_allowed_tanimoto_to_benchmark: 0.7
+  exclude_too_similar_candidates: true
+analysis:
+  calculate_qed: true
+  calculate_sa_score_if_available: true
+  calculate_morgan_fingerprints: true
+  calculate_diversity: true
+  calculate_novelty_against_training: true
+  calculate_scaffolds: true
+  pairwise_diversity_sample_size: 5000
+  max_training_fingerprints_for_novelty: 20000
+  tanimoto_similarity_threshold_duplicate_like: 0.95

@@ -1,0 +1,115 @@
+project_name: SMN2-RescueDiff
+module_name: Geometry-Corrected HuRDA Decoy Redocking
+
+inputs:
+  molecules_for_docking: data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/top150_for_hurda_100_decoy_docking.tsv
+  molecules_filtered: data/processed/molecule_generation/runs/module3_final_final_rigorous_x10/generated_molecules_for_docking.tsv
+  smn2_target_fasta: data/processed/target_definition/smn2_target_windows.fasta
+  smn2_target_profile: data/processed/target_definition/smn2_target_profile.tsv
+  smn2_target_metadata: data/processed/target_definition/smn2_target_metadata.json
+  decoy_atlas_full: data/processed/decoy_atlas/hurda_180k_full_with_100_receptors.tsv
+  decoy_atlas_summary: data/processed/decoy_atlas/hurda_summary.json
+  raw_structure_dir: data/raw/structures
+
+outputs:
+  output_dir: data/processed/docking/geometry_corrected_decoy_150x100
+  ligand_dir: data/processed/docking/geometry_corrected_decoy_150x100/ligands
+  receptor_dir: data/processed/docking/receptors
+  pose_dir: data/processed/docking/geometry_corrected_decoy_150x100/poses
+  log_dir: data/processed/docking/geometry_corrected_decoy_150x100/logs
+  simulation_dir: data/processed/docking/geometry_corrected_decoy_150x100/simulation
+  report_path: reports/geometry_corrected_decoy_150x100_report.md
+  figure_dir: figures/docking/geometry_corrected_decoy_150x100
+
+run:
+  random_seed: 42
+  run_name: geometry_corrected_decoy_150x100_v1
+  run_mode: target_plus_decoy_docking
+  max_molecules_to_dock: 150
+  require_real_docking_for_scientific_results: true
+  allow_dry_run_simulation: false
+  parallel_jobs: 1
+  resume_existing_results: true
+  save_intermediate_every_n_jobs: 25
+  overwrite_existing: false
+
+staged_docking:
+  enabled: false
+  select_top_from_target_scores: false
+  reuse_prior_target_scores: true
+  target_scores_path: data/processed/docking/target_conformer_runs/target5_500_v1_complete_merged/target_conformer_robustness_scores_final.tsv
+
+docking_engine:
+  engine: vina
+  vina_executable: vina
+  exhaustiveness: 8
+  num_modes: 10
+  energy_range: 3
+  timeout_seconds_per_job: 240
+  random_seed_policy: fixed_run_seed
+
+receptor:
+  receptor_mode: user_provided
+  smn2_receptor_file: data/processed/docking/receptors/target_conformers/smn2_target_model01.pdbqt
+  receptor_format: pdbqt
+  docking_box:
+    center_x: 24.896
+    center_y: 20.352
+    center_z: 24.973
+    size_x: 44.963
+    size_y: 34.551
+    size_z: 44.652
+  require_user_to_confirm_box: false
+
+ligand_preparation:
+  input_smiles_column: canonical_smiles
+  add_hydrogens: true
+  generate_3d_conformers: true
+  optimize_geometry: true
+  max_conformer_attempts: 20
+  output_format: sdf
+  prepare_pdbqt: true
+
+decoy_panel:
+  use_decoy_panel: true
+  total_decoys_for_docking: 100
+  include_categories: [smn2_like_hard_decoy, five_prime_splice_site, three_prime_splice_site]
+  min_smn2_similarity: 0.45
+  min_biological_weight: 0.8
+  category_targets:
+    smn2_like_hard_decoy: 60
+    five_prime_splice_site: 25
+    three_prime_splice_site: 15
+  prioritize_high_similarity_decoys: true
+  prioritize_high_biological_weight: true
+  allow_sequence_only_decoy_panel: false
+  decoy_receptor_mode: prepared_pdbqt_if_available
+  decoy_receptor_file_column: decoy_receptor_file
+  docking_box_mode: per_receptor_bounds
+  docking_box_padding_angstrom: 6.0
+  docking_box_min_size_angstrom: 20.0
+  docking_box_max_size_angstrom: 126.0
+  minimum_receptor_atom_coverage: 1.0
+
+selectivity_scoring:
+  target_score_column: target_deltaG
+  lower_deltaG_is_better: true
+  use_biological_weights: false
+  off_target_risk_threshold_deltaG: -7.0
+  selectivity_gap_threshold: 1.0
+  advance_target_deltaG_threshold: 0.0
+  advance_weighted_gap_threshold: 1.0
+  advance_off_target_risk_threshold: 0.4
+  advance_min_decoys_with_scores: 100
+
+live_simulation:
+  enable_live_logging: true
+  write_jsonl_log: true
+  live_log_file: data/processed/docking/geometry_corrected_decoy_150x100/simulation/live_docking_events.jsonl
+  live_state_file: data/processed/docking/geometry_corrected_decoy_150x100/simulation/current_docking_state.json
+  dashboard_refresh_seconds: 2
+
+figures:
+  make_figures: true
+  max_heatmap_molecules: 50
+  max_heatmap_decoys: 50

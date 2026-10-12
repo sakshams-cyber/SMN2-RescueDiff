@@ -1,0 +1,10 @@
+stage	count	definition
+raw_samples_requested	50000	sampler request
+unique_strings_emitted	49660	deduplicated generated strings presented to RDKit
+rdkit_parse_valid_strings	49660	denominator: unique emitted strings
+canonicalization_collapses	171	valid strings mapping to an already observed canonical graph
+unique_canonical_molecules	49489	unique emitted strings minus canonicalization collapses
+unique_canonical_filter_failures	9012	unique canonical molecules failing chemical filters
+retained_unique_molecules	40477	unique canonical molecules passing chemical filters
+rejected_records_total	9183	canonical duplicates plus unique chemical-filter failures
+exported_for_docking	1000	diversity-selected docking export

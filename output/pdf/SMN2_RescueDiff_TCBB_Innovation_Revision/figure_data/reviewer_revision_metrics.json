@@ -1,0 +1,73 @@
+{
+  "analysis_scope": "Post hoc audit of released historical results; no score was imputed or replaced.",
+  "decoy_geometry_and_score_audit": {
+    "decoy_receptors": 97,
+    "decoy_score_rows": 14259,
+    "exact_zero_fraction": 0.33768146433831264,
+    "exact_zero_scores": 4815,
+    "fixed_box_coverage_score_spearman_p": 8.355014494157373e-28,
+    "fixed_box_coverage_score_spearman_rho": -0.8469224878790462,
+    "mean_gap_excluding_zeros_median": 4.572853333333334,
+    "mean_gap_with_zeros_median": 5.590487938144329,
+    "mean_score_other_receptors": -6.886140306122449,
+    "mean_score_receptors_under_10_percent_in_box": -1.1925111609977324,
+    "receptors_under_10_percent_in_fixed_box": 81,
+    "sample_median_minimum_distance_nonzero_scores": 2.58048734263371,
+    "sample_median_minimum_distance_zero_scores": 32.648952533077995,
+    "strongest_decoy_for_all_molecules": "HuRDA_000041",
+    "strongest_decoy_frequency": 147,
+    "unique_biological_weights": [
+      1.0
+    ],
+    "variance_explained_by_ligand": 0.001323976718672426,
+    "variance_explained_by_receptor": 0.9883030371192016
+  },
+  "generation_flow": {
+    "canonicalization_collapses": 171,
+    "exported_for_docking": 1000,
+    "raw_samples_requested": 50000,
+    "rdkit_parse_valid_strings": 49660,
+    "rejected_records_total": 9183,
+    "retained_unique_molecules": 40477,
+    "unique_canonical_filter_failures": 9012,
+    "unique_canonical_molecules": 49489,
+    "unique_strings_emitted": 49660
+  },
+  "released_campaigns": {
+    "benchmark_decoy_rows": 200,
+    "benchmark_molecules": 2,
+    "benchmark_target_rows": 2,
+    "benchmark_warning": "Benchmark decoy scores share the historical fixed-box coordinate confound and are released for audit, not inference.",
+    "cross_target_completed": 800,
+    "cross_target_molecules": 40,
+    "cross_target_real_scores": 800,
+    "cross_target_receptors": 20,
+    "cross_target_rows": 800
+  },
+  "target_size_and_descriptor_audit": {
+    "lead_candidate_descriptors": {
+      "canonical_smiles": "O=C1CC(Nc2nccc(N3CCOCC3)n2)C=CC=Cc2ccccc2N1",
+      "decoy_panel_size": 97,
+      "decoys_stronger_than_mean_target_count": 1,
+      "fraction_decoys_stronger_than_mean_target": 0.01030928,
+      "hba": 6,
+      "hbd": 2,
+      "heavy_atom_count": 28,
+      "logp": 2.7055000000000007,
+      "molecular_weight": 377.448,
+      "molecule_id": "MolGen_038292",
+      "percent_decoys_stronger_than_mean_target": 1.030928,
+      "qed": 0.8562556436551684,
+      "rotatable_bonds": 3,
+      "tpsa": 79.38000000000001
+    },
+    "lead_candidate_ligand_efficiency": 0.3188928571428571,
+    "lead_candidate_ligand_efficiency_rank_of_500": 136,
+    "lead_candidate_mw_residual": -1.344423945223065,
+    "lead_candidate_mw_residual_rank_of_500": 3,
+    "target_molecules": 500,
+    "target_score_mw_linear_slope": -0.008612018554242882,
+    "target_score_mw_spearman_p": 9.05822057921205e-34,
+    "target_score_mw_spearman_rho": -0.5053629711152804
+  }
+}

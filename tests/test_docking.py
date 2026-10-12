@@ -513,6 +513,59 @@ def test_off_target_risk_score_between_zero_and_one():
     assert 0 <= scores.iloc[0]["off_target_risk_score"] <= 1
 
 
+def test_per_receptor_decoy_box_covers_receptor_coordinates(tmp_path):
+    from smn2_rescuediff.docking.receptor_preparer import resolve_decoy_docking_box
+
+    receptor = tmp_path / "decoy.pdbqt"
+    receptor.write_text(
+        "ATOM      1  C   RNA A   1     -10.000  -5.000   2.000  0.00  0.00     0.000 C\n"
+        "ATOM      2  N   RNA A   1      30.000  15.000  42.000  0.00  0.00     0.000 N\n",
+        encoding="utf-8",
+    )
+    box, qc = resolve_decoy_docking_box(
+        {
+            "decoy_panel": {
+                "docking_box_mode": "per_receptor_bounds",
+                "docking_box_padding_angstrom": 4.0,
+                "minimum_receptor_atom_coverage": 1.0,
+            }
+        },
+        receptor,
+    )
+    assert qc["docking_box_mode"] == "per_receptor_bounds"
+    assert qc["receptor_atoms_in_box_fraction"] == 1.0
+    assert box["center_x"] == 10.0
+    assert box["size_x"] == 48.0
+
+
+def test_fixed_decoy_box_fails_when_receptor_coverage_is_too_low(tmp_path):
+    from smn2_rescuediff.docking.receptor_preparer import resolve_decoy_docking_box
+
+    receptor = tmp_path / "decoy.pdbqt"
+    receptor.write_text(
+        "ATOM      1  C   RNA A   1     100.000 100.000 100.000  0.00  0.00     0.000 C\n",
+        encoding="utf-8",
+    )
+    config = {
+        "receptor": {
+            "docking_box": {
+                "center_x": 0,
+                "center_y": 0,
+                "center_z": 0,
+                "size_x": 20,
+                "size_y": 20,
+                "size_z": 20,
+            }
+        },
+        "decoy_panel": {
+            "docking_box_mode": "fixed_target_box",
+            "minimum_receptor_atom_coverage": 0.95,
+        },
+    }
+    with pytest.raises(ValueError, match="Recenter or re-box"):
+        resolve_decoy_docking_box(config, receptor)
+
+
 def test_live_jsonl_event_logging_and_state_update(tmp_path):
     logger = LiveLogger(tmp_path / "events.jsonl", tmp_path / "state.json", enabled=True)
     logger.event("module_started", run_mode="dry_run", status="running", message="start")
@@ -529,7 +582,10 @@ def test_real_decoy_docking_invokes_vina_with_prepared_decoy_pdbqt(tmp_path, mon
     decoys = pd.read_csv(decoys_path, sep="\t").head(1)
     decoy_receptor = tmp_path / "receptors" / "HuRDA_000001.pdbqt"
     decoy_receptor.parent.mkdir(parents=True)
-    decoy_receptor.write_text("REMARK decoy receptor\n", encoding="utf-8")
+    decoy_receptor.write_text(
+        "ATOM      1  C   RNA A   1       0.000   0.000   0.000  0.00  0.00     0.000 C\n",
+        encoding="utf-8",
+    )
     decoys["decoy_receptor_file"] = str(decoy_receptor)
     decoys.to_csv(decoys_path, sep="\t", index=False)
 

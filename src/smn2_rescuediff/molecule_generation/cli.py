@@ -430,7 +430,9 @@ def run(config_path: str | Path) -> int:
     _write_run_artifacts(output_dir, config, summary, output_files)
 
     # Convenience copies for Module 4, while preserving run-specific outputs.
-    if output_dir != paths.output_dir:
+    # Controlled baselines can opt out so they never replace the production export.
+    publish_stable_outputs = bool(config.get("run", {}).get("publish_stable_outputs", True))
+    if output_dir != paths.output_dir and publish_stable_outputs:
         _sync_run_outputs_to_stable(output_dir, paths.output_dir, output_files)
         _sync_run_report_and_figures(output_dir, paths.report_path, paths.figure_dir)
 

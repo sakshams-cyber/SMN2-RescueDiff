@@ -1,0 +1,55 @@
+COMMAND:
+/opt/homebrew/Caskroom/miniforge/base/envs/smn2-docking/bin/vina --receptor data/processed/docking/cross_target_offtargets/receptors/PROT_007_ACHE_4EY7.pdbqt --ligand data/processed/docking/stage_b_decoy_150x53_after_target5/runs/decoy_150x53_after_target5/ligands/MolGen_033370.pdbqt --center_x -13.988 --center_y -43.906 --center_z 27.108 --size_x 25.341 --size_y 20.0 --size_z 22.355 --exhaustiveness 8 --num_modes 9 --energy_range 3.0 --seed 42 --out data/processed/docking/cross_target_offtargets/top40x20_v1/poses/PROT_007/MolGen_033370.pdbqt
+
+STDOUT:
+AutoDock Vina v1.2.7
+#################################################################
+# If you used AutoDock Vina in your work, please cite:          #
+#                                                               #
+# J. Eberhardt, D. Santos-Martins, A. F. Tillack, and S. Forli  #
+# AutoDock Vina 1.2.0: New Docking Methods, Expanded Force      #
+# Field, and Python Bindings, J. Chem. Inf. Model. (2021)       #
+# DOI 10.1021/acs.jcim.1c00203                                  #
+#                                                               #
+# O. Trott, A. J. Olson,                                        #
+# AutoDock Vina: improving the speed and accuracy of docking    #
+# with a new scoring function, efficient optimization and       #
+# multithreading, J. Comp. Chem. (2010)                         #
+# DOI 10.1002/jcc.21334                                         #
+#                                                               #
+# Please see https://github.com/ccsb-scripps/AutoDock-Vina for  #
+# more information.                                             #
+#################################################################
+
+Scoring function : vina
+Rigid receptor: data/processed/docking/cross_target_offtargets/receptors/PROT_007_ACHE_4EY7.pdbqt
+Ligand: data/processed/docking/stage_b_decoy_150x53_after_target5/runs/decoy_150x53_after_target5/ligands/MolGen_033370.pdbqt
+Grid center: X -13.988 Y -43.906 Z 27.108
+Grid size  : X 25.341 Y 20 Z 22.355
+Grid space : 0.375
+Exhaustiveness: 8
+CPU: 0
+Verbosity: 1
+
+Computing Vina grid ... done.
+Performing docking (random seed: 42) ... 
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+
+mode |   affinity | dist from best mode
+     | (kcal/mol) | rmsd l.b.| rmsd u.b.
+-----+------------+----------+----------
+   1       -11.81          0          0
+   2       -11.49      1.786      2.506
+   3       -9.061      5.058      12.47
+   4       -9.016      1.767      2.394
+   5       -8.807      7.088       14.5
+   6       -8.383      9.284      12.58
+   7       -8.331      8.503       10.8
+   8       -8.165      7.871      11.27
+   9       -7.873      8.738      12.37
+
+
+STDERR:
+WARNING: At low exhaustiveness, it may be impossible to utilize all CPUs.

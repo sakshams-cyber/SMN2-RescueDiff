@@ -1,0 +1,29 @@
+{
+  "project": "SMN2-RescueDiff",
+  "module": "SMN2 Target Docking and HuRDA Off-Target Counter-Screening",
+  "run_mode": "target_plus_decoy_docking",
+  "stage_name": "benchmark_controls_risdiplam_branaplam_2x100_v2",
+  "dry_run_warning": "",
+  "molecules_evaluated": 2,
+  "target_scores": {
+    "count": 2,
+    "min": -8.591,
+    "mean": -8.456
+  },
+  "decoy_scores": {
+    "count": 200,
+    "min": -10.1,
+    "mean": -2.3444757550000004
+  },
+  "advanced_candidates": 0,
+  "warnings": [],
+  "limitations": [
+    "Docking scores are model-based computational predictions and do not prove experimental binding.",
+    "Dry-run scores are simulated for pipeline testing and visualization only.",
+    "This module does not prove splicing rescue, safety, therapeutic efficacy, or clinical relevance.",
+    "Sequence-only RNA target windows cannot replace real 3D receptor structures for scientific docking.",
+    "No chemical synthesis or biological testing instructions are provided."
+  ],
+  "run_name": "benchmark_controls_risdiplam_branaplam_2x100_v2",
+  "run_folder": "data/processed/benchmark_controls/risdiplam_branaplam_2x100/module4_2x100_v2/runs/benchmark_controls_risdiplam_branaplam_2x100_v2"
+}

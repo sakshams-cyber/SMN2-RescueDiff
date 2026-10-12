@@ -1,5 +1,9 @@
 # SMN2-RescueDiff
 
+> **October 2026 evidence audit:** A post hoc coordinate-frame audit found that the historical HuRDA structural docking campaign reused the SMN2 target box for independently positioned RNAComposer receptors. Those historical decoy scores are retained for transparency but are **withdrawn from biological selectivity inference**. The repository now requires receptor-specific decoy boxes (or verifies fixed-box atom coverage) before docking. See the [TCBB reviewer revision evidence](reproducibility/tcbb_2026/reviewer_revision_2026_10), [review response ledger](docs/TCBB_REVIEW_RESPONSE_2026_10.md), and [reproducibility snapshot](reproducibility/tcbb_2026/README.md).
+
+The central contribution is an auditable, failure-aware computational biology workflow: each module emits explicit evidence contracts, preserves missingness and provenance, and prevents downstream ranking from silently converting structural or metadata failures into biological claims. The workflow generates hypotheses for later validation; it does not establish RNA binding, exon 7 inclusion, safety, efficacy, or clinical superiority.
+
 SMN2-RescueDiff is a computational biology project for defining and later analyzing SMN2 exon 7 splicing-related RNA targets. This repository currently implements Module 1: SMN2 Target Definition, Module 2: HuRDA-180K Human RNA Decoy Atlas, Module 3: Deep Neural Molecular Generation Model, and Module 4: SMN2 Docking and HuRDA Off-Target Counter-Screening.
 
 The pipeline defines the SMN2 exon 7 splicing-related RNA target, builds a transcriptome-scale HuRDA decoy atlas, generates computational molecule candidates, evaluates target-vs-decoy docking/selectivity evidence, and produces a final SRSI-ranked candidate table with cautious evidence summaries.

@@ -21,7 +21,7 @@ from .input_loader import load_decoy_atlas, load_molecules
 from .ligand_preparer import prepare_ligands
 from .live_logger import LiveLogger
 from .molecule_selector import select_molecules_for_docking
-from .receptor_preparer import prepare_receptor
+from .receptor_preparer import config_with_docking_box, prepare_receptor, resolve_decoy_docking_box
 from .report_writer import build_summary, write_report, write_summary_json
 from .selectivity_scorer import calculate_selectivity_scores
 from .target_conformer_panel import conformer_panel_enabled, run_target_conformer_panel
@@ -110,6 +110,7 @@ def _sync_run_outputs_to_stable(run_paths, stable_paths) -> None:
         "ligand_preparation_summary.tsv",
         "receptor_preparation_summary.tsv",
         "selected_decoy_docking_panel.tsv",
+        "decoy_receptor_box_qc.tsv",
         "smn2_target_docking_scores.tsv",
         "decoy_docking_scores.tsv",
         "molecule_selectivity_scores.tsv",
@@ -481,6 +482,23 @@ def run(config_path: str | Path) -> int:
         _write(decoy_panel, paths.output_dir / "selected_decoy_docking_panel.tsv")
         logger.event("decoy_panel_selected", run_mode=mode, status="completed", message=f"Selected {len(decoy_panel)} HuRDA decoys.")
 
+        decoy_box_configs: dict[str, dict[str, Any]] = {}
+        decoy_box_qc_rows: list[dict[str, Any]] = []
+        if mode == "target_plus_decoy_docking" and not decoy_panel.empty:
+            for _, decoy in decoy_panel.iterrows():
+                decoy_id = str(decoy.get("decoy_id", "NA"))
+                decoy_receptor = str(decoy.get("decoy_receptor_file", "NA"))
+                box, qc = resolve_decoy_docking_box(config, decoy_receptor)
+                qc["decoy_id"] = decoy_id
+                qc["decoy_category"] = str(decoy.get("decoy_category", "NA"))
+                decoy_box_qc_rows.append(qc)
+                decoy_box_configs[decoy_id] = config_with_docking_box(config, box)
+            _write(pd.DataFrame(decoy_box_qc_rows), paths.output_dir / "decoy_receptor_box_qc.tsv")
+            log(
+                f"Validated receptor geometry for {len(decoy_box_qc_rows)} decoys using "
+                f"{config.get('decoy_panel', {}).get('docking_box_mode', 'fixed_target_box')}."
+            )
+
         (paths.output_dir / "docking_config_used.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
 
         if mode == "prepare_only":
@@ -640,7 +658,12 @@ def run(config_path: str | Path) -> int:
                         try:
                             validate_vina_input_files(decoy_receptor, ligand_file)
                             pose_file = str(paths.pose_dir / f"{molecule['molecule_id']}_{decoy_id}_out.pdbqt")
-                            result = run_vina(receptor_file=decoy_receptor, ligand_file=ligand_file, pose_file=pose_file, config=config)
+                            result = run_vina(
+                                receptor_file=decoy_receptor,
+                                ligand_file=ligand_file,
+                                pose_file=pose_file,
+                                config=decoy_box_configs.get(decoy_id, config),
+                            )
                         except Exception as exc:
                             failed_rows.append(
                                 {
